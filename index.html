@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garment Production Input</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="header">
+        <h1>รายงานยอดการผลิต</h1>
+        <p>กรอกข้อมูลการผลิตประจำช่วงเวลา</p>
+      </div>
+
+      <form id="productionForm">
+        <div class="field">
+          <label for="date">วันที่</label>
+          <input type="date" id="date" required>
+        </div>
+
+        <div class="field">
+          <label for="line">Line</label>
+          <select id="line" required>
+            <option value="">เลือก Line</option>
+            <option value="L01">LINE 01</option>
+            <option value="L02">LINE 02</option>
+            <option value="L03">LINE 03</option>
+            <option value="L04">LINE 04</option>
+            <option value="L05">LINE 05</option>
+            <option value="L06">LINE 06</option>
+            <option value="L07">LINE 07</option>
+            <option value="L08">LINE 08</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fo">FO</label>
+          <input type="text" id="fo" placeholder="เช่น FO001" required>
+        </div>
+
+        <div class="field">
+          <label for="timeSlot">ช่วงเวลา</label>
+          <select id="timeSlot" required>
+            <option value="">เลือกช่วงเวลา</option>
+            <option>08:00-09:00</option>
+            <option>09:00-10:00</option>
+            <option>10:00-11:00</option>
+            <option>11:00-12:00</option>
+            <option>13:00-14:00</option>
+            <option>14:00-15:00</option>
+            <option>15:00-16:00</option>
+            <option>16:00-17:00</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="outputQty">ยอดผลิต</label>
+          <input type="number" id="outputQty" min="0" step="1" placeholder="0" required>
+        </div>
+
+        <button type="submit" class="save-btn">บันทึกยอดผลิต</button>
+        <div id="message" class="message" aria-live="polite"></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
