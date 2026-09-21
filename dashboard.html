@@ -3092,11 +3092,13 @@ Please provide:
     </script>
 
 <script>
-/* ===== LIVE PRODUCTION LOG BRIDGE ===== */
+/* ===== LIVE PRODUCTION LOG BRIDGE: SERVER + GITHUB STATIC ===== */
 (function(){
   const LOG_KEY='production_control_dashboard_log_v1';
   const META_KEY='production_control_dashboard_meta_v1';
-  let lastRaw=null;
+  const LINES=Array.from({length:18},(_,i)=>'LINE'+String(i+1).padStart(2,'0'));
+  const STATIC_HOST=/github\.io$/i.test(location.hostname);
+  let lastSignature='';
 
   function pad2(n){return String(n).padStart(2,'0');}
   function localStamp(ms){
@@ -3129,34 +3131,36 @@ Please provide:
       'Time Slot':String(x.timeSlot||'').trim(),
       'Type':String(x.type||'').toUpperCase().trim(),
       'Qty':Number(x.qty||0),
-      'Source':'LIVE LOG'+(x.source?' • '+x.source:''),
+      'Source':String(x._bridgeSource||'LIVE LOG')+(x.source?' • '+x.source:''),
       'Status':'ACTIVE',
-      'Downtime (min)':0,
-      'Reason':'',
+      'Downtime (min)':Number(x.downtime||0),
+      'Reason':String(x.reason||''),
       'JOB ID':String(x.jobId||'').trim(),
       'Master FO':String(x.masterFo||'').trim(),
       'Event ID':String(x.eventId||'').trim()
     };
   }
-  function setLiveBadge(count){
+  function signature(logs,mode){
+    const last=logs.length?logs[logs.length-1]:{};
+    return mode+'|'+logs.length+'|'+String(last.eventId||'')+'|'+logs.reduce((s,x)=>s+Number(x.qty||0),0);
+  }
+  function setLiveBadge(count,mode){
     const badge=document.getElementById('standalone-badge');
     if(!badge) return;
     badge.classList.remove('hidden');
-    badge.innerHTML='<i class="fa-solid fa-link text-emerald-300"></i><span>LIVE LOG • '+count.toLocaleString()+' records</span>';
-    badge.className='px-3 py-1 bg-emerald-900/50 border border-emerald-600/50 text-emerald-300 text-xs rounded-lg font-medium flex items-center space-x-1';
+    const server=mode==='SERVER LOG';
+    badge.innerHTML='<i class="fa-solid '+(server?'fa-server':'fa-link')+'"></i><span>'+mode+' • '+count.toLocaleString()+' records</span>';
+    badge.className='px-3 py-1 '+(server?'bg-cyan-900/50 border-cyan-600/50 text-cyan-300':'bg-emerald-900/50 border-emerald-600/50 text-emerald-300')+' border text-xs rounded-lg font-medium flex items-center space-x-1';
   }
-  function applyLogs(showToast=false){
-    if(!window.app) return;
-    const raw=localStorage.getItem(LOG_KEY);
-    if(!raw||raw===lastRaw) return;
-    let logs=[];
-    try{logs=JSON.parse(raw);}catch{return;}
-    if(!Array.isArray(logs)) return;
-    lastRaw=raw;
+  function applyLogs(logs,mode,showToast=false){
+    if(!window.app||!Array.isArray(logs)) return;
+    const sig=signature(logs,mode);
+    if(sig===lastSignature) return;
+    lastSignature=sig;
 
     const grouped={};
     logs.forEach(x=>{
-      const r=mapLog(x);
+      const r=mapLog({...x,_bridgeSource:mode});
       if(!r.Line) return;
       (grouped[r.Line] ||= []).push(r);
     });
@@ -3166,11 +3170,44 @@ Please provide:
     app.renderFilesCount();
     app.populateFilterDropdowns();
     app.updateAllViews();
-    setLiveBadge(logs.length);
+    setLiveBadge(logs.length,mode);
 
     if(showToast&&typeof app.showNotification==='function'){
-      app.showNotification('เชื่อม Production Log สำเร็จ '+logs.length.toLocaleString()+' รายการ','success');
+      app.showNotification('เชื่อม '+mode+' สำเร็จ '+logs.length.toLocaleString()+' รายการ','success');
     }
+  }
+  function readBrowserLogs(){
+    let logs=[];
+    try{logs=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');}catch{}
+    return Array.isArray(logs)?logs:[];
+  }
+  async function readServerLogs(){
+    if(STATIC_HOST) return null;
+    let success=0;
+    const rows=[];
+    const results=await Promise.allSettled(LINES.map(async line=>{
+      const res=await fetch('/api/line/state?line='+encodeURIComponent(line),{cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      return Array.isArray(data.logs)?data.logs:[];
+    }));
+    results.forEach(r=>{
+      if(r.status==='fulfilled'){
+        success++;
+        (r.value||[]).forEach(x=>rows.push(x));
+      }
+    });
+    return success>0?rows:null;
+  }
+  async function refresh(showToast=false){
+    try{
+      const serverLogs=await readServerLogs();
+      if(serverLogs!==null){
+        applyLogs(serverLogs,'SERVER LOG',showToast);
+        return;
+      }
+    }catch(e){}
+    applyLogs(readBrowserLogs(),'LIVE LOG',showToast);
   }
   function addProductionButton(){
     if(document.getElementById('btn-back-production')) return;
@@ -3186,10 +3223,10 @@ Please provide:
   function start(){
     if(!window.app){setTimeout(start,250);return;}
     addProductionButton();
-    applyLogs(true);
-    setInterval(()=>applyLogs(false),2000);
-    window.addEventListener('storage',e=>{if(e.key===LOG_KEY){lastRaw=null;applyLogs(false);}});
-    window.PRODUCTION_LOG_DASHBOARD_BRIDGE={refresh:()=>{lastRaw=null;applyLogs(true);},key:LOG_KEY,metaKey:META_KEY};
+    refresh(true);
+    setInterval(()=>refresh(false),3000);
+    window.addEventListener('storage',e=>{if(e.key===LOG_KEY){lastSignature='';refresh(false);}});
+    window.PRODUCTION_LOG_DASHBOARD_BRIDGE={refresh:()=>{lastSignature='';return refresh(true);},key:LOG_KEY,metaKey:META_KEY};
   }
   start();
 })();
