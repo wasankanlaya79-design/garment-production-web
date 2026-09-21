@@ -2933,7 +2933,104 @@ function exportDayExcel(dateIso){
     ${htmlTableFromRows("Daily Summary",summary)}
     ${htmlTableFromRows("Production Board",board)}
     ${htmlTableFromRows("Transaction Log",logs)}
-  </body>
+  
+<script>
+/* ===== DASHBOARD LOG PUBLISHER ===== */
+(function(){
+  const LOG_KEY = 'production_control_dashboard_log_v1';
+  const META_KEY = 'production_control_dashboard_meta_v1';
+
+  function normLine(v){
+    const m=String(v||'').toUpperCase().match(/(?:LINE\s*)?(\d{1,2})/);
+    if(!m) return '';
+    const n=Number(m[1]);
+    return n>=1&&n<=18 ? 'LINE'+String(n).padStart(2,'0') : '';
+  }
+  function dedupe(rows){
+    const map=new Map();
+    rows.forEach((x,i)=>{
+      const key=String(x?.eventId||'').trim() || [x?.line,x?.seq,x?.dateTime,x?.fo,x?.type,x?.qty,i].join('|');
+      map.set(key,x);
+    });
+    return [...map.values()].sort((a,b)=>{
+      const ma=String(a?.eventId||'').match(/^EVT-(\d+)-/);
+      const mb=String(b?.eventId||'').match(/^EVT-(\d+)-/);
+      return Number(ma?.[1]||0)-Number(mb?.[1]||0);
+    });
+  }
+  function restoreSavedLogs(){
+    let saved=[];
+    try{ saved=JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch{}
+    if(!Array.isArray(saved) || !saved.length) return;
+    const byLine={};
+    saved.forEach(x=>{
+      const line=normLine(x?.line);
+      if(!line) return;
+      (byLine[line] ||= []).push({...x,line});
+    });
+    Object.entries(byLine).forEach(([line,rows])=>{
+      const w=getLineWorkspace(line);
+      w.productionLog=dedupe([...(w.productionLog||[]),...rows]);
+      w.eventSeq=Math.max(Number(w.eventSeq||0), ...w.productionLog.map(x=>Number(x.seq||0)));
+    });
+  }
+  function collectLogs(){
+    const rows=[];
+    try{
+      Object.keys(LINE_WORKSPACES||{}).forEach(line=>{
+        const w=LINE_WORKSPACES[line]||{};
+        (w.productionLog||[]).forEach(x=>rows.push({...x,line:x.line||line}));
+      });
+      if(typeof ACTIVE_LINE!=='undefined' && ACTIVE_LINE && Array.isArray(PRODUCTION_LOG)){
+        PRODUCTION_LOG.forEach(x=>rows.push({...x,line:x.line||ACTIVE_LINE}));
+      }
+    }catch(e){ console.warn('collect dashboard log',e); }
+    return dedupe(rows);
+  }
+  function publish(){
+    try{
+      const logs=collectLogs();
+      localStorage.setItem(LOG_KEY,JSON.stringify(logs));
+      localStorage.setItem(META_KEY,JSON.stringify({
+        updatedAt:new Date().toISOString(),
+        records:logs.length,
+        source:'Production Control JOB ID V1.35'
+      }));
+    }catch(e){ console.warn('publish dashboard log',e); }
+  }
+
+  restoreSavedLogs();
+
+  const originalCaptureForDashboard = captureCurrentLineWorkspace;
+  captureCurrentLineWorkspace = function(){
+    const r=originalCaptureForDashboard.apply(this,arguments);
+    publish();
+    return r;
+  };
+
+  const originalAppendForDashboard = appendProductionLog;
+  appendProductionLog = function(){
+    const item=originalAppendForDashboard.apply(this,arguments);
+    publish();
+    return item;
+  };
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(publish,300);
+    document.querySelectorAll('.main-nav').forEach(nav=>{
+      if(nav.querySelector('.dashboard-nav-btn')) return;
+      const b=document.createElement('button');
+      b.className='dashboard-nav-btn';
+      b.textContent='▦ Dashboard';
+      b.onclick=()=>{ publish(); location.href='dashboard.html'; };
+      nav.appendChild(b);
+    });
+  });
+  window.addEventListener('beforeunload',publish);
+  window.PRODUCTION_DASHBOARD_LOG_PUBLISHER={publish,key:LOG_KEY};
+})();
+</script>
+</body>
   </html>`;
 
   const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
