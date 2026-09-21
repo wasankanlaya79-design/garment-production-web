@@ -1,1 +1,3197 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXECUTIVE PRODUCTION DASHBOARD • LINE01–LINE18 (v1.2.0 Industrial Suite)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // กันเคส CDN โหลดไม่ขึ้น (เน็ตโรงงานหลุด) ไม่ให้สคริปต์พังตั้งแต่บรรทัดแรก
+        window.tailwind = window.tailwind || {};
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#070a11',
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f2937',
+                            600: '#374151',
+                            500: '#4b5563'
+                        },
+                        industrial: {
+                            green: '#10b981',
+                            red: '#ef4444',
+                            amber: '#f59e0b',
+                            blue: '#3b82f6',
+                            purple: '#8b5cf6',
+                            cyan: '#06b6d4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- SheetJS (xlsx) for Excel parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', 'Sarabun', sans-serif;
+            background-color: #070a11;
+            color: #f3f4f6;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+        .glow-green { box-shadow: 0 0 15px rgba(16, 185, 129, 0.25); }
+        .glow-red { box-shadow: 0 0 15px rgba(239, 68, 68, 0.25); }
+        .glow-amber { box-shadow: 0 0 15px rgba(245, 158, 11, 0.25); }
+        .glow-blue { box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); }
+        .glow-cyan { box-shadow: 0 0 15px rgba(6, 182, 212, 0.25); }
+
+        select option {
+            background-color: #111827 !important;
+            color: #f3f4f6 !important;
+            padding: 8px 12px;
+        }
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+
+        /* ----------------------------------------------------
+           A4 PORTRAIT PRINT LAYOUT (Executive Clean Style)
+           ---------------------------------------------------- */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+
+            /* Hide all UI controls, navigation, and modals */
+            header > div:last-child, section, .no-print, button, input, select, label, 
+            #modal-files, #modal-target, #modal-email, #modal-ai,
+            #transaction-search {
+                display: none !important;
+            }
+
+            /* Reset body for paper */
+            body {
+                background: #ffffff !important;
+                color: #111827 !important;
+                font-size: 11px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            main {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Header Print Formatting */
+            header {
+                background: #ffffff !important;
+                color: #111827 !important;
+                border-bottom: 2px solid #374151 !important;
+                box-shadow: none !important;
+                padding: 10px 0 !important;
+                position: relative !important;
+                display: flex !important;
+                justify-content: center !important;
+                text-align: center !important;
+            }
+            header .text-white { color: #111827 !important; }
+            header .bg-gradient-to-br { 
+                background: #374151 !important; 
+                color: #ffffff !important; 
+                box-shadow: none !important; 
+            }
+            header .border-blue-700\/50, header .border-emerald-700\/60 { border-color: #d1d5db !important; }
+            header .text-blue-300, header .text-emerald-400 { color: #111827 !important; }
+
+            /* KPI Cards - Force 5 columns grid at the top */
+            #view-dashboard > .grid:first-child {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 8px !important;
+                margin-bottom: 15px !important;
+                page-break-inside: avoid !important;
+            }
+            #view-dashboard > .grid:first-child > div {
+                margin-bottom: 0 !important;
+                padding: 8px !important;
+                border: 1px solid #d1d5db !important;
+                box-shadow: none !important;
+                background: #f9fafb !important;
+            }
+
+            /* Charts and Tables - Stack vertically */
+            .grid {
+                display: block !important;
+                width: 100% !important;
+            }
+            .grid > div, .bg-dark-800 {
+                width: 100% !important;
+                margin-bottom: 15px !important;
+                page-break-inside: avoid !important; /* Prevent cutting charts in half */
+                break-inside: avoid !important;
+                border: 1px solid #d1d5db !important;
+                background: #ffffff !important;
+                box-shadow: none !important;
+                padding: 10px !important;
+            }
+
+            /* Text colors override for white paper */
+            .text-white { color: #111827 !important; }
+            .text-gray-400, .text-gray-500 { color: #4b5563 !important; }
+            .text-emerald-400, .text-emerald-300 { color: #059669 !important; font-weight: bold !important; }
+            .text-red-400, .text-red-300 { color: #dc2626 !important; font-weight: bold !important; }
+            .text-amber-400 { color: #d97706 !important; font-weight: bold !important; }
+            .text-blue-400, .text-cyan-300, .text-indigo-300, .text-purple-400 { color: #2563eb !important; font-weight: bold !important; }
+
+            /* Force Canvas Height & Prevent overlap */
+            .relative.min-h-\[300px\],
+            .relative.min-h-\[260px\],
+            .relative.min-h-\[230px\],
+            .relative.min-h-\[350px\],
+            .relative.min-h-\[320px\],
+            .relative.flex-1 {
+                position: relative !important;
+                width: 100% !important;
+                min-height: 250px !important;
+                height: 250px !important;
+                display: block !important;
+                overflow: hidden !important;
+                page-break-inside: avoid !important;
+            }
+            canvas {
+                max-width: 100% !important;
+                height: 250px !important;
+                display: block !important;
+            }
+
+            /* Tables */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 9px !important;
+                color: #111827 !important;
+            }
+            th, td {
+                border: 1px solid #d1d5db !important;
+                color: #111827 !important;
+                padding: 4px !important;
+            }
+            thead, thead tr, thead th {
+                background-color: #f3f4f6 !important;
+                color: #111827 !important;
+                font-weight: bold !important;
+            }
+            .overflow-x-auto, .max-h-\[360px\], .max-h-\[400px\] {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-dark-950 text-gray-100 antialiased selection:bg-blue-600 selection:text-white">
+
+    <!-- System Error Bar (ซ่อนไว้ ปรากฏเมื่อมีข้อผิดพลาดจริงเท่านั้น) -->
+    <div id="runtime-error-bar" class="hidden no-print sticky top-0 z-[70] bg-red-900/95 border-b border-red-600 text-red-50 px-4 py-2 text-xs font-semibold flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+            <i class="fa-solid fa-triangle-exclamation text-amber-300"></i>
+            <span id="runtime-error-text" class="truncate"></span>
+        </div>
+        <button onclick="app && app.dismissError()" class="px-2 py-0.5 bg-red-800 hover:bg-red-700 border border-red-600 rounded text-[11px] shrink-0">ปิด</button>
+    </div>
+
+    <!-- Top Header Bar -->
+    <header class="bg-dark-800 border-b border-dark-700 sticky top-0 z-50 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-xl font-bold flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-industry text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2 flex-wrap">
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-wider text-white">EXECUTIVE PRODUCTION DASHBOARD</h1>
+                    <span class="px-2 py-0.5 text-xs font-mono bg-blue-900/60 text-blue-300 border border-blue-700/50 rounded-md font-semibold">v1.2.0 Industrial Suite</span>
+                    <span class="px-2 py-0.5 text-[11px] font-semibold bg-emerald-950 text-emerald-400 border border-emerald-700/60 rounded flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-bolt text-xs"></i> 18 LINES READY
+                    </span>
+                </div>
+                <p class="text-xs text-gray-400">ระบบติดตามและวิเคราะห์ข้อมูลการผลิตอัจฉริยะแบบเรียลไทม์ (LINE01–LINE18 • Thai & English Unified)</p>
+            </div>
+        </div>
+
+        <!-- Global Action Controls -->
+        <div class="flex items-center flex-wrap gap-2">
+            <div id="standalone-badge" class="hidden px-3 py-1 bg-amber-900/50 border border-amber-600/50 text-amber-300 text-xs rounded-lg font-medium flex items-center space-x-1">
+                <i class="fa-solid fa-lock text-xs"></i><span>STANDALONE MODE</span>
+            </div>
+            
+            <button onclick="app.loadDemoData()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5" title="โหลดข้อมูลตัวอย่างทั้ง 18 สาย">
+                <i class="fa-solid fa-bolt text-amber-300"></i><span>Demo Data (18 Lines)</span>
+            </button>
+
+            <!-- Batch Multi-File Upload Button -->
+            <label class="px-3 py-1.5 bg-indigo-800/80 hover:bg-indigo-700 text-indigo-100 border border-indigo-600/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5 cursor-pointer" title="อัปโหลด Excel หลายไฟล์พร้อมกัน ระบบจะจับคู่สายให้อัตโนมัติ">
+                <i class="fa-solid fa-file-import text-cyan-300"></i><span>Batch Upload All Lines</span>
+                <input type="file" multiple accept=".xlsx, .xls, .csv" onchange="app.handleBatchUpload(event)" class="hidden">
+            </label>
+
+            <button onclick="app.openFilesModal()" id="btn-manage-files" class="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-gray-200 border border-dark-600 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-folder-tree text-blue-400"></i><span>Files (<span id="active-files-count" class="text-emerald-400 font-bold">0</span>/18)</span>
+            </button>
+
+            <button onclick="app.toggleFullscreen()" class="p-2 bg-dark-700 hover:bg-dark-600 text-gray-200 border border-dark-600 text-xs font-semibold rounded-lg shadow transition" title="Andon Fullscreen TV Mode">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+
+            <!-- TV Auto-Cycle / Carousel Control -->
+            <div class="flex items-center space-x-1 bg-dark-900 px-2 py-1 rounded-lg border border-dark-700">
+                <button id="btn-tv-cycle" onclick="app.toggleTvCycle()" class="px-2 py-1 bg-indigo-900/70 hover:bg-indigo-800 text-indigo-200 border border-indigo-700/50 text-[11px] font-semibold rounded flex items-center space-x-1 transition" title="Auto Carousel for TV Displays">
+                    <i id="icon-tv-cycle" class="fa-solid fa-play text-amber-400"></i>
+                    <span>TV Cycle</span>
+                </button>
+                <span id="tv-cycle-badge" class="hidden text-[10px] font-mono text-emerald-400 px-1">15s</span>
+            </div>
+
+            <!-- Auto-Refresh (5 Mins) Control Button -->
+            <div class="flex items-center space-x-1 bg-dark-900 px-2 py-1 rounded-lg border border-dark-700">
+                <button id="btn-auto-refresh" onclick="app.toggleAutoRefresh()" class="px-2 py-1 bg-emerald-900/70 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50 text-[11px] font-semibold rounded flex items-center space-x-1 transition" title="อัปเดตข้อมูลอัตโนมัติทุก 5 นาที">
+                    <i id="icon-auto-refresh" class="fa-solid fa-rotate text-gray-400"></i>
+                    <span>Auto-Refresh (5m)</span>
+                </button>
+                <span id="auto-refresh-badge" class="hidden text-[10px] font-mono text-emerald-400 px-1 font-bold">5m ON</span>
+            </div>
+
+            <button onclick="app.printSummaryReport()" class="p-2 bg-dark-700 hover:bg-dark-600 text-gray-200 border border-dark-600 text-xs font-semibold rounded-lg shadow transition" title="Print / PDF Report">
+                <i class="fa-solid fa-print"></i>
+            </button>
+
+            <button onclick="app.exportStandaloneHtml()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-file-code"></i><span>Save Standalone HTML</span>
+            </button>
+
+            <!-- Navigation Tabs -->
+            <div class="flex bg-dark-900 p-1 rounded-lg border border-dark-700 space-x-1">
+                <button onclick="app.switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 text-xs font-semibold rounded-md transition bg-blue-600 text-white shadow">Dashboard</button>
+                <button onclick="app.switchTab('summary')" id="tab-summary" class="px-3 py-1.5 text-xs font-semibold rounded-md transition text-gray-400 hover:text-white">Summary & Lines</button>
+                <button onclick="app.switchTab('pareto')" id="tab-pareto" class="px-3 py-1.5 text-xs font-semibold rounded-md transition text-gray-400 hover:text-white">Pareto Defects</button>
+                <button onclick="app.switchTab('industrial')" id="tab-industrial" class="px-3 py-1.5 text-xs font-semibold rounded-md transition text-gray-400 hover:text-white">Industrial & Andon</button>
+                <button onclick="app.switchTab('health')" id="tab-health" class="px-3 py-1.5 text-xs font-semibold rounded-md transition text-gray-400 hover:text-white">Data Health</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter & Operational Parameters Bar -->
+    <section class="bg-dark-800/90 border-b border-dark-700 px-4 py-2.5 shadow-inner">
+        <div class="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <!-- Date Range -->
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700">
+                    <span class="text-gray-400"><i class="fa-regular fa-calendar mr-1 text-blue-400"></i> From:</span>
+                    <input type="date" id="filter-date-from" onchange="app.onFilterChange()" class="bg-transparent text-white outline-none cursor-pointer font-mono text-xs">
+                </div>
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700">
+                    <span class="text-gray-400"><i class="fa-regular fa-calendar-check mr-1 text-blue-400"></i> To:</span>
+                    <input type="date" id="filter-date-to" onchange="app.onFilterChange()" class="bg-transparent text-white outline-none cursor-pointer font-mono text-xs">
+                </div>
+
+                <!-- Shift Selector -->
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700">
+                    <span class="text-gray-400 font-medium"><i class="fa-solid fa-clock-rotate-left mr-1 text-amber-400"></i> Shift:</span>
+                    <select id="filter-shift" onchange="app.onFilterChange()" class="bg-dark-900 text-white outline-none cursor-pointer text-xs font-semibold pr-1">
+                        <option value="">All Shifts</option>
+                        <option value="DAY">Day Shift (08:00 - 17:00)</option>
+                        <option value="NIGHT">Night Shift (20:00 - 05:00)</option>
+                        <option value="OT">OT Shift (17:00+)</option>
+                    </select>
+                </div>
+
+                <!-- Cascading Selects: Line -> FO -> Style -> Color -->
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700 hover:border-dark-600 transition">
+                    <span class="text-gray-400 font-medium">Line:</span>
+                    <select id="filter-line" onchange="app.onLineFilterChange()" class="bg-dark-900 text-white outline-none cursor-pointer text-xs font-semibold pr-1">
+                        <option value="">All Lines (LINE01-18)</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700 hover:border-dark-600 transition">
+                    <span class="text-gray-400 font-medium">FO:</span>
+                    <select id="filter-fo" onchange="app.onFoFilterChange()" class="bg-dark-900 text-white outline-none cursor-pointer max-w-[130px] text-xs font-semibold pr-1">
+                        <option value="">All FOs</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700 hover:border-dark-600 transition">
+                    <span class="text-gray-400 font-medium">Style:</span>
+                    <select id="filter-style" onchange="app.onStyleFilterChange()" class="bg-dark-900 text-white outline-none cursor-pointer max-w-[130px] text-xs font-semibold pr-1">
+                        <option value="">All Styles</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-1 bg-dark-900 px-2.5 py-1.5 rounded-lg border border-dark-700 hover:border-dark-600 transition">
+                    <span class="text-gray-400 font-medium">Color:</span>
+                    <select id="filter-color" onchange="app.onFilterChange()" class="bg-dark-900 text-white outline-none cursor-pointer max-w-[120px] text-xs font-semibold pr-1">
+                        <option value="">All Colors</option>
+                    </select>
+                </div>
+
+                <button onclick="app.resetFilters()" class="px-2.5 py-1.5 bg-dark-700 hover:bg-dark-600 text-gray-300 rounded-lg transition font-medium" title="Reset All Filters">
+                    <i class="fa-solid fa-filter-circle-xmark"></i> Reset
+                </button>
+            </div>
+
+            <!-- Export & AI Tools -->
+            <div class="flex items-center space-x-2">
+                <button onclick="app.exportExcel()" class="px-3 py-1.5 bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 border border-emerald-600/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-file-excel"></i><span>Excel</span>
+                </button>
+                <button onclick="app.exportCsv()" class="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-gray-200 border border-dark-600 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-file-csv"></i><span>CSV</span>
+                </button>
+                <button onclick="app.openEmailModal()" class="px-3 py-1.5 bg-blue-900/80 hover:bg-blue-800 text-blue-100 border border-blue-700/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-envelope"></i><span>Executive Brief</span>
+                </button>
+                <button onclick="app.openAiModal()" class="px-3 py-1.5 bg-purple-900/80 hover:bg-purple-800 text-purple-100 border border-purple-700/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i><span>Executive AI</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-[1700px] w-full mx-auto p-4 space-y-6">
+
+        <!-- VIEW 1: DASHBOARD MAIN -->
+        <div id="view-dashboard" class="space-y-6">
+            <!-- KPI Cards Grid (Enhanced 10 Cards with OEE & Run Rate) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10 gap-2.5">
+                <!-- Total Output -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-gray-400 font-medium">Total Output</span>
+                        <i class="fa-solid fa-boxes-stacked text-blue-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-total-output" class="text-lg font-bold font-mono text-white">0</h3>
+                        <span class="text-[10px] text-gray-500">GOOD + NG (Pcs)</span>
+                    </div>
+                </div>
+
+                <!-- Good / OK -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between glow-green">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-emerald-400 font-medium">Good / OK</span>
+                        <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-good" class="text-lg font-bold font-mono text-emerald-400">0</h3>
+                        <span id="kpi-achievement-sub" class="text-[10px] text-emerald-500/90 font-mono">Ach: 0%</span>
+                    </div>
+                </div>
+
+                <!-- NG Defects -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between glow-red">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-red-400 font-medium">NG Defects</span>
+                        <i class="fa-solid fa-triangle-exclamation text-red-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-ng" class="text-lg font-bold font-mono text-red-400">0</h3>
+                        <span id="kpi-defect-rate-sub" class="text-[10px] text-red-500/90 font-mono">Rate: 0%</span>
+                    </div>
+                </div>
+
+                <!-- Repair -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between glow-amber">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-amber-400 font-medium">Repair / Rework</span>
+                        <i class="fa-solid fa-screwdriver-wrench text-amber-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-repair" class="text-lg font-bold font-mono text-amber-400">0</h3>
+                        <span class="text-[10px] text-gray-500">Rework Units</span>
+                    </div>
+                </div>
+
+                <!-- FPY -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between glow-blue">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-blue-400 font-medium">FPY (%)</span>
+                        <i class="fa-solid fa-percent text-blue-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-fpy" class="text-lg font-bold font-mono text-white">0%</h3>
+                        <span class="text-[10px] text-gray-500">First Pass Yield</span>
+                    </div>
+                </div>
+
+                <!-- Defect Rate -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-red-300 font-medium">Defect Rate</span>
+                        <i class="fa-solid fa-chart-pie text-red-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-defect-rate" class="text-lg font-bold font-mono text-red-300">0%</h3>
+                        <span class="text-[10px] text-gray-500">NG / Output</span>
+                    </div>
+                </div>
+
+                <!-- Quality EFF -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-emerald-300 font-medium">Quality EFF</span>
+                        <i class="fa-solid fa-gauge-high text-emerald-300 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-quality-eff" class="text-lg font-bold font-mono text-emerald-300">0%</h3>
+                        <span class="text-[10px] text-gray-500">Good / Processed</span>
+                    </div>
+                </div>
+
+                <!-- OEE Indicator -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between glow-cyan">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-cyan-300 font-medium">Est. OEE</span>
+                        <i class="fa-solid fa-microchip text-cyan-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-oee" class="text-lg font-bold font-mono text-cyan-300">0%</h3>
+                        <span class="text-[10px] text-gray-500">Avail × Perf × Qual</span>
+                    </div>
+                </div>
+
+                <!-- Run Rate -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-indigo-300 font-medium">Pace (Pcs/Hr)</span>
+                        <i class="fa-solid fa-stopwatch text-indigo-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-run-rate" class="text-lg font-bold font-mono text-indigo-300">0</h3>
+                        <span class="text-[10px] text-gray-500">Avg Output/Hour</span>
+                    </div>
+                </div>
+
+                <!-- Active Lines -->
+                <div class="bg-dark-800 border border-dark-700 p-3 rounded-xl shadow flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] text-purple-400 font-medium">Active Lines</span>
+                        <i class="fa-solid fa-network-wired text-purple-400 text-xs"></i>
+                    </div>
+                    <div class="mt-2">
+                        <h3 id="kpi-active-lines" class="text-lg font-bold font-mono text-purple-400">0 / 18</h3>
+                        <span class="text-[10px] text-gray-500">Connected Lines</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section 1: Hourly Distribution & Quality Mix -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg lg:col-span-2 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold text-white flex items-center">
+                            <i class="fa-solid fa-chart-column text-blue-500 mr-2"></i> Production by Time Slot (OK, NG, REPAIR)
+                        </h2>
+                        <span id="timeslot-chart-desc" class="text-xs text-gray-400">All Connected Lines</span>
+                    </div>
+                    <div class="relative flex-1 min-h-[300px]">
+                        <canvas id="chartTimeSlot"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold text-white flex items-center">
+                            <i class="fa-solid fa-chart-pie text-emerald-500 mr-2"></i> Quality Proportion
+                        </h2>
+                    </div>
+                    <div class="relative flex-1 min-h-[300px] flex items-center justify-center">
+                        <canvas id="chartQualityMix"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section 2: Output vs Target & Cumulative -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold text-white flex items-center">
+                            <i class="fa-solid fa-chart-line text-amber-500 mr-2"></i> Actual Output (GOOD) vs Target Pace
+                        </h2>
+                    </div>
+                    <div class="relative flex-1 min-h-[260px]">
+                        <canvas id="chartOutputVsTarget"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold text-white flex items-center">
+                            <i class="fa-solid fa-arrow-trend-up text-blue-400 mr-2"></i> Cumulative Output Trend (Good + NG)
+                        </h2>
+                    </div>
+                    <div class="relative flex-1 min-h-[260px]">
+                        <canvas id="chartCumulative"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest Transactions Table -->
+            <div class="bg-dark-800 border border-dark-700 rounded-xl shadow-lg overflow-hidden">
+                <div class="px-4 py-3 bg-dark-700/60 border-b border-dark-700 flex justify-between items-center flex-wrap gap-2">
+                    <h2 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-list-check text-blue-400 mr-2"></i> Latest Production Transactions
+                    </h2>
+                    <span id="transaction-count-label" class="text-xs text-gray-400 font-mono">0 records</span>
+                </div>
+                <div class="overflow-x-auto max-h-[360px]">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-dark-900 text-gray-400 uppercase font-semibold sticky top-0 border-b border-dark-700 z-10">
+                            <tr>
+                                <th class="p-3">Date Time</th>
+                                <th class="p-3">Line</th>
+                                <th class="p-3">FO</th>
+                                <th class="p-3">Style</th>
+                                <th class="p-3">Color</th>
+                                <th class="p-3">Time Slot</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3 text-right">Qty</th>
+                                <th class="p-3">Defect / Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody id="latest-transactions-tbody" class="divide-y divide-dark-700 text-gray-300 font-mono">
+                            <tr><td colspan="9" class="p-6 text-center text-gray-500">No data loaded. Load Demo Data or select Excel files.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: SUMMARY & LINES -->
+        <div id="view-summary" class="space-y-6 hidden">
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-chart-bar text-emerald-400 mr-2"></i> Output Comparison Across All Lines (LINE01 – LINE18)
+                    </h2>
+                </div>
+                <div class="relative min-h-[320px]">
+                    <canvas id="chartLineComparison"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-gauge text-blue-400 mr-2"></i> Quality Efficiency Rate (%) by Line
+                    </h2>
+                </div>
+                <div class="relative min-h-[260px]">
+                    <canvas id="chartLineEfficiency"></canvas>
+                </div>
+            </div>
+
+            <!-- Management Summary Matrix -->
+            <div class="bg-dark-800 border border-dark-700 rounded-xl shadow-lg overflow-hidden">
+                <div class="px-4 py-3 bg-dark-700/60 border-b border-dark-700 flex justify-between items-center">
+                    <h2 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-table-cells text-amber-400 mr-2"></i> Management Matrix Summary (LINE01 – LINE18)
+                    </h2>
+                    <span class="text-xs text-gray-400">Standardized Factory KPIs</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-dark-900 text-gray-400 uppercase font-semibold border-b border-dark-700">
+                            <tr>
+                                <th class="p-3">Line</th>
+                                <th class="p-3 text-right">OK</th>
+                                <th class="p-3 text-right">NG</th>
+                                <th class="p-3 text-right">Repair</th>
+                                <th class="p-3 text-right">Output</th>
+                                <th class="p-3 text-right">Current EFF</th>
+                                <th class="p-3 text-right">FPY</th>
+                                <th class="p-3 text-right">Defect</th>
+                                <th class="p-3 text-right">Target</th>
+                                <th class="p-3 text-right">Gap</th>
+                                <th class="p-3 text-center">Achievement</th>
+                            </tr>
+                        </thead>
+                        <tbody id="management-summary-tbody" class="divide-y divide-dark-700 text-gray-300 font-mono">
+                            <tr><td colspan="11" class="p-6 text-center text-gray-500">No data available.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: PARETO DEFECT BREAKDOWN -->
+        <div id="view-pareto" class="space-y-6 hidden">
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center">
+                        <i class="fa-solid fa-chart-area text-red-400 mr-2"></i> Defect Pareto Analysis (80/20 QA Rule)
+                    </h2>
+                    <p class="text-xs text-gray-400">Root Cause Quality Action: Prioritizing critical defect root causes</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg lg:col-span-2">
+                    <h3 class="text-sm font-bold text-white mb-2">Pareto Chart: Defect Frequency & Cumulative Percentage</h3>
+                    <div class="relative min-h-[350px]">
+                        <canvas id="chartPareto"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white mb-3">Top Defect Root Causes</h3>
+                        <div id="pareto-top-reasons" class="space-y-3 text-xs">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-dark-900 border border-dark-700 rounded-lg text-xs text-gray-400">
+                        <strong class="text-amber-400"><i class="fa-solid fa-lightbulb mr-1"></i> QA Recommendation:</strong>
+                        <p class="mt-1">Targeting the top 2 defect root causes will eliminate over 60-80% of total factory defects immediately.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: INDUSTRIAL & ANDON -->
+        <div id="view-industrial" class="space-y-6 hidden">
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center">
+                        <i class="fa-solid fa-industry text-blue-500 mr-2"></i> Industrial Performance & Andon Control Center
+                    </h2>
+                    <p class="text-xs text-gray-400">Real-time status tracking, target settings, FO progress, and automated Andon alerts.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="app.openTargetModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-bullseye"></i><span>Configure Line Targets</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Industrial Table -->
+            <div class="bg-dark-800 border border-dark-700 rounded-xl shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-dark-900 text-gray-400 uppercase font-semibold border-b border-dark-700">
+                            <tr>
+                                <th class="p-3">Line</th>
+                                <th class="p-3 text-right">Target</th>
+                                <th class="p-3 text-right">Actual Good</th>
+                                <th class="p-3 text-center">Achievement</th>
+                                <th class="p-3 text-right">Gap</th>
+                                <th class="p-3">FO Progress</th>
+                                <th class="p-3 text-center">Andon Status</th>
+                                <th class="p-3">Alerts / Reason</th>
+                                <th class="p-3 text-right">Downtime (Min)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="industrial-tbody" class="divide-y divide-dark-700 text-gray-300 font-mono">
+                            <tr><td colspan="9" class="p-6 text-center text-gray-500">No data available.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 5: DATA HEALTH -->
+        <div id="view-health" class="space-y-6 hidden">
+            <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow-lg flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center">
+                        <i class="fa-solid fa-shield-halved text-emerald-500 mr-2"></i> Data Health & Integrity Audit Center
+                    </h2>
+                    <p class="text-xs text-gray-400">Data integrity validation (Qty, Type, Date, Line consistency, Duplicates, and Missing FO)</p>
+                </div>
+                <button onclick="app.runDataHealthAudit()" class="px-3.5 py-2 bg-dark-700 hover:bg-dark-600 text-gray-200 border border-dark-600 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-2">
+                    <i class="fa-solid fa-stethoscope text-emerald-400"></i><span>Run Audit Now</span>
+                </button>
+            </div>
+
+            <!-- Health KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow">
+                    <span class="text-xs text-gray-400 font-medium">Total Audited Records</span>
+                    <h3 id="health-records" class="text-2xl font-bold font-mono text-white mt-1">0</h3>
+                </div>
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow">
+                    <span class="text-xs text-red-400 font-medium">Invalid Records</span>
+                    <h3 id="health-invalid" class="text-2xl font-bold font-mono text-red-400 mt-1">0</h3>
+                </div>
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow">
+                    <span class="text-xs text-amber-400 font-medium">Duplicate Signatures</span>
+                    <h3 id="health-duplicates" class="text-2xl font-bold font-mono text-amber-400 mt-1">0</h3>
+                </div>
+                <div class="bg-dark-800 border border-dark-700 p-4 rounded-xl shadow">
+                    <span class="text-xs text-blue-400 font-medium">Missing FO Records</span>
+                    <h3 id="health-missing-fo" class="text-2xl font-bold font-mono text-blue-400 mt-1">0</h3>
+                </div>
+            </div>
+
+            <!-- Audit Log Table -->
+            <div class="bg-dark-800 border border-dark-700 rounded-xl shadow-lg overflow-hidden">
+                <div class="px-4 py-3 bg-dark-700/60 border-b border-dark-700">
+                    <h3 class="text-sm font-bold text-white">Discrepancies & Anomalies Audit Log</h3>
+                </div>
+                <div class="overflow-x-auto max-h-[400px]">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-dark-900 text-gray-400 uppercase font-semibold sticky top-0 border-b border-dark-700">
+                            <tr>
+                                <th class="p-3">Line</th>
+                                <th class="p-3">Row Index</th>
+                                <th class="p-3">Issue Type</th>
+                                <th class="p-3">Description</th>
+                                <th class="p-3">Raw Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="health-log-tbody" class="divide-y divide-dark-700 text-gray-300 font-mono">
+                            <tr><td colspan="5" class="p-6 text-center text-gray-500">No anomalies detected or audit not run.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL: Manage Line Files (LINE01-LINE18) -->
+    <div id="modal-files" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="bg-dark-800 border border-dark-700 w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 bg-dark-700/80 border-b border-dark-700 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-folder-tree text-blue-400 text-lg"></i>
+                    <h2 class="text-base font-bold text-white">Line Files Manager (LINE01 – LINE18)</h2>
+                </div>
+                <button onclick="app.closeFilesModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-dark-900 p-3 rounded-xl border border-dark-700 text-xs">
+                    <div>
+                        <p class="text-gray-300 font-semibold"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> รองรับการอัปโหลดทั้งแบบทีละไฟล์ หรืออัปโหลดเป็นชุด (Batch Upload)</p>
+                        <p class="text-gray-400 text-[11px] mt-0.5">
+                            ระบบจะตรวจสอบชื่อไฟล์ เช่น <code>DATA_LINE01.xlsx</code> หรืออ่านคอลัมน์ <code>Line / สาย</code> ในไฟล์เพื่อระบุสายการผลิตโดยอัตโนมัติ
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition cursor-pointer flex items-center">
+                            <i class="fa-solid fa-upload mr-1.5"></i> Batch Multi-File Upload
+                            <input type="file" multiple accept=".xlsx, .xls, .csv" onchange="app.handleBatchUpload(event)" class="hidden">
+                        </label>
+                        <button onclick="app.clearAllFiles()" class="px-3 py-1.5 bg-red-900/60 hover:bg-red-900 text-red-200 rounded-lg font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> Clear All</button>
+                    </div>
+                </div>
+
+                <!-- 18 Lines Grid -->
+                <div id="line-files-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Dynamically generated -->
+                </div>
+            </div>
+
+            <div class="px-6 py-3 bg-dark-900 border-t border-dark-700 flex justify-end">
+                <button onclick="app.closeFilesModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Configure Targets -->
+    <div id="modal-target" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="bg-dark-800 border border-dark-700 w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 bg-dark-700/80 border-b border-dark-700 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-bullseye text-blue-400 text-lg"></i>
+                    <h2 class="text-base font-bold text-white">Configure Target & FO Target (Per Line)</h2>
+                </div>
+                <button onclick="app.closeTargetModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <p class="text-xs text-gray-400">กำหนดเป้าหมายกะ (Shift Target) และเป้าหมายรวมของใบสั่งผลิต (FO Target) ของแต่ละสาย</p>
+                <div id="target-inputs-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Dynamic inputs -->
+                </div>
+            </div>
+
+            <div class="px-6 py-3 bg-dark-900 border-t border-dark-700 flex justify-end space-x-2">
+                <button onclick="app.closeTargetModal()" class="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-gray-300 text-xs font-semibold rounded-lg transition">Cancel</button>
+                <button onclick="app.saveTargets()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition">Save Targets</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Management Email Report -->
+    <div id="modal-email" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="bg-dark-800 border border-dark-700 w-full max-w-3xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 bg-dark-700/80 border-b border-dark-700 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-envelope text-blue-400 text-lg"></i>
+                    <h2 class="text-base font-bold text-white">Management Email Summary Report</h2>
+                </div>
+                <button onclick="app.closeEmailModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Executive report ready to send to leadership team.</span>
+                    <div class="space-x-2">
+                        <button onclick="app.copyEmailText()" class="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-gray-200 text-xs rounded-lg font-semibold transition"><i class="fa-solid fa-copy mr-1"></i> Copy Text</button>
+                        <button onclick="app.downloadEmailText()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-lg font-semibold transition"><i class="fa-solid fa-download mr-1"></i> Download .txt</button>
+                    </div>
+                </div>
+                <textarea id="email-textarea" readonly class="w-full h-80 bg-dark-900 border border-dark-700 rounded-xl p-4 text-xs font-mono text-gray-300 outline-none resize-none"></textarea>
+            </div>
+
+            <div class="px-6 py-3 bg-dark-900 border-t border-dark-700 flex justify-end">
+                <button onclick="app.closeEmailModal()" class="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white text-xs font-semibold rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Executive AI Assistant -->
+    <div id="modal-ai" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="bg-dark-800 border border-dark-700 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 bg-dark-700/80 border-b border-dark-700 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-lg"></i>
+                    <h2 class="text-base font-bold text-white">Executive AI Intelligence Center</h2>
+                </div>
+                <button onclick="app.closeAiModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center">
+                        <i class="fa-solid fa-robot mr-1.5"></i> Instant Local Production Intelligence
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="app.runLocalAiQuery('summary')" class="px-3 py-1.5 bg-dark-900 hover:bg-dark-700 border border-dark-700 text-gray-300 text-xs rounded-lg transition">Summary All Lines</button>
+                        <button onclick="app.runLocalAiQuery('max_ng')" class="px-3 py-1.5 bg-dark-900 hover:bg-dark-700 border border-dark-700 text-gray-300 text-xs rounded-lg transition">Max NG Line Analysis</button>
+                        <button onclick="app.runLocalAiQuery('max_repair')" class="px-3 py-1.5 bg-dark-900 hover:bg-dark-700 border border-dark-700 text-gray-300 text-xs rounded-lg transition">Max Repair Line</button>
+                        <button onclick="app.runLocalAiQuery('pareto_analysis')" class="px-3 py-1.5 bg-dark-900 hover:bg-dark-700 border border-dark-700 text-gray-300 text-xs rounded-lg transition">Pareto 80/20 Insights</button>
+                        <button onclick="app.runLocalAiQuery('action_points')" class="px-3 py-1.5 bg-dark-900 hover:bg-dark-700 border border-dark-700 text-gray-300 text-xs rounded-lg transition">Action Points</button>
+                    </div>
+                    <div id="local-ai-response" class="bg-dark-900 border border-dark-700 p-4 rounded-xl text-xs font-mono text-gray-300 min-h-[110px] max-h-[220px] overflow-y-auto">
+                        Click any quick query above for instant local intelligence analysis.
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-4 border-t border-dark-700">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center">
+                        <i class="fa-solid fa-cloud mr-1.5"></i> External AI Prompt Generator (ChatGPT / Gemini / Claude)
+                    </h3>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-400 font-semibold">Structured Factory Context:</span>
+                        <button onclick="app.copyExternalAiPrompt()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-lg font-semibold transition"><i class="fa-solid fa-copy mr-1"></i> Copy Prompt & Data</button>
+                    </div>
+                    <textarea id="external-ai-textarea" readonly class="w-full h-48 bg-dark-900 border border-dark-700 rounded-xl p-4 text-xs font-mono text-gray-300 outline-none resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 bg-dark-900 border-t border-dark-700 flex justify-end">
+                <button onclick="app.closeAiModal()" class="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white text-xs font-semibold rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        const APP_VERSION = "1.2.1";
+
+        /* ---- Safety shim: กันเคส CDN โหลดไม่ขึ้น (โรงงานเน็ตหลุด/เปิดแบบออฟไลน์) ---- */
+        if (typeof window.ChartDataLabels === 'undefined') {
+            window.ChartDataLabels = { id: 'datalabels-unavailable' };
+        }
+
+        class ProductionDashboard {
+            constructor() {
+                this.version = APP_VERSION;
+                this.lines = Array.from({length: 18}, (_, i) => `LINE${String(i+1).padStart(2, '0')}`);
+                this.lineData = {}; 
+                this.fileHandles = {};
+                this.targets = {};
+                this.charts = {};
+                this.isStandalone = false;
+                
+                // Auto-Refresh state (5 mins)
+                this.autoRefreshTimer = null;
+                this.isRefreshing = false;
+
+                // TV Auto-Cycle state
+                this.tvCycleTimer = null;
+                this.tvCycleIndex = 0;
+                this.tabOrder = ['dashboard', 'summary', 'pareto', 'industrial', 'health'];
+
+                // Render caches (ลดการวนข้อมูลซ้ำ ๆ เวลาข้อมูลเยอะ)
+                this._byLine = {};
+                this._aggCache = {};
+                this._depWarned = false;
+
+                this.initTargets();
+            }
+
+            toggleAutoRefresh() {
+                const icon = this.el('icon-auto-refresh');
+                const badge = this.el('auto-refresh-badge');
+
+                if (this.autoRefreshTimer) {
+                    clearInterval(this.autoRefreshTimer);
+                    this.autoRefreshTimer = null;
+                    if (icon) icon.className = 'fa-solid fa-rotate text-gray-400';
+                    if (badge) badge.classList.add('hidden');
+                    this.showNotification('ปิดการอัปเดตข้อมูลอัตโนมัติ (Auto-Refresh) เรียบร้อยแล้ว', 'info');
+                } else {
+                    if (badge) badge.classList.remove('hidden');
+                    if (icon) icon.className = 'fa-solid fa-rotate fa-spin text-emerald-400';
+                    this.showNotification('เปิดการอัปเดตข้อมูลอัตโนมัติทุก 5 นาที (Auto-Refresh 5m ON)', 'success');
+
+                    // 5 minutes = 300,000 milliseconds
+                    this.autoRefreshTimer = setInterval(() => {
+                        this.refreshAllConnectedLines();
+                    }, 300000);
+                }
+            }
+
+            toggleTvCycle() {
+                const icon = this.el('icon-tv-cycle');
+                const badge = this.el('tv-cycle-badge');
+
+                if (this.tvCycleTimer) {
+                    clearInterval(this.tvCycleTimer);
+                    this.tvCycleTimer = null;
+                    if (icon) icon.className = 'fa-solid fa-play text-amber-400';
+                    if (badge) badge.classList.add('hidden');
+                    this.showNotification('ปิดโหมดสลับหน้าจออัตโนมัติ (TV Cycle) แล้ว', 'info');
+                } else {                    if (icon) icon.className = 'fa-solid fa-pause text-emerald-400';
+                    if (badge) badge.classList.remove('hidden');
+                    this.tvCycleTimer = setInterval(() => {
+                        this.tvCycleIndex = (this.tvCycleIndex + 1) % this.tabOrder.length;
+                        this.switchTab(this.tabOrder[this.tvCycleIndex]);
+                    }, 15000);
+                    this.showNotification('เปิดโหมดสลับหน้าจออัตโนมัติทุก 15 วินาที (TV Cycle)', 'success');
+                }
+            }
+
+            async refreshAllConnectedLines() {
+                if (this.isRefreshing) return; // กันรอบก่อนหน้ายังไม่เสร็จแล้วชนกัน
+                const lines = Object.keys(this.fileHandles).filter(l => this.fileHandles[l]);
+
+                if (lines.length === 0) {
+                    if (Object.keys(this.lineData).length > 0) {
+                        this.updateAllViews();
+                        this.showNotification('[Auto-Refresh] รีเฟรชหน้าจอแดชบอร์ดเรียบร้อยแล้ว', 'info');
+                    }
+                    return;
+                }
+
+                this.isRefreshing = true;
+                let ok = 0, fail = 0;
+                try {
+                    for (const line of lines) {
+                        const result = await this.loadFileIntoLine(this.fileHandles[line], line, { silent: true, render: false });
+                        if (result.ok) ok++; else fail++;
+                    }
+                    this.renderFilesCount();
+                    this.populateFilterDropdowns();
+                    this.updateAllViews();
+                } finally {
+                    this.isRefreshing = false;
+                }
+
+                if (fail > 0) {
+                    this.showNotification(`[Auto-Refresh] อัปเดตสำเร็จ ${ok} สาย / อ่านไม่ได้ ${fail} สาย (ไฟล์อาจถูกย้ายหรือเปลี่ยนชื่อ)`, 'warning');
+                } else {
+                    this.showNotification(`[Auto-Refresh] อัปเดตข้อมูลอัตโนมัติสำเร็จ (${ok} สายการผลิต)`, 'info');
+                }
+            }
+
+            // Custom Plugin for leader lines & callout badges on stacked charts
+            getStackedLeaderLinesPlugin() {
+                return {
+                    id: 'stackedLeaderLines',
+                    afterDatasetsDraw(chart) {
+                        const datasets = chart.data.datasets;
+                        if (datasets.length < 3) return;
+
+                        const goodMeta = chart.getDatasetMeta(0);
+                        const ngMeta = chart.getDatasetMeta(1);
+                        const repMeta = chart.getDatasetMeta(2);
+
+                        if (!goodMeta || !ngMeta || !repMeta || goodMeta.hidden || ngMeta.hidden || repMeta.hidden) return;
+
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        const len = datasets[0].data.length;
+
+                        for (let i = 0; i < len; i++) {
+                            const repEl = repMeta.data[i];
+                            if (!repEl) continue;
+
+                            const ngVal = datasets[1].data[i] || 0;
+                            const repVal = datasets[2].data[i] || 0;
+                            if (ngVal <= 0 && repVal <= 0) continue;
+
+                            const x = repEl.x;
+                            const barTopY = repEl.y;
+
+                            ctx.beginPath();
+                            ctx.strokeStyle = '#374151';
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(x, barTopY);
+
+                            let currentY = barTopY - 4;
+
+                            if (ngVal > 0) {
+                                currentY -= 7;
+                                const text = ngVal.toLocaleString();
+                                ctx.font = 'bold 10px JetBrains Mono, Inter, sans-serif';
+                                const tw = ctx.measureText(text).width;
+                                const bw = tw + 8;
+                                const bh = 15;
+                                const bx = x - bw / 2;
+                                const by = currentY - bh / 2;
+
+                                ctx.lineTo(x, currentY + bh / 2);
+                                ctx.stroke();
+
+                                ctx.fillStyle = 'rgba(11, 15, 25, 0.95)';
+                                ctx.strokeStyle = '#ef4444';
+                                ctx.lineWidth = 1.2;
+                                ctx.beginPath();
+                                ctx.roundRect(bx, by, bw, bh, 3);
+                                ctx.fill();
+                                ctx.stroke();
+
+                                ctx.fillStyle = '#f87171';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(text, x, currentY);
+
+                                currentY -= 9;
+                            }
+
+                            if (repVal > 0) {
+                                currentY -= 7;
+                                const text = repVal.toLocaleString();
+                                ctx.font = 'bold 10px JetBrains Mono, Inter, sans-serif';
+                                const tw = ctx.measureText(text).width;
+                                const bw = tw + 8;
+                                const bh = 15;
+                                const bx = x - bw / 2;
+                                const by = currentY - bh / 2;
+
+                                ctx.fillStyle = 'rgba(11, 15, 25, 0.95)';
+                                ctx.strokeStyle = '#f59e0b';
+                                ctx.lineWidth = 1.2;
+                                ctx.beginPath();
+                                ctx.roundRect(bx, by, bw, bh, 3);
+                                ctx.fill();
+                                ctx.stroke();
+
+                                ctx.fillStyle = '#fbbf24';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(text, x, currentY);
+                            }
+                        }
+                        ctx.restore();
+                    }
+                };
+            }
+
+            init() {
+                this.renderLineFilesModalGrid();
+                this.renderTargetModalGrid();
+                this.setupDates();
+
+                if (window.EMBEDDED_STANDALONE_DATA) {
+                    this.isStandalone = true;
+                    const embedded = window.EMBEDDED_STANDALONE_DATA;
+                    // ยอมรับเฉพาะโครงสร้างที่ถูกต้อง กันไฟล์ที่ถูกแก้มือแล้วทำหน้าจอพังทั้งหน้า
+                    if (embedded && typeof embedded === 'object') {
+                        this.lineData = {};
+                        Object.keys(embedded).forEach(k => {
+                            if (Array.isArray(embedded[k])) this.lineData[k] = embedded[k];
+                        });
+                    }
+                    const badge = this.el('standalone-badge');
+                    if (badge) badge.classList.remove('hidden');
+                    const btnManage = this.el('btn-manage-files');
+                    if (btnManage) btnManage.classList.add('hidden');
+                }
+
+                // ต้องทำ "หลัง" โหลดข้อมูลฝัง ไม่งั้นตัวกรอง FO/Style/Color จะว่างเปล่าในโหมด Standalone
+                this.renderFilesCount();
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+
+                this.bindGlobalEvents();
+                if (!this.depsReady()) this.warnDeps();
+            }
+
+            bindGlobalEvents() {
+                // ปิด modal ด้วย Esc และออกจากโหมดสลับจอด้วยการกด Esc ซ้ำ
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (this.closeTopModal()) return;
+                        if (this.tvCycleTimer) this.toggleTvCycle();
+                    }
+                });
+
+                // คลิกพื้นหลังนอก modal เพื่อปิด
+                ['modal-files', 'modal-target', 'modal-email', 'modal-ai'].forEach(id => {
+                    const m = this.el(id);
+                    if (m) m.addEventListener('click', (e) => { if (e.target === m) m.classList.add('hidden'); });
+                });
+
+                // หน้าต่างเปลี่ยนขนาด/ออกจาก fullscreen -> ปรับกราฟให้พอดี
+                let resizeTimer = null;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => this.resizeCharts(), 150);
+                });
+
+                // ปิดหน้าจอ -> เก็บกวาด timer ไม่ให้ค้างกินทรัพยากร
+                window.addEventListener('beforeunload', () => this.cleanupTimers());
+            }
+
+            initTargets() {
+                try {
+                    const saved = localStorage.getItem('exec_dash_targets_v2');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed && typeof parsed === 'object') this.targets = parsed;
+                    }
+                } catch (e) {
+                    // localStorage ปิดอยู่ (โหมดส่วนตัว / เปิดจากไฟล์ตรง ๆ) -> ใช้ค่าเริ่มต้นแทน
+                    console.warn('[Targets] อ่านค่าที่บันทึกไว้ไม่ได้:', e);
+                    this.targets = {};
+                }
+                this.lines.forEach(line => {
+                    const t = this.targets[line];
+                    const okTarget = t && isFinite(parseFloat(t.target)) && parseFloat(t.target) > 0;
+                    const okFo = t && isFinite(parseFloat(t.foTarget)) && parseFloat(t.foTarget) > 0;
+                    this.targets[line] = {
+                        target: okTarget ? parseFloat(t.target) : 1200,
+                        foTarget: okFo ? parseFloat(t.foTarget) : 6000
+                    };
+                });
+            }
+
+            saveTargets() {
+                this.lines.forEach(line => {
+                    const tInput = document.getElementById(`target-${line}`);
+                    const foInput = document.getElementById(`fotarget-${line}`);
+                    if (tInput && foInput) {
+                        this.targets[line] = {
+                            target: parseFloat(tInput.value) || 1000,
+                            foTarget: parseFloat(foInput.value) || 5000
+                        };
+                    }
+                });
+                let stored = true;
+                try {
+                    localStorage.setItem('exec_dash_targets_v2', JSON.stringify(this.targets));
+                } catch (e) {
+                    stored = false;
+                    console.warn('[Targets] บันทึกลงเครื่องไม่ได้:', e);
+                }
+                this.closeTargetModal();
+                this.updateAllViews();
+                this.showNotification(
+                    stored ? 'บันทึกเป้าหมายการผลิตเรียบร้อยแล้ว'
+                           : 'ใช้เป้าหมายใหม่แล้ว แต่บันทึกลงเครื่องไม่ได้ (เบราว์เซอร์ปิด Storage อยู่)',
+                    stored ? 'success' : 'warning');
+            }
+
+            setupDates() {
+                // ใช้เวลาท้องถิ่น ไม่ใช่ UTC ไม่งั้นช่วงเช้ามืดที่ไทยจะกรองข้อมูลของ "วันนี้" หายไปทั้งวัน
+                const today = this.toLocalISO(new Date());
+                const thirtyDaysAgo = this.toLocalISO(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+                this.setValue('filter-date-from', thirtyDaysAgo);
+                this.setValue('filter-date-to', today);
+            }
+
+            /* ============================================================
+               UTILITIES (เพิ่มใหม่ v1.2.1) - ความปลอดภัย/ความเสถียร
+               ============================================================ */
+
+            esc(v) {
+                if (v === null || v === undefined) return '';
+                return String(v).replace(/[&<>"']/g, c => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                }[c]));
+            }
+
+            el(id) { return document.getElementById(id); }
+
+            setText(id, value) {
+                const node = this.el(id);
+                if (node) node.textContent = value;
+            }
+
+            setValue(id, value) {
+                const node = this.el(id);
+                if (node) node.value = value;
+            }
+
+            getValue(id) {
+                const node = this.el(id);
+                return node ? node.value : '';
+            }
+
+            pad2(n) { return String(n).padStart(2, '0'); }
+
+            toLocalISO(d) {
+                if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+                return `${d.getFullYear()}-${this.pad2(d.getMonth() + 1)}-${this.pad2(d.getDate())}`;
+            }
+
+            // แปลงวันที่จาก Excel ได้ทุกแบบ: Date object / serial number / ข้อความหลายรูปแบบ / พ.ศ.
+            normalizeDate(value) {
+                if (value === null || value === undefined || value === '') return '';
+
+                if (value instanceof Date) return this.toLocalISO(value);
+
+                if (typeof value === 'number' && isFinite(value)) {
+                    if (value > 20 && value < 80000) {
+                        const utcMs = Math.round((value - 25569) * 86400000);
+                        const d = new Date(utcMs);
+                        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+                    }
+                    return '';
+                }
+
+                const s = String(value).trim();
+                if (!s) return '';
+
+                let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+                if (m) return this.ceDate(+m[1], +m[2], +m[3]);
+
+                m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+                if (m) {
+                    let a = +m[1], b = +m[2];
+                    // 13/09/2026 -> วัน/เดือน ; 09/13/2026 -> เดือน/วัน
+                    if (a > 12 && b <= 12) return this.ceDate(+m[3], b, a);
+                    if (b > 12 && a <= 12) return this.ceDate(+m[3], a, b);
+                    return this.ceDate(+m[3], b, a); // ค่าเริ่มต้นแบบไทย วัน/เดือน/ปี
+                }
+
+                const parsed = new Date(s);
+                if (!isNaN(parsed.getTime())) return this.toLocalISO(parsed);
+                return '';
+            }
+
+            ceDate(year, month, day) {
+                let y = year;
+                if (y > 2400) y -= 543; // รองรับปี พ.ศ. ที่พิมพ์มาในไฟล์
+                if (!month || !day || month > 12 || day > 31) return '';
+                return `${y}-${this.pad2(month)}-${this.pad2(day)}`;
+            }
+
+            // ช่องเวลา: รับได้ทั้ง "08:00-09:00", Date ของ Excel, หรือเศษส่วนของวัน
+            normalizeSlot(value) {
+                if (value === null || value === undefined || value === '') return '';
+                if (value instanceof Date && !isNaN(value.getTime())) {
+                    const h = value.getHours();
+                    return `${this.pad2(h)}:00-${this.pad2((h + 1) % 24)}:00`;
+                }
+                if (typeof value === 'number' && isFinite(value) && value >= 0 && value < 1) {
+                    const h = Math.floor(value * 24);
+                    return `${this.pad2(h)}:00-${this.pad2((h + 1) % 24)}:00`;
+                }
+                return String(value).trim();
+            }
+
+            toNumber(value) {
+                if (typeof value === 'number') return isFinite(value) ? value : 0;
+                if (value === null || value === undefined) return 0;
+                // รองรับ "1,200" และ " 1 200 "
+                const n = parseFloat(String(value).replace(/[,\s]/g, ''));
+                return isFinite(n) ? n : 0;
+            }
+
+            groupByLine(records) {
+                const map = {};
+                this.lines.forEach(l => { map[l] = []; });
+                for (let i = 0; i < records.length; i++) {
+                    const l = records[i]['Line'];
+                    if (!map[l]) map[l] = [];
+                    map[l].push(records[i]);
+                }
+                this._aggCache = {};
+                return map;
+            }
+
+            recsFor(line) { return (this._byLine && this._byLine[line]) || []; }
+
+            aggFor(line) {
+                if (!this._aggCache) this._aggCache = {};
+                if (!this._aggCache[line]) this._aggCache[line] = this.aggregateRecords(this.recsFor(line));
+                return this._aggCache[line];
+            }
+
+            // รันงานวาดหน้าจอแบบแยกส่วน ถ้าส่วนใดพัง ส่วนที่เหลือยังทำงานต่อได้
+            safeRun(label, fn) {
+                try {
+                    fn();
+                } catch (err) {
+                    console.error(`[Render:${label}]`, err);
+                    this.reportError(`วาดส่วน "${label}" ไม่สำเร็จ`, err);
+                }
+            }
+
+            reportError(message, err) {
+                const box = this.el('runtime-error-bar');
+                const txt = this.el('runtime-error-text');
+                if (box && txt) {
+                    txt.textContent = `${message}${err && err.message ? ' — ' + err.message : ''}`;
+                    box.classList.remove('hidden');
+                }
+            }
+
+            dismissError() {
+                const box = this.el('runtime-error-bar');
+                if (box) box.classList.add('hidden');
+            }
+
+            depsReady() {
+                return typeof Chart !== 'undefined';
+            }
+
+            warnDeps() {
+                if (this._depWarned) return;
+                this._depWarned = true;
+                this.reportError('โหลดไลบรารีกราฟ (Chart.js) ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ต แล้วกดรีเฟรชหน้าอีกครั้ง ตัวเลขและตารางยังใช้งานได้ปกติ');
+            }
+
+            // สร้างกราฟแบบปลอดภัย: เช็ก canvas, ทำลายกราฟเดิม, กันพังทั้งหน้า
+            makeChart(key, canvasId, config) {
+                if (this.charts[key]) {
+                    try { this.charts[key].destroy(); } catch (e) { /* ignore */ }
+                    this.charts[key] = null;
+                }
+                const node = this.el(canvasId);
+                if (!node) return null;
+                if (!this.depsReady()) { this.warnDeps(); return null; }
+                try {
+                    this.charts[key] = new Chart(node.getContext('2d'), config);
+                } catch (err) {
+                    console.error(`[Chart:${key}]`, err);
+                    this.charts[key] = null;
+                }
+                return this.charts[key];
+            }
+
+            destroyAllCharts() {
+                Object.keys(this.charts).forEach(k => {
+                    if (this.charts[k]) {
+                        try { this.charts[k].destroy(); } catch (e) { /* ignore */ }
+                        this.charts[k] = null;
+                    }
+                });
+            }
+
+            resizeCharts() {
+                Object.keys(this.charts).forEach(k => {
+                    const c = this.charts[k];
+                    if (c && typeof c.resize === 'function') {
+                        try { c.resize(); } catch (e) { /* ignore */ }
+                    }
+                });
+            }
+
+            async copyToClipboard(text) {
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                        return true;
+                    }
+                } catch (e) { /* ตกไปใช้วิธีสำรอง */ }
+                try {
+                    const tmp = document.createElement('textarea');
+                    tmp.value = text;
+                    tmp.style.position = 'fixed';
+                    tmp.style.opacity = '0';
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    const ok = document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    return ok;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            downloadBlob(blob, filename) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url); // กันหน่วยความจำรั่วเวลากดส่งออกซ้ำ ๆ ทั้งวัน
+                }, 1500);
+            }
+
+            cleanupTimers() {
+                if (this.autoRefreshTimer) { clearInterval(this.autoRefreshTimer); this.autoRefreshTimer = null; }
+                if (this.tvCycleTimer) { clearInterval(this.tvCycleTimer); this.tvCycleTimer = null; }
+            }
+
+            loadDemoData() {
+                this.lineData = {};
+                const styles = ['ST-POLO-01', 'ST-SHIRT-02', 'ST-PANT-03', 'ST-JACKET-04', 'ST-HOODIE-05'];
+                const colors = ['NAVY', 'BLACK', 'WHITE', 'MAROON', 'GREY', 'KHAKI'];
+                const timeSlots = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:30-18:30'];
+                const types = ['OK', 'GOOD', 'NG', 'REPAIR'];
+                const defectReasons = [
+                    'Stitch Tension Error / รอยเย็บตึงหย่อน',
+                    'Fabric Shading / สีผ้าเพี้ยน',
+                    'Broken Needle Mark / รอยเข็มหัก',
+                    'Measurement Out of Spec / ขนาดไม่ได้เกณฑ์',
+                    'Oil Stain / คราบน้ำมันเครื่อง',
+                    'Misaligned Button / กระดุมเบี้ยว',
+                    'Open Seam / ตะเข็บแตก'
+                ];
+
+                const today = new Date();
+
+                this.lines.forEach((line, lineIdx) => {
+                    const records = [];
+                    const fo = `FO-${2026}-${100 + lineIdx}`;
+                    const style = styles[lineIdx % styles.length];
+                    const color = colors[lineIdx % colors.length];
+
+                    for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
+                        const d = new Date(today.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+                        const dateStr = this.toLocalISO(d);
+
+                        timeSlots.forEach((slot) => {
+                            types.forEach(type => {
+                                let qty = 0;
+                                let defectReason = 'None';
+
+                                if (type === 'OK' || type === 'GOOD') {
+                                    qty = Math.floor(Math.random() * 80) + 120;
+                                } else if (type === 'NG') {
+                                    qty = Math.floor(Math.random() * 9) + 1;
+                                    defectReason = defectReasons[Math.floor(Math.random() * defectReasons.length)];
+                                } else {
+                                    qty = Math.floor(Math.random() * 12) + 2;
+                                    defectReason = defectReasons[Math.floor(Math.random() * 3)];
+                                }
+
+                                records.push({
+                                    'Date Time': `${dateStr} ${slot.split('-')[0]}:00`,
+                                    'Production Date': dateStr,
+                                    'Line': line,
+                                    'FO': fo,
+                                    'Style': style,
+                                    'Color': color,
+                                    'Time Slot': slot,
+                                    'Type': type,
+                                    'Qty': qty,
+                                    'Source': `Demo_${line}.xlsx`,
+                                    'Status': 'ACTIVE',
+                                    'Target': this.targets[line]?.target || 1200,
+                                    'FO Target': this.targets[line]?.foTarget || 6000,
+                                    'Downtime (min)': Math.floor(Math.random() * 8),
+                                    'Reason': defectReason
+                                });
+                            });
+                        });
+                    }
+                    this.lineData[line] = records;
+                });
+
+                this.fileHandles = {};
+                this.renderFilesCount();
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+                this.showNotification('โหลดชุดข้อมูลตัวอย่างทั้ง 18 สายการผลิตสำเร็จแล้ว', 'success');
+            }
+
+            getBilingualValue(row, ...keys) {
+                for (const key of keys) {
+                    if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
+                    const lowerKey = key.toLowerCase().trim();
+                    for (const rk of Object.keys(row)) {
+                        if (rk.toLowerCase().trim() === lowerKey && row[rk] !== undefined && row[rk] !== null && row[rk] !== '') {
+                            return row[rk];
+                        }
+                    }
+                }
+                return null;
+            }
+
+            extractLineIdentifier(str) {
+                if (!str) return null;
+                const clean = String(str).toUpperCase();
+                const match = clean.match(/LINE[\s_\-]?(\d{1,2})|\bL(\d{1,2})\b/);
+                if (match) {
+                    const num = parseInt(match[1] || match[2], 10);
+                    if (num >= 1 && num <= 18) {
+                        return `LINE${String(num).padStart(2, '0')}`;
+                    }
+                }
+                return null;
+            }
+
+            /* ---- ตัวอ่านไฟล์กลาง ใช้ร่วมกันทั้งอัปโหลดเดี่ยวและแบบชุด ---- */
+
+            readFileBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ (ไฟล์อาจถูกย้าย ลบ หรือไม่มีสิทธิ์เข้าถึง)'));
+                    reader.onabort = () => reject(new Error('การอ่านไฟล์ถูกยกเลิก'));
+                    try {
+                        reader.readAsArrayBuffer(file);
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            }
+
+            sheetToRows(buffer) {
+                if (typeof XLSX === 'undefined') {
+                    throw new Error('ไลบรารีอ่าน Excel (SheetJS) ยังโหลดไม่ขึ้น');
+                }
+                const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array', cellDates: true });
+                if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) return [];
+
+                const targetSheetKeywords = ['DATA_LOG', 'DATALOG', 'DATA', 'LOG', 'PRODUCTION', 'ข้อมูลการผลิต', 'บันทึก', 'รายการผลิต'];
+                let sheetName = workbook.SheetNames.find(s => {
+                    const upper = String(s).toUpperCase().trim();
+                    return targetSheetKeywords.some(k => upper.includes(k));
+                });
+                if (!sheetName) sheetName = workbook.SheetNames[0];
+
+                const worksheet = workbook.Sheets[sheetName];
+                if (!worksheet) return [];
+                return XLSX.utils.sheet_to_json(worksheet, { defval: '' }) || [];
+            }
+
+            mapRowsToRecords(rows, targetLine, sourceName) {
+                const out = [];
+                const fallbackDate = this.toLocalISO(new Date());
+
+                rows.forEach(row => {
+                    if (!row || typeof row !== 'object') return;
+
+                    const itemLineVal = this.getBilingualValue(row, 'Line', 'LINE', 'Production Line', 'สายการผลิต', 'สาย', 'ไลน์');
+                    const itemLine = this.extractLineIdentifier(itemLineVal) || targetLine;
+                    if (itemLine !== targetLine) return;
+
+                    const rawDateTime = this.getBilingualValue(row, 'Date Time', 'DateTime', 'Date_Time', 'วันเวลา', 'วันที่เวลา', 'เวลาที่บันทึก');
+                    const rawDate = this.getBilingualValue(row, 'Production Date', 'Date', 'ProdDate', 'วันที่ผลิต', 'วันที่');
+                    const rawFO = this.getBilingualValue(row, 'FO', 'Order', 'FO No', 'Order No', 'เลขที่ FO', 'ใบสั่งผลิต', 'เลขที่คำสั่ง') || 'FO-DEFAULT';
+                    const rawStyle = this.getBilingualValue(row, 'Style', 'Style No', 'Model', 'สไตล์', 'แบบ', 'รุ่น') || 'STYLE-01';
+                    const rawColor = this.getBilingualValue(row, 'Color', 'Colour', 'สี') || 'DEFAULT';
+                    const rawSlot = this.getBilingualValue(row, 'Time Slot', 'TimeSlot', 'Slot', 'Hour', 'ช่วงเวลา', 'ชั่วโมง');
+                    const rawType = this.getBilingualValue(row, 'Type', 'Status Type', 'Quality Type', 'ประเภท', 'ชนิด', 'สถานะงาน') || 'GOOD';
+                    const rawQty = this.getBilingualValue(row, 'Qty', 'Quantity', 'Amount', 'จำนวน', 'ยอดผลิต');
+                    const rawDowntime = this.getBilingualValue(row, 'Downtime (min)', 'Downtime Min', 'Downtime', 'เวลาหยุดเครื่อง', 'เวลาหยุด (นาที)');
+                    const rawReason = this.getBilingualValue(row, 'Reason', 'Downtime Reason', 'Remark', 'Defect Reason', 'สาเหตุ', 'หมายเหตุ') || 'None';
+
+                    // วันที่คือหัวใจของตัวกรอง ต้องแปลงให้เป็น YYYY-MM-DD เสมอ
+                    let prodDate = this.normalizeDate(rawDate) || this.normalizeDate(rawDateTime) || fallbackDate;
+
+                    let dateTimeText;
+                    if (rawDateTime instanceof Date && !isNaN(rawDateTime.getTime())) {
+                        dateTimeText = `${this.toLocalISO(rawDateTime)} ${this.pad2(rawDateTime.getHours())}:${this.pad2(rawDateTime.getMinutes())}`;
+                    } else if (rawDateTime !== null && rawDateTime !== undefined && rawDateTime !== '') {
+                        dateTimeText = String(rawDateTime);
+                    } else {
+                        dateTimeText = prodDate;
+                    }
+
+                    const slot = this.normalizeSlot(rawSlot) || '08:00-09:00';
+
+                    out.push({
+                        'Date Time': dateTimeText,
+                        'Production Date': prodDate,
+                        'Line': targetLine,
+                        'FO': String(rawFO).trim(),
+                        'Style': String(rawStyle).trim(),
+                        'Color': String(rawColor).trim(),
+                        'Time Slot': slot,
+                        'Type': String(rawType).trim(),
+                        'Qty': this.toNumber(rawQty),
+                        'Source': sourceName,
+                        'Status': 'ACTIVE',
+                        'Downtime (min)': this.toNumber(rawDowntime),
+                        'Reason': String(rawReason).trim()
+                    });
+                });
+
+                return out;
+            }
+
+            // คืนค่า { ok, count, reason } - ไม่โยน error ออกไปข้างนอก เพื่อไม่ให้ทั้งระบบล่ม
+            async loadFileIntoLine(file, targetLine, opts = {}) {
+                const silent = !!opts.silent;
+                const render = opts.render !== false;
+
+                if (!file) return { ok: false, count: 0, reason: 'ไม่พบไฟล์' };
+
+                try {
+                    const buffer = await this.readFileBuffer(file);
+                    const rows = this.sheetToRows(buffer);
+
+                    if (rows.length === 0) {
+                        if (!silent) this.showNotification(`ไฟล์ "${file.name}" ไม่มีข้อมูลแถว (Empty Sheet)`, 'warning');
+                        return { ok: false, count: 0, reason: 'ไฟล์ว่าง' };
+                    }
+
+                    const detectedFromRow = this.extractLineIdentifier(
+                        this.getBilingualValue(rows[0], 'Line', 'LINE', 'Production Line', 'สายการผลิต', 'สาย', 'ไลน์')
+                    );
+                    if (detectedFromRow && detectedFromRow !== targetLine) {
+                        if (!silent) this.showNotification(`[ปฏิเสธการโหลด] ข้อมูลในไฟล์ระบุสาย ${detectedFromRow} ไม่ตรงกับช่อง ${targetLine}`, 'error');
+                        return { ok: false, count: 0, reason: 'สายการผลิตไม่ตรง' };
+                    }
+
+                    const records = this.mapRowsToRecords(rows, targetLine, file.name);
+                    if (records.length === 0) {
+                        if (!silent) this.showNotification(`[ปฏิเสธการโหลด] ไม่พบข้อมูลของ ${targetLine} ในไฟล์นี้`, 'error');
+                        return { ok: false, count: 0, reason: 'ไม่มีแถวของสายนี้' };
+                    }
+
+                    this.lineData[targetLine] = records;
+                    this.fileHandles[targetLine] = file;
+
+                    if (render) {
+                        this.renderFilesCount();
+                        this.populateFilterDropdowns();
+                        this.updateAllViews();
+                    }
+                    if (!silent) this.showNotification(`โหลดข้อมูลสำเร็จสำหรับ ${targetLine} (${records.length} แถว)`, 'success');
+                    return { ok: true, count: records.length };
+
+                } catch (err) {
+                    console.error(`[Upload:${targetLine}]`, err);
+                    if (!silent) this.showNotification(`อ่านไฟล์สำหรับ ${targetLine} ไม่สำเร็จ — ${err.message || 'รูปแบบไฟล์ไม่ถูกต้อง'}`, 'error');
+                    return { ok: false, count: 0, reason: err.message || 'error' };
+                }
+            }
+
+            async handleBatchUpload(event) {
+                const input = event && event.target;
+                const files = Array.from((input && input.files) || []);
+                if (input && 'value' in input) input.value = ''; // ให้เลือกไฟล์ชุดเดิมซ้ำได้
+                if (files.length === 0) return;
+
+                this.showNotification(`กำลังอ่าน ${files.length} ไฟล์ กรุณารอสักครู่...`, 'info');
+
+                let loaded = 0, rejected = 0;
+                const rejectedNames = [];
+
+                for (const file of files) {
+                    let detectedLine = this.extractLineIdentifier(file.name);
+
+                    if (!detectedLine) {
+                        // ยังไม่รู้สาย -> เปิดไฟล์ดูแถวแรกก่อน
+                        try {
+                            const buffer = await this.readFileBuffer(file);
+                            const rows = this.sheetToRows(buffer);
+                            if (rows.length > 0) {
+                                detectedLine = this.extractLineIdentifier(
+                                    this.getBilingualValue(rows[0], 'Line', 'LINE', 'Production Line', 'สายการผลิต', 'สาย', 'ไลน์')
+                                );
+                            }
+                        } catch (err) {
+                            console.error('[BatchUpload]', err);
+                        }
+                    }
+
+                    if (!detectedLine) {
+                        rejected++;
+                        rejectedNames.push(file.name);
+                        continue;
+                    }
+
+                    const result = await this.loadFileIntoLine(file, detectedLine, { silent: true, render: false });
+                    if (result.ok) loaded++; else { rejected++; rejectedNames.push(file.name); }
+                }
+
+                // วาดหน้าจอครั้งเดียวตอนจบ ไม่ใช่ 18 ครั้ง (ตัวการที่ทำให้จอค้าง)
+                this.renderFilesCount();
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+
+                if (loaded > 0 && rejected === 0) {
+                    this.showNotification(`นำเข้าสำเร็จ ${loaded} สายการผลิต`, 'success');
+                } else if (loaded > 0) {
+                    this.showNotification(`นำเข้าสำเร็จ ${loaded} ไฟล์ / ข้าม ${rejected} ไฟล์ (${rejectedNames.slice(0, 3).join(', ')}${rejectedNames.length > 3 ? '...' : ''})`, 'warning');
+                } else {
+                    this.showNotification(`ไม่สามารถนำเข้าไฟล์ใดได้เลย — ตรวจสอบว่าชื่อไฟล์หรือคอลัมน์ Line ระบุ LINE01–LINE18`, 'error');
+                }
+            }
+
+            handleFileUpload(targetLine, event) {
+                const input = event && event.target;
+                const file = input && input.files && input.files[0];
+                if (input && 'value' in input) input.value = '';
+                if (!file) return;
+
+                const detectedFromFilename = this.extractLineIdentifier(file.name);
+                if (detectedFromFilename && detectedFromFilename !== targetLine) {
+                    this.showNotification(`[ปฏิเสธการโหลด] ไฟล์ "${file.name}" เป็นของ ${detectedFromFilename} ไม่ตรงกับช่อง ${targetLine}`, 'error');
+                    return;
+                }
+
+                this.loadFileIntoLine(file, targetLine);
+            }
+
+            refreshLine(line) {
+                if (this.fileHandles[line]) {
+                    this.loadFileIntoLine(this.fileHandles[line], line);
+                } else if (this.lineData[line]) {
+                    this.showNotification(`รีเฟรชข้อมูล ${line} สำเร็จ`, 'success');
+                    this.updateAllViews();
+                } else {
+                    this.showNotification(`ไม่มีไฟล์เชื่อมต่อสำหรับ ${line}`, 'warning');
+                }
+            }
+
+            removeLineFile(line) {
+                delete this.lineData[line];
+                delete this.fileHandles[line];
+                this.renderFilesCount();
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+                this.showNotification(`ลบข้อมูลของ ${line} เรียบร้อย`, 'info');
+            }
+
+            clearAllFiles() {
+                this.lineData = {};
+                this.fileHandles = {};
+                this.renderFilesCount();
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+                this.showNotification('ล้างไฟล์และข้อมูลของทุกสายเรียบร้อยแล้ว', 'info');
+            }
+
+            getTypeMapped(type) {
+                const t = (type || '').toString().toUpperCase().trim();
+                if (['OK', 'GOOD', 'PASS', 'ดี', 'ผ่าน', 'ปกติ', 'งานดี', 'สมบูรณ์'].includes(t)) return 'GOOD';
+                if (['NG', 'NO GOOD', 'DEFECT', 'DEFECTIVE', 'REJECT', 'เสีย', 'ของเสีย', 'ชำรุด', 'ไม่ผ่าน', 'มีตำหนิ'].includes(t)) return 'NG';
+                if (['REPAIR', 'REWORK', 'FIX', 'แก้', 'แก้ไข', 'ซ่อม', 'งานซ่อม', 'งานแก้'].includes(t)) return 'REPAIR';
+                return 'GOOD';
+            }
+
+            aggregateRecords(records) {
+                let good = 0, ng = 0, repair = 0;
+                let totalDowntime = 0;
+
+                records.forEach(r => {
+                    const mapped = this.getTypeMapped(r['Type']);
+                    const qty = parseFloat(r['Qty']) || 0;
+                    if (mapped === 'GOOD') good += qty;
+                    else if (mapped === 'NG') ng += qty;
+                    else if (mapped === 'REPAIR') repair += qty;
+                    totalDowntime += (parseFloat(r['Downtime (min)']) || 0);
+                });
+
+                const productionOutput = good + ng;
+                const processed = good + ng + repair;
+                const fpy = (good + ng) > 0 ? (good / (good + ng)) * 100 : 0;
+                const defectRate = (good + ng) > 0 ? (ng / (good + ng)) * 100 : 0;
+                const currentQualityEff = processed > 0 ? (good / processed) * 100 : 0;
+
+                const plannedShiftMinutes = 480;
+                const availability = Math.max(0, Math.min(100, ((plannedShiftMinutes - Math.min(totalDowntime, plannedShiftMinutes)) / plannedShiftMinutes) * 100));
+                const qualityRate = fpy;
+                const performance = Math.min(100, productionOutput > 0 ? 94.5 : 0);
+                const oee = (availability * performance * qualityRate) / 10000;
+
+                return { good, ng, repair, productionOutput, processed, fpy, defectRate, currentQualityEff, oee, totalDowntime };
+            }
+
+            getAllFilteredRecords() {
+                const dateFrom = this.getValue('filter-date-from');
+                const dateTo = this.getValue('filter-date-to');
+                const selShift = this.getValue('filter-shift');
+                const selLine = this.getValue('filter-line');
+                const selFo = this.getValue('filter-fo');
+                const selStyle = this.getValue('filter-style');
+                const selColor = this.getValue('filter-color');
+
+                let all = [];
+                Object.keys(this.lineData).forEach(line => {
+                    if (selLine && selLine !== line) return;
+                    const recs = this.lineData[line] || [];
+                    recs.forEach(r => {
+                        const pDate = r['Production Date'] || '';
+                        // แถวที่ไม่มีวันที่จะไม่ถูกตัดทิ้งเงียบ ๆ (ไปโผล่ในหน้า Data Health แทน)
+                        if (pDate) {
+                            if (dateFrom && pDate < dateFrom) return;
+                            if (dateTo && pDate > dateTo) return;
+                        }
+
+                        if (selShift) {
+                            const slot = String(r['Time Slot'] || '');
+                            const hourMatch = parseInt(slot.split(':')[0], 10);
+                            if (!isNaN(hourMatch)) {
+                                if (selShift === 'DAY' && (hourMatch < 8 || hourMatch >= 17)) return;
+                                if (selShift === 'NIGHT' && (hourMatch >= 5 && hourMatch < 20)) return;
+                                if (selShift === 'OT' && hourMatch < 17) return;
+                            }
+                        }
+
+                        if (selFo && r['FO'] !== selFo) return;
+                        if (selStyle && r['Style'] !== selStyle) return;
+                        if (selColor && r['Color'] !== selColor) return;
+                        all.push(r);
+                    });
+                });
+                return all;
+            }
+
+            populateFilterDropdowns() {
+                const lineSelect = this.el('filter-line');
+                const foSelect = this.el('filter-fo');
+                const styleSelect = this.el('filter-style');
+                const colorSelect = this.el('filter-color');
+
+                if (!lineSelect || !foSelect || !styleSelect || !colorSelect) return;
+
+                const currentLine = lineSelect.value;
+                const currentFo = foSelect.value;
+                const currentStyle = styleSelect.value;
+                const currentColor = colorSelect.value;
+
+                lineSelect.innerHTML = '<option value="">All Lines (LINE01-18)</option>';
+                this.lines.forEach(l => {
+                    const hasData = this.lineData[l] && this.lineData[l].length > 0;
+                    const opt = document.createElement('option');
+                    opt.value = l;
+                    opt.textContent = `${l} ${hasData ? '●' : '(No data)'}`;
+                    if (l === currentLine) opt.selected = true;
+                    lineSelect.appendChild(opt);
+                });
+
+                let pool = [];
+                Object.keys(this.lineData).forEach(l => {
+                    if (!currentLine || currentLine === l) {
+                        pool = pool.concat(this.lineData[l] || []);
+                    }
+                });
+
+                foSelect.innerHTML = '<option value="">All FOs</option>';
+                const fos = [...new Set(pool.map(r => r['FO']).filter(Boolean))].sort();
+                fos.forEach(fo => {
+                    const opt = document.createElement('option');
+                    opt.value = fo;
+                    opt.textContent = fo;
+                    if (fo === currentFo) opt.selected = true;
+                    foSelect.appendChild(opt);
+                });
+
+                if (currentFo) {
+                    pool = pool.filter(r => r['FO'] === currentFo);
+                }
+
+                styleSelect.innerHTML = '<option value="">All Styles</option>';
+                const styles = [...new Set(pool.map(r => r['Style']).filter(Boolean))].sort();
+                styles.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    if (s === currentStyle) opt.selected = true;
+                    styleSelect.appendChild(opt);
+                });
+
+                if (currentStyle) {
+                    pool = pool.filter(r => r['Style'] === currentStyle);
+                }
+
+                colorSelect.innerHTML = '<option value="">All Colors</option>';
+                const colors = [...new Set(pool.map(r => r['Color']).filter(Boolean))].sort();
+                colors.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    if (c === currentColor) opt.selected = true;
+                    colorSelect.appendChild(opt);
+                });
+            }
+
+            onLineFilterChange() {
+                this.setValue('filter-fo', '');
+                this.setValue('filter-style', '');
+                this.setValue('filter-color', '');
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+            }
+
+            onFoFilterChange() {
+                this.setValue('filter-style', '');
+                this.setValue('filter-color', '');
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+            }
+
+            onStyleFilterChange() {
+                this.setValue('filter-color', '');
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+            }
+
+            onFilterChange() {
+                this.updateAllViews();
+            }
+
+            resetFilters() {
+                ['filter-date-from', 'filter-date-to', 'filter-shift', 'filter-line',
+                 'filter-fo', 'filter-style', 'filter-color'].forEach(id => this.setValue(id, ''));
+                this.populateFilterDropdowns();
+                this.updateAllViews();
+            }
+
+            updateAllViews() {
+                const records = this.getAllFilteredRecords();
+                const agg = this.aggregateRecords(records);
+
+                const activeLinesCount = this.lines.filter(l => this.lineData[l] && this.lineData[l].length > 0).length;
+
+                // จัดกลุ่มตามสายครั้งเดียว แล้วใช้ซ้ำทุกกราฟ/ทุกตาราง
+                this._byLine = this.groupByLine(records);
+                this.setText('kpi-total-output', agg.productionOutput.toLocaleString());
+                this.setText('kpi-good', agg.good.toLocaleString());
+                this.setText('kpi-ng', agg.ng.toLocaleString());
+                this.setText('kpi-repair', agg.repair.toLocaleString());
+                this.setText('kpi-fpy', agg.fpy.toFixed(1) + '%');
+                this.setText('kpi-defect-rate', agg.defectRate.toFixed(1) + '%');
+                this.setText('kpi-quality-eff', agg.currentQualityEff.toFixed(1) + '%');
+                this.setText('kpi-oee', agg.oee > 0 ? agg.oee.toFixed(1) + '%' : 'N/A');
+
+                const distinctSlots = new Set(records.map(r => r['Time Slot'])).size || 8;
+                const runRate = distinctSlots > 0 ? Math.round(agg.productionOutput / distinctSlots) : 0;
+                this.setText('kpi-run-rate', runRate.toLocaleString());
+                this.setText('kpi-active-lines', `${activeLinesCount} / 18`);
+
+                const selLine = this.getValue('filter-line');
+                let totalTarget = 0;
+                this.lines.forEach(l => {
+                    if (!selLine || selLine === l) {
+                        totalTarget += (this.targets[l]?.target || 1200);
+                    }
+                });
+                const totalAchievement = totalTarget > 0 ? (agg.good / totalTarget) * 100 : 0;
+                this.setText('kpi-achievement-sub', `Ach: ${totalAchievement.toFixed(1)}%`);
+                this.setText('kpi-defect-rate-sub', `Rate: ${agg.defectRate.toFixed(1)}%`);
+
+                // แยกส่วนกัน ถ้าส่วนใดพังส่วนอื่นยังขึ้นตามปกติ
+                this.safeRun('รายการล่าสุด', () => this.renderLatestTransactions(records));
+                this.safeRun('กราฟหน้าหลัก', () => this.renderCharts(records));
+                this.safeRun('Summary & Lines', () => this.renderSummaryPage(records));
+                this.safeRun('Pareto Defects', () => this.renderParetoAnalysis(records));
+                this.safeRun('Industrial & Andon', () => this.renderIndustrialPage(records));
+            }
+
+            renderLatestTransactions(records) {
+                const tbody = this.el('latest-transactions-tbody');
+                const countLbl = this.el('transaction-count-label');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                const stamp = (r) => {
+                    const t = new Date(r['Date Time']).getTime();
+                    return isNaN(t) ? 0 : t; // กันวันที่เพี้ยนทำให้การเรียงมั่ว
+                };
+                const sorted = [...records].sort((a, b) => stamp(b) - stamp(a));
+                const slice = sorted.slice(0, 30);
+                if (countLbl) countLbl.textContent = `${slice.length} of ${records.length} records`;
+
+                if (slice.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-gray-500">No matching records found.</td></tr>`;
+                    return;
+                }
+
+                const frag = document.createDocumentFragment();
+                slice.forEach(r => {
+                    const mapped = this.getTypeMapped(r['Type']);
+                    let badgeClass = 'bg-emerald-900/50 text-emerald-400 border-emerald-700/50';
+                    if (mapped === 'NG') badgeClass = 'bg-red-900/50 text-red-400 border-red-700/50';
+                    else if (mapped === 'REPAIR') badgeClass = 'bg-amber-900/50 text-amber-400 border-amber-700/50';
+
+                    const reason = r['Reason'] || 'None';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-dark-700/50 transition';
+                    tr.innerHTML = `
+                        <td class="p-3">${this.esc(r['Date Time'])}</td>
+                        <td class="p-3 font-bold text-white">${this.esc(r['Line'])}</td>
+                        <td class="p-3">${this.esc(r['FO'])}</td>
+                        <td class="p-3">${this.esc(r['Style'])}</td>
+                        <td class="p-3">${this.esc(r['Color'])}</td>
+                        <td class="p-3">${this.esc(r['Time Slot'])}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 text-[10px] border rounded font-sans ${badgeClass}">${this.esc(r['Type'])}</span></td>
+                        <td class="p-3 text-right font-bold text-white">${this.toNumber(r['Qty']).toLocaleString()}</td>
+                        <td class="p-3 text-gray-400 truncate max-w-[180px]" title="${this.esc(reason)}">${this.esc(r['Reason'] || 'Normal')}</td>
+                    `;
+                    frag.appendChild(tr);
+                });
+                tbody.appendChild(frag);
+            }
+
+            renderCharts(records) {
+                const selLine = this.getValue('filter-line');
+                const timeSlots = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'];
+                const slotIndex = {};
+                timeSlots.forEach((s, i) => { slotIndex[s] = i; });
+
+                if (selLine) {
+                    this.setText('timeslot-chart-desc', `Breakdown for ${selLine}`);
+
+                    // วนข้อมูลรอบเดียวแทนการ filter 24 รอบ (เร็วขึ้นมากเมื่อข้อมูลหลักหมื่นแถว)
+                    const okData = timeSlots.map(() => 0);
+                    const ngData = timeSlots.map(() => 0);
+                    const repairData = timeSlots.map(() => 0);
+                    this.recsFor(selLine).forEach(r => {
+                        const i = slotIndex[r['Time Slot']];
+                        if (i === undefined) return;
+                        const qty = this.toNumber(r['Qty']);
+                        const m = this.getTypeMapped(r['Type']);
+                        if (m === 'GOOD') okData[i] += qty;
+                        else if (m === 'NG') ngData[i] += qty;
+                        else if (m === 'REPAIR') repairData[i] += qty;
+                    });
+
+                    this.makeChart('timeSlot', 'chartTimeSlot', {
+                        type: 'bar',
+                        plugins: [ChartDataLabels, this.getStackedLeaderLinesPlugin()],
+                        data: {
+                            labels: timeSlots,
+                            datasets: [
+                                { 
+                                    label: 'GOOD', 
+                                    data: okData, 
+                                    backgroundColor: '#10b981', 
+                                    borderRadius: 4,
+                                    datalabels: {
+                                        color: '#ffffff',
+                                        font: { weight: 'bold', size: 10 },
+                                        formatter: (val) => val > 0 ? val.toLocaleString() : '',
+                                        anchor: 'center',
+                                        align: 'center',
+                                        display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0
+                                    }
+                                },
+                                { 
+                                    label: 'NG', 
+                                    data: ngData, 
+                                    backgroundColor: '#ef4444', 
+                                    borderRadius: 4,
+                                    datalabels: { display: false }
+                                },
+                                { 
+                                    label: 'REPAIR', 
+                                    data: repairData, 
+                                    backgroundColor: '#f59e0b', 
+                                    borderRadius: 4,
+                                    datalabels: { display: false }
+                                }
+                            ]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            scales: { 
+                                x: { stacked: true, grid: { color: '#1f2937' } }, 
+                                y: { stacked: true, grid: { color: '#1f2937' }, grace: '20%' } 
+                            }, 
+                            plugins: { 
+                                legend: { labels: { color: '#9ca3af' } }
+                            } 
+                        }
+                    });
+                } else {
+                    this.setText('timeslot-chart-desc', `Comparing LINE01–LINE18 total output`);
+                    const lineOutputs = this.lines.map(l => this.aggFor(l).productionOutput);
+
+                    this.makeChart('timeSlot', 'chartTimeSlot', {
+                        type: 'bar',
+                        plugins: [ChartDataLabels],
+                        data: {
+                            labels: this.lines,
+                            datasets: [{ label: 'Total Output (Good + NG)', data: lineOutputs, backgroundColor: '#3b82f6', borderRadius: 4 }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            scales: { 
+                                x: { grid: { color: '#1f2937' } }, 
+                                y: { grid: { color: '#1f2937' }, grace: '12%' } 
+                            }, 
+                            plugins: { 
+                                legend: { labels: { color: '#9ca3af' } },
+                                datalabels: {
+                                    color: '#93c5fd',
+                                    font: { weight: 'bold', size: 10 },
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 2,
+                                    formatter: (val) => val > 0 ? val.toLocaleString() : '',
+                                    display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0
+                                }
+                            } 
+                        }
+                    });
+                }
+
+                const aggAll = this.aggregateRecords(records);
+                this.makeChart('qualityMix', 'chartQualityMix', {
+                    type: 'doughnut',
+                    plugins: [ChartDataLabels],
+                    data: {
+                        labels: ['Good / OK', 'NG Defects', 'Repair'],
+                        datasets: [{
+                            data: [aggAll.good, aggAll.ng, aggAll.repair],
+                            backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { position: 'bottom', labels: { color: '#9ca3af' } },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (val, ctx) => {
+                                    const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    if (!total || val === 0) return '';
+                                    const pct = ((val / total) * 100).toFixed(1);
+                                    if (pct < 5) return '';
+                                    return `${val.toLocaleString()}\n(${pct}%)`;
+                                },
+                                textAlign: 'center',
+                                display: (ctx) => {
+                                    const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const val = ctx.dataset.data[ctx.dataIndex];
+                                    if (!total || val === 0) return false;
+                                    return (val / total) * 100 >= 5;
+                                }
+                            }
+                        } 
+                    }
+                });
+
+                // รวมยอดต่อช่วงเวลาในรอบเดียว ใช้ทั้งกราฟ Output vs Target และกราฟสะสม
+                const goodBySlot = timeSlots.map(() => 0);
+                const outputBySlot = timeSlots.map(() => 0);
+                records.forEach(r => {
+                    const i = slotIndex[r['Time Slot']];
+                    if (i === undefined) return;
+                    const qty = this.toNumber(r['Qty']);
+                    const m = this.getTypeMapped(r['Type']);
+                    if (m === 'GOOD') { goodBySlot[i] += qty; outputBySlot[i] += qty; }
+                    else if (m === 'NG') { outputBySlot[i] += qty; }
+                });
+
+                const actualBySlot = goodBySlot;
+                const targetBySlot = timeSlots.map(() => 150);
+
+                this.makeChart('outputVsTarget', 'chartOutputVsTarget', {
+                    type: 'line',
+                    plugins: [ChartDataLabels],
+                    data: {
+                        labels: timeSlots,
+                        datasets: [
+                            { 
+                                label: 'Actual Output (GOOD)', 
+                                data: actualBySlot, 
+                                borderColor: '#10b981', 
+                                backgroundColor: 'rgba(16,185,129,0.1)', 
+                                fill: true, 
+                                tension: 0.3,
+                                datalabels: {
+                                    align: 'top',
+                                    color: '#34d399',
+                                    font: { weight: 'bold', size: 10 },
+                                    formatter: (val) => val > 0 ? val.toLocaleString() : ''
+                                }
+                            },
+                            { 
+                                label: 'Target / Hour', 
+                                data: targetBySlot, 
+                                borderColor: '#3b82f6', 
+                                borderDash: [5,5], 
+                                tension: 0,
+                                datalabels: {
+                                    display: false
+                                }
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        scales: { 
+                            x: { grid: { color: '#1f2937' } }, 
+                            y: { grid: { color: '#1f2937' }, grace: '12%' } 
+                        }, 
+                        plugins: { legend: { labels: { color: '#9ca3af' } } } 
+                    }
+                });
+
+                let runningTotal = 0;
+                const cumData = outputBySlot.map(v => {
+                    runningTotal += v;
+                    return runningTotal;
+                });
+
+                this.makeChart('cumulative', 'chartCumulative', {
+                    type: 'line',
+                    plugins: [ChartDataLabels],
+                    data: {
+                        labels: timeSlots,
+                        datasets: [{ 
+                            label: 'Cumulative Output (OK+NG)', 
+                            data: cumData, 
+                            borderColor: '#3b82f6', 
+                            backgroundColor: 'rgba(59,130,246,0.1)', 
+                            fill: true, 
+                            tension: 0.2,
+                            datalabels: {
+                                align: 'top',
+                                color: '#93c5fd',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => val > 0 ? val.toLocaleString() : ''
+                            }
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        scales: { 
+                            x: { grid: { color: '#1f2937' } }, 
+                            y: { grid: { color: '#1f2937' }, grace: '12%' } 
+                        }, 
+                        plugins: { legend: { labels: { color: '#9ca3af' } } } 
+                    }
+                });
+            }
+
+            renderSummaryPage(records) {
+                if (!records) { records = this.getAllFilteredRecords(); this._byLine = this.groupByLine(records); }
+
+                const okArr = [], ngArr = [], repairArr = [];
+                this.lines.forEach(l => {
+                    const agg = this.aggFor(l);
+                    okArr.push(agg.good);
+                    ngArr.push(agg.ng);
+                    repairArr.push(agg.repair);
+                });
+
+                this.makeChart('lineComparison', 'chartLineComparison', {
+                    type: 'bar',
+                    plugins: [ChartDataLabels, this.getStackedLeaderLinesPlugin()],
+                    data: {
+                        labels: this.lines,
+                        datasets: [
+                            { 
+                                label: 'GOOD', 
+                                data: okArr, 
+                                backgroundColor: '#10b981', 
+                                borderRadius: 2,
+                                datalabels: {
+                                    color: '#ffffff',
+                                    font: { weight: 'bold', size: 9 },
+                                    formatter: (val) => val > 0 ? val.toLocaleString() : '',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0
+                                }
+                            },
+                            { 
+                                label: 'NG', 
+                                data: ngArr, 
+                                backgroundColor: '#ef4444', 
+                                borderRadius: 2,
+                                datalabels: { display: false }
+                            },
+                            { 
+                                label: 'REPAIR', 
+                                data: repairArr, 
+                                backgroundColor: '#f59e0b', 
+                                borderRadius: 2,
+                                datalabels: { display: false }
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        scales: { 
+                            x: { stacked: true, grid: { color: '#1f2937' } }, 
+                            y: { stacked: true, grid: { color: '#1f2937' }, grace: '20%' } 
+                        }, 
+                        plugins: { 
+                            legend: { labels: { color: '#9ca3af' } }
+                        } 
+                    }
+                });
+
+                const effArr = this.lines.map(l => parseFloat(this.aggFor(l).currentQualityEff.toFixed(1)));
+
+                this.makeChart('lineEfficiency', 'chartLineEfficiency', {
+                    type: 'bar',
+                    plugins: [ChartDataLabels],
+                    data: {
+                        labels: this.lines,
+                        datasets: [{ label: 'Quality Efficiency (%)', data: effArr, backgroundColor: '#3b82f6', borderRadius: 4 }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        scales: { 
+                            x: { grid: { color: '#1f2937' } }, 
+                            y: { max: 105, grid: { color: '#1f2937' } } 
+                        }, 
+                        plugins: { 
+                            legend: { labels: { color: '#9ca3af' } },
+                            datalabels: {
+                                color: '#93c5fd',
+                                anchor: 'end',
+                                align: 'top',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => val > 0 ? `${val}%` : '',
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0
+                            }
+                        } 
+                    }
+                });
+
+                const tbody = this.el('management-summary-tbody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                const summaryFrag = document.createDocumentFragment();
+
+                this.lines.forEach(l => {
+                    const agg = this.aggFor(l);
+                    const target = this.targets[l]?.target || 1200;
+                    const gap = agg.good - target;
+                    const achievement = target > 0 ? (agg.good / target) * 100 : 0;
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-dark-700/50 transition';
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-white">${l}</td>
+                        <td class="p-3 text-right text-emerald-400">${agg.good.toLocaleString()}</td>
+                        <td class="p-3 text-right text-red-400">${agg.ng.toLocaleString()}</td>
+                        <td class="p-3 text-right text-amber-400">${agg.repair.toLocaleString()}</td>
+                        <td class="p-3 text-right font-bold text-white">${agg.productionOutput.toLocaleString()}</td>
+                        <td class="p-3 text-right">${agg.currentQualityEff.toFixed(1)}%</td>
+                        <td class="p-3 text-right">${agg.fpy.toFixed(1)}%</td>
+                        <td class="p-3 text-right">${agg.defectRate.toFixed(1)}%</td>
+                        <td class="p-3 text-right">${target.toLocaleString()}</td>
+                        <td class="p-3 text-right ${gap >= 0 ? 'text-emerald-400' : 'text-red-400'}">${gap >= 0 ? '+' : ''}${gap.toLocaleString()}</td>
+                        <td class="p-3 text-center font-bold ${achievement >= 100 ? 'text-emerald-400' : achievement >= 90 ? 'text-amber-400' : 'text-red-400'}">${achievement.toFixed(1)}%</td>
+                    `;
+                    summaryFrag.appendChild(tr);
+                });
+                tbody.appendChild(summaryFrag);
+            }
+
+            renderParetoAnalysis(records) {
+                if (!records) records = this.getAllFilteredRecords();
+                const ngRecords = records.filter(r => this.getTypeMapped(r['Type']) === 'NG');
+                const reasonCounts = {};
+
+                ngRecords.forEach(r => {
+                    const reason = r['Reason'] && r['Reason'] !== 'None' ? String(r['Reason']) : 'Unspecified Quality Defect';
+                    const qty = this.toNumber(r['Qty']) || 1;
+                    reasonCounts[reason] = (reasonCounts[reason] || 0) + qty;
+                });
+
+                const sortedReasons = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1]);
+                const totalNgQty = sortedReasons.reduce((sum, item) => sum + item[1], 0);
+
+                const labels = sortedReasons.map(r => r[0]);
+                const counts = sortedReasons.map(r => r[1]);
+                let cum = 0;
+                const cumPercentages = counts.map(c => {
+                    cum += c;
+                    return totalNgQty > 0 ? parseFloat(((cum / totalNgQty) * 100).toFixed(1)) : 0;
+                });
+
+                {
+                    this.makeChart('pareto', 'chartPareto', {
+                        plugins: [ChartDataLabels],
+                        data: {
+                            labels: labels.length > 0 ? labels : ['No Defect Data'],
+                            datasets: [
+                                {
+                                    type: 'bar',
+                                    label: 'Defect Qty (ชิ้น)',
+                                    data: counts.length > 0 ? counts : [0],
+                                    backgroundColor: '#ef4444',
+                                    borderRadius: 4,
+                                    yAxisID: 'y',
+                                    datalabels: {
+                                        color: '#ffffff',
+                                        anchor: 'end',
+                                        align: 'top',
+                                        font: { weight: 'bold', size: 10 },
+                                        formatter: (val) => val > 0 ? val.toLocaleString() : '',
+                                        display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0
+                                    }
+                                },
+                                {
+                                    type: 'line',
+                                    label: 'Cumulative %',
+                                    data: cumPercentages.length > 0 ? cumPercentages : [0],
+                                    borderColor: '#f59e0b',
+                                    backgroundColor: '#f59e0b',
+                                    borderWidth: 2,
+                                    yAxisID: 'y1',
+                                    datalabels: {
+                                        color: '#fcd34d',
+                                        align: 'top',
+                                        offset: 4,
+                                        font: { weight: 'bold', size: 10 },
+                                        formatter: (val) => val > 0 ? `${val}%` : ''
+                                    }
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 20 } },
+                                y: { type: 'linear', position: 'left', grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' }, grace: '15%' },
+                                y1: { type: 'linear', position: 'right', min: 0, max: 110, grid: { drawOnChartArea: false }, ticks: { color: '#f59e0b', callback: v => v + '%' } }
+                            },
+                            plugins: { legend: { labels: { color: '#9ca3af' } } }
+                        }
+                    });
+                }
+
+                const topDiv = this.el('pareto-top-reasons');
+                if (topDiv) {
+                    topDiv.innerHTML = '';
+                    if (sortedReasons.length === 0) {
+                        topDiv.innerHTML = '<p class="text-gray-500">No defect data to display.</p>';
+                    } else {
+                        sortedReasons.slice(0, 5).forEach((item, idx) => {
+                            const pct = totalNgQty > 0 ? ((item[1] / totalNgQty) * 100).toFixed(1) : 0;
+                            const row = document.createElement('div');
+                            row.className = 'p-2.5 bg-dark-900 border border-dark-700 rounded-lg flex items-center justify-between';
+                            row.innerHTML = `
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-5 h-5 rounded bg-red-950 text-red-400 border border-red-800 flex items-center justify-center font-bold text-[10px]">${idx+1}</span>
+                                    <span class="text-gray-300 font-medium truncate max-w-[180px]" title="${this.esc(item[0])}">${this.esc(item[0])}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-bold text-white">${item[1].toLocaleString()} ชิ้น</span>
+                                    <span class="text-[10px] text-gray-400 block">${pct}%</span>
+                                </div>
+                            `;
+                            topDiv.appendChild(row);
+                        });
+                    }
+                }
+            }
+
+            renderIndustrialPage(records) {
+                if (!records) { records = this.getAllFilteredRecords(); this._byLine = this.groupByLine(records); }
+                const tbody = this.el('industrial-tbody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                const indFrag = document.createDocumentFragment();
+
+                this.lines.forEach(l => {
+                    const recs = this.recsFor(l);
+                    const agg = this.aggFor(l);
+                    const targetObj = this.targets[l] || { target: 1200, foTarget: 6000 };
+                    const target = targetObj.target;
+                    const foTarget = targetObj.foTarget;
+
+                    const achievement = target > 0 ? (agg.good / target) * 100 : 0;
+                    const gap = agg.good - target;
+                    const foProgress = foTarget > 0 ? (agg.good / foTarget) * 100 : 0;
+                    const remaining = Math.max(0, foTarget - agg.good);
+
+                    let andonStatus = 'NORMAL';
+                    let andonClass = 'bg-emerald-900/50 text-emerald-400 border-emerald-700/50';
+                    if (!target || target <= 0) {
+                        andonStatus = 'NO TARGET';
+                        andonClass = 'bg-gray-800 text-gray-400 border-gray-700';
+                    } else if (achievement >= 100) {
+                        andonStatus = 'NORMAL';
+                        andonClass = 'bg-emerald-900/50 text-emerald-400 border-emerald-700/50';
+                    } else if (achievement >= 90) {
+                        andonStatus = 'WARNING';
+                        andonClass = 'bg-amber-900/50 text-amber-400 border-amber-700/50';
+                    } else {
+                        andonStatus = 'CRITICAL';
+                        andonClass = 'bg-red-900/50 text-red-400 border-red-700/50';
+                    }
+
+                    const downtimeMin = agg.totalDowntime;
+                    const alertReason = recs.find(r => r['Reason'] && r['Reason'] !== 'None')?.['Reason'] || 'Stable Operations';
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-dark-700/50 transition';
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-white">${l}</td>
+                        <td class="p-3 text-right">${target.toLocaleString()}</td>
+                        <td class="p-3 text-right font-bold text-emerald-400">${agg.good.toLocaleString()}</td>
+                        <td class="p-3 text-center font-bold ${achievement >= 100 ? 'text-emerald-400' : achievement >= 90 ? 'text-amber-400' : 'text-red-400'}">${achievement.toFixed(1)}%</td>
+                        <td class="p-3 text-right ${gap >= 0 ? 'text-emerald-400' : 'text-red-400'}">${gap >= 0 ? '+' : ''}${gap.toLocaleString()}</td>
+                        <td class="p-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-24 bg-dark-900 rounded-full h-2 overflow-hidden border border-dark-700">
+                                    <div class="bg-blue-500 h-full rounded-full" style="width: ${Math.min(100, foProgress)}%"></div>
+                                </div>
+                                <span class="text-[11px]">${foProgress.toFixed(0)}% (Rem: ${remaining.toLocaleString()})</span>
+                            </div>
+                        </td>
+                        <td class="p-3 text-center"><span class="px-2 py-0.5 text-[10px] border rounded font-sans ${andonClass}">${andonStatus}</span></td>
+                        <td class="p-3 text-gray-400">${this.esc(alertReason)}</td>
+                        <td class="p-3 text-right text-amber-400">${downtimeMin.toLocaleString()} min</td>
+                    `;
+                    indFrag.appendChild(tr);
+                });
+                tbody.appendChild(indFrag);
+            }
+
+            runDataHealthAudit() {
+                let totalRecords = 0, invalidCount = 0, duplicateCount = 0, missingFoCount = 0;
+                const logTbody = this.el('health-log-tbody');
+                if (!logTbody) return;
+                logTbody.innerHTML = '';
+                const issues = [];
+                const MAX_ROWS = 500; // กันตารางยาวเป็นหมื่นแถวจนเบราว์เซอร์ค้าง
+                const knownTypes = ['OK','GOOD','PASS','ดี','ผ่าน','ปกติ','งานดี','สมบูรณ์',
+                                    'NG','NO GOOD','DEFECT','DEFECTIVE','REJECT','เสีย','ของเสีย','ชำรุด','ไม่ผ่าน','มีตำหนิ',
+                                    'REPAIR','REWORK','FIX','แก้','แก้ไข','ซ่อม','งานซ่อม','งานแก้'];
+
+                Object.keys(this.lineData).forEach(line => {
+                    const recs = this.lineData[line] || [];
+                    const seenSignatures = new Set();
+
+                    recs.forEach((r, idx) => {
+                        totalRecords++;
+                        const qty = parseFloat(r['Qty']);
+                        const type = r['Type'];
+                        const date = r['Production Date'];
+                        const fo = r['FO'];
+
+                        if (isNaN(qty) || qty < 0) {
+                            invalidCount++;
+                            issues.push({ line, idx, type: 'Invalid Qty', desc: `Negative or NaN quantity: ${r['Qty']}`, val: qty });
+                        }
+                        
+                        // เช็กจากค่าดิบ ไม่ใช่ค่าที่แปลงแล้ว (ของเดิมเช็กยังไงก็ไม่มีวันเจอ)
+                        const rawType = (type || '').toString().toUpperCase().trim();
+                        if (!knownTypes.includes(rawType)) {
+                            invalidCount++;
+                            issues.push({ line, idx, type: 'Invalid Type', desc: `ประเภทงานไม่รู้จัก ระบบนับเป็น GOOD: ${type}`, val: type });
+                        }
+                        
+                        if (!date || (typeof date === 'string' && date.trim() === '')) {
+                            invalidCount++;
+                            issues.push({ line, idx, type: 'Invalid Date', desc: `Missing production date`, val: date });
+                        }
+                        if (!fo || fo === 'FO-DEFAULT') {
+                            missingFoCount++;
+                            issues.push({ line, idx, type: 'Missing FO', desc: `FO number missing or default`, val: fo });
+                        }
+
+                        const sig = `${r['Date Time']}_${r['Line']}_${r['FO']}_${r['Time Slot']}_${r['Type']}_${r['Qty']}`;
+                        if (seenSignatures.has(sig)) {
+                            duplicateCount++;
+                            issues.push({ line, idx, type: 'Duplicate Candidate', desc: `Exact duplicate transaction detected`, val: sig });
+                        } else {
+                            seenSignatures.add(sig);
+                        }
+                    });
+                });
+
+                this.setText('health-records', totalRecords.toLocaleString());
+                this.setText('health-invalid', invalidCount.toLocaleString());
+                this.setText('health-duplicates', duplicateCount.toLocaleString());
+                this.setText('health-missing-fo', missingFoCount.toLocaleString());
+
+                if (issues.length === 0) {
+                    logTbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-emerald-400 font-bold">All data checks passed! Zero discrepancies detected.</td></tr>`;
+                } else {
+                    const frag = document.createDocumentFragment();
+                    issues.slice(0, MAX_ROWS).forEach(iss => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-dark-700/50 transition';
+                        tr.innerHTML = `
+                            <td class="p-3 font-bold text-white">${this.esc(iss.line)}</td>
+                            <td class="p-3">Row #${iss.idx + 1}</td>
+                            <td class="p-3 text-red-400 font-semibold">${this.esc(iss.type)}</td>
+                            <td class="p-3 text-gray-300">${this.esc(iss.desc)}</td>
+                            <td class="p-3 text-gray-400 font-mono text-[11px]">${this.esc(iss.val)}</td>
+                        `;
+                        frag.appendChild(tr);
+                    });
+                    if (issues.length > MAX_ROWS) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td colspan="5" class="p-4 text-center text-amber-400 font-semibold">แสดง ${MAX_ROWS.toLocaleString()} รายการแรกจากทั้งหมด ${issues.length.toLocaleString()} รายการ (ส่งออก Excel เพื่อดูทั้งหมด)</td>`;
+                        frag.appendChild(tr);
+                    }
+                    logTbody.appendChild(frag);
+                }
+                this.showNotification(`ตรวจสอบความถูกต้องของข้อมูลเสร็จสมบูรณ์ (${totalRecords.toLocaleString()} แถว)`, 'info');
+            }
+
+            exportExcel() {
+                const records = this.getAllFilteredRecords();
+                if (records.length === 0) {
+                    this.showNotification('ไม่มีข้อมูลให้ส่งออก', 'warning');
+                    return;
+                }
+                if (typeof XLSX === 'undefined') {
+                    this.showNotification('ไลบรารี Excel ยังโหลดไม่ขึ้น — ลองใช้ปุ่ม CSV แทน', 'error');
+                    return;
+                }
+                try {
+                    const worksheet = XLSX.utils.json_to_sheet(records);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Production_Data");
+                    XLSX.writeFile(workbook, `EXECUTIVE_PRODUCTION_EXPORT_${this.version}_${this.toLocalISO(new Date())}.xlsx`);
+                    this.showNotification('ส่งออกไฟล์ Excel สำเร็จ', 'success');
+                } catch (err) {
+                    console.error('[ExportExcel]', err);
+                    this.showNotification('ส่งออก Excel ไม่สำเร็จ — ' + (err.message || 'ไม่ทราบสาเหตุ'), 'error');
+                }
+            }
+
+            exportCsv() {
+                const records = this.getAllFilteredRecords();
+                if (records.length === 0) {
+                    this.showNotification('ไม่มีข้อมูลให้ส่งออก', 'warning');
+                    return;
+                }
+                try {
+                    let csvOutput;
+                    if (typeof XLSX !== 'undefined') {
+                        csvOutput = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(records));
+                    } else {
+                        // สำรองไว้เผื่อ CDN ล่ม ยังส่งออกได้อยู่
+                        const headers = Object.keys(records[0]);
+                        const cell = (v) => `"${String(v === null || v === undefined ? '' : v).replace(/"/g, '""')}"`;
+                        csvOutput = headers.map(cell).join(',') + '\n' +
+                            records.map(r => headers.map(h => cell(r[h])).join(',')).join('\n');
+                    }
+                    // BOM เพื่อให้ Excel ภาษาไทยไม่เป็นตัวยึกยือ
+                    const blob = new Blob(['\ufeff' + csvOutput], { type: 'text/csv;charset=utf-8;' });
+                    this.downloadBlob(blob, `EXECUTIVE_PRODUCTION_EXPORT_${this.version}_${this.toLocalISO(new Date())}.csv`);
+                    this.showNotification('ส่งออกไฟล์ CSV สำเร็จ', 'success');
+                } catch (err) {
+                    console.error('[ExportCsv]', err);
+                    this.showNotification('ส่งออก CSV ไม่สำเร็จ — ' + (err.message || 'ไม่ทราบสาเหตุ'), 'error');
+                }
+            }
+
+            exportStandaloneHtml() {
+                try {
+                    if (Object.keys(this.lineData).length === 0) {
+                        this.showNotification('ยังไม่มีข้อมูลให้บันทึก — โหลดไฟล์หรือกด Demo Data ก่อน', 'warning');
+                        return;
+                    }
+
+                    // escape '<' กันข้อมูลที่มีแท็กปิดสคริปต์ปนมา แล้วทำให้ไฟล์ที่เซฟออกไปพัง
+                    const dataJsonStr = JSON.stringify(this.lineData).replace(/</g, '\\u003c');
+                    let currentDocHtml = document.documentElement.outerHTML;
+
+                    // ถ้าไฟล์นี้เคยเป็น standalone อยู่แล้ว ให้ถอดข้อมูลชุดเก่าออกก่อน ไม่ให้ซ้อนกันบวมขึ้นเรื่อย ๆ
+                    currentDocHtml = currentDocHtml.replace(
+                        /<script>window\.EMBEDDED_STANDALONE_DATA[\s\S]*?<\/script>/g, '');
+
+                    const scriptInjection = '<' + 'script' + '>window.EMBEDDED_STANDALONE_DATA = ' + dataJsonStr + ';<' + '/script' + '>';
+                    // ต้องมี DOCTYPE ไม่งั้นไฟล์ที่เซฟออกไปจะเพี้ยนทั้งหน้า (quirks mode)
+                    const standaloneHtml = '<!DOCTYPE html>\n' + currentDocHtml.replace('</head>', scriptInjection + '</head>');
+
+                    const blob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8;' });
+                    this.downloadBlob(blob, `EXECUTIVE_DASHBOARD_${this.version}_STANDALONE_${this.toLocalISO(new Date())}.html`);
+                    this.showNotification('บันทึกไฟล์ Standalone HTML สำเร็จ (เปิดดูออฟไลน์ได้ทันที)', 'success');
+                } catch (err) {
+                    console.error('[Standalone]', err);
+                    this.showNotification('บันทึก Standalone HTML ไม่สำเร็จ — ' + (err.message || 'ไม่ทราบสาเหตุ'), 'error');
+                }
+            }
+
+            printSummaryReport() {
+                window.print();
+            }
+
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        this.showNotification('ไม่สามารถเข้าสู่โหมดเต็มหน้าจอได้', 'warning');
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            openEmailModal() {
+                const records = this.getAllFilteredRecords();
+                const agg = this.aggregateRecords(records);
+                const dateFrom = this.getValue('filter-date-from') || 'All Time';
+                const dateTo = this.getValue('filter-date-to') || 'Present';
+                const selLine = this.getValue('filter-line') || 'All Lines (LINE01-18)';
+                const selFo = this.getValue('filter-fo') || 'All FOs';
+
+                let totalTarget = 0;
+                this.lines.forEach(l => {
+                    if (selLine === 'All Lines (LINE01-18)' || selLine === l) {
+                        totalTarget += (this.targets[l]?.target || 1200);
+                    }
+                });
+                const achievement = totalTarget > 0 ? (agg.good / totalTarget) * 100 : 0;
+                const gap = agg.good - totalTarget;
+
+                const emailText = `EXECUTIVE FACTORY PRODUCTION BRIEFING (v${this.version})
+==================================================
+Date Range : ${dateFrom} to ${dateTo}
+Scope      : ${selLine} | FO: ${selFo}
+--------------------------------------------------
+OPERATIONAL METRICS:
+• Output (Good + NG)       : ${agg.productionOutput.toLocaleString()} units
+• Good / OK Quantity      : ${agg.good.toLocaleString()} units
+• NG Defects Quantity     : ${agg.ng.toLocaleString()} units
+• Repair / Rework Quantity : ${agg.repair.toLocaleString()} units
+• Total Processed Units   : ${agg.processed.toLocaleString()} units
+
+QUALITY & INDUSTRIAL EFFICIENCY:
+• First Pass Yield (FPY)   : ${agg.fpy.toFixed(1)}%
+• Overall Defect Rate      : ${agg.defectRate.toFixed(1)}%
+• Quality Efficiency (EFF) : ${agg.currentQualityEff.toFixed(1)}%
+• Estimated Factory OEE    : ${agg.oee > 0 ? agg.oee.toFixed(1) + '%' : 'N/A'}
+
+TARGET vs ACTUAL:
+• Target                   : ${totalTarget.toLocaleString()} units
+• Achievement              : ${achievement.toFixed(1)}% (${gap >= 0 ? '+' : ''}${gap.toLocaleString()} units)
+• Status                   : ${achievement >= 100 ? 'NORMAL (ACHIEVED)' : achievement >= 90 ? 'WARNING (NEAR TARGET)' : 'CRITICAL (BELOW 90%)'}
+
+EXECUTIVE QA HIGHLIGHTS:
+1. Review Pareto top defect contributors under the Pareto tab.
+2. Ensure critical lines (<90%) receive immediate technician and tooling support.
+==================================================
+Generated by Executive Production Dashboard v${this.version}`;
+
+                this.setValue('email-textarea', emailText);
+                const m = this.el('modal-email');
+                if (m) m.classList.remove('hidden');
+            }
+
+            async copyEmailText() {
+                const ok = await this.copyToClipboard(this.getValue('email-textarea'));
+                this.showNotification(ok ? 'คัดลอกรายงานอีเมลเรียบร้อยแล้ว'
+                                         : 'คัดลอกอัตโนมัติไม่ได้ กรุณาลากคลุมข้อความแล้วกด Ctrl+C', ok ? 'success' : 'warning');
+            }
+
+            downloadEmailText() {
+                const text = this.getValue('email-textarea');
+                const blob = new Blob(['\ufeff' + text], { type: 'text/plain;charset=utf-8;' });
+                this.downloadBlob(blob, `Factory_Executive_Report_${this.toLocalISO(new Date())}.txt`);
+                this.showNotification('ดาวน์โหลดไฟล์ .txt สำเร็จ', 'success');
+            }
+
+            openAiModal() {
+                this.generateExternalAiPrompt();
+                const m = this.el('modal-ai');
+                if (m) m.classList.remove('hidden');
+            }
+
+            runLocalAiQuery(queryType) {
+                const records = this.getAllFilteredRecords();
+                this._byLine = this.groupByLine(records);
+                const agg = this.aggregateRecords(records);
+                const respDiv = this.el('local-ai-response');
+                if (!respDiv) return;
+
+                let output = "";
+                if (queryType === 'summary') {
+                    output = `[LOCAL AI SUMMARY]\nTotal Output: ${agg.productionOutput.toLocaleString()} units | Good: ${agg.good.toLocaleString()} | NG: ${agg.ng.toLocaleString()}\nFPY: ${agg.fpy.toFixed(1)}% | Defect Rate: ${agg.defectRate.toFixed(1)}% | Est OEE: ${agg.oee.toFixed(1)}%`;
+                } else if (queryType === 'max_ng') {
+                    let maxNgLine = '-', maxNgVal = -1;
+                    this.lines.forEach(l => {
+                        const a = this.aggFor(l);
+                        if (a.ng > maxNgVal) { maxNgVal = a.ng; maxNgLine = l; }
+                    });
+                    if (maxNgVal < 0) maxNgVal = 0;
+                    output = `[LOCAL AI MAX NG LINE]\nสายการผลิตที่มีของเสียสูงสุดคือ ${maxNgLine} (จำนวนของเสีย ${maxNgVal.toLocaleString()} ชิ้น) ควรตรวจสอบการปรับตั้งเครื่องจักรและความคมของใบมีด/เข็มเย็บทันที`;
+                } else if (queryType === 'max_repair') {
+                    let maxRepLine = '-', maxRepVal = -1;
+                    this.lines.forEach(l => {
+                        const a = this.aggFor(l);
+                        if (a.repair > maxRepVal) { maxRepVal = a.repair; maxRepLine = l; }
+                    });
+                    if (maxRepVal < 0) maxRepVal = 0;
+                    output = `[LOCAL AI MAX REPAIR LINE]\nสายที่มีงานส่งซ่อม/แก้ไขสูงสุดคือ ${maxRepLine} (${maxRepVal.toLocaleString()} ชิ้น) ควรตรวจสอบมาตรฐานการตรวจสอบชิ้นงานกลางกระบวนการ`;
+                } else if (queryType === 'pareto_analysis') {
+                    output = `[LOCAL AI PARETO ANALYSIS]\nจากการวิเคราะห์ 80/20 ปัญหาคุณภาพหลักมาจากข้อบกพร่องด้านการเย็บและสีผ้า การกำหนดมาตรการควบคุมเฉพาะ 2 สาเหตุนี้จะลดข้อบกพร่องรวมได้กว่า 70%`;
+                } else if (queryType === 'action_points') {
+                    output = `[EXECUTIVE ACTION POINTS]\n1. แก้ไขข้อติดขัดในสายที่สถานะ Andon เป็น CRITICAL (<90%)\n2. จัดอบรมซ้ำ (Re-training) จุดเย็บที่มีข้อบกพร่องสูง\n3. ติดตามยอดการผลิตเทียบกับเป้าหมาย FO อย่างใกล้ชิด`;
+                }
+                respDiv.textContent = output;
+            }
+
+            generateExternalAiPrompt() {
+                const records = this.getAllFilteredRecords();
+                const agg = this.aggregateRecords(records);
+                
+                const prompt = `Please act as an Expert Industrial Operations Consultant and Lean Six Sigma Master Black Belt. Analyze this multi-line factory production dataset (LINE01 to LINE18) and deliver an executive assessment:
+
+KEY FACTORY METRICS:
+- Total Output: ${agg.productionOutput.toLocaleString()} units
+- Good / OK: ${agg.good.toLocaleString()} units
+- NG Defects: ${agg.ng.toLocaleString()} units
+- First Pass Yield (FPY): ${agg.fpy.toFixed(1)}%
+- Defect Rate: ${agg.defectRate.toFixed(1)}%
+- Estimated Factory OEE: ${agg.oee.toFixed(1)}%
+
+Please provide:
+1. Operational Bottleneck Identification
+2. Root Cause & Pareto Action Recommendations
+3. Kaizen 30-Day Improvement Plan for Plant Managers`;
+
+                this.setValue('external-ai-textarea', prompt);
+            }
+
+            async copyExternalAiPrompt() {
+                const ok = await this.copyToClipboard(this.getValue('external-ai-textarea'));
+                this.showNotification(ok ? 'คัดลอก Prompt สำหรับ AI ภายนอกเรียบร้อยแล้ว'
+                                         : 'คัดลอกอัตโนมัติไม่ได้ กรุณาลากคลุมข้อความแล้วกด Ctrl+C', ok ? 'success' : 'warning');
+            }
+
+            switchTab(tabName) {
+                const idx = this.tabOrder.indexOf(tabName);
+                if (idx >= 0) this.tvCycleIndex = idx; // ให้ TV Cycle เดินต่อจากแท็บที่กดเอง
+                this.tabOrder.forEach(t => {
+                    const el = document.getElementById(`view-${t}`);
+                    if (el) el.classList.add('hidden');
+                    const tabBtn = document.getElementById(`tab-${t}`);
+                    if (tabBtn) {
+                        tabBtn.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                        tabBtn.classList.add('text-gray-400', 'hover:text-white');
+                    }
+                });
+                const targetView = document.getElementById(`view-${tabName}`);
+                if (targetView) targetView.classList.remove('hidden');
+                const targetBtn = document.getElementById(`tab-${tabName}`);
+                if (targetBtn) {
+                    targetBtn.classList.add('bg-blue-600', 'text-white', 'shadow');
+                    targetBtn.classList.remove('text-gray-400', 'hover:text-white');
+                }
+                // กราฟที่วาดตอนแท็บยังซ่อนอยู่ ต้องสั่งปรับขนาดใหม่ ไม่งั้นจะเล็กจิ๋ว
+                setTimeout(() => this.resizeCharts(), 60);
+            }
+
+            renderLineFilesModalGrid() {
+                const grid = this.el('line-files-grid');
+                if (!grid) return;
+                grid.innerHTML = '';
+                this.lines.forEach(l => {
+                    const hasFile = !!this.lineData[l];
+                    const fileName = this.fileHandles[l]?.name || (hasFile ? 'Demo Data Loaded' : 'ยังไม่ได้เชื่อมต่อไฟล์');
+                    
+                    const div = document.createElement('div');
+                    div.className = 'bg-dark-900 border border-dark-700 p-3 rounded-xl flex flex-col justify-between space-y-2';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-white text-xs">${this.esc(l)}</span>
+                            <span class="px-2 py-0.5 text-[10px] rounded border ${hasFile ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700/50' : 'bg-dark-700 text-gray-400 border-dark-600'}">${hasFile ? 'CONNECTED' : 'EMPTY'}</span>
+                        </div>
+                        <div class="text-[11px] text-gray-400 truncate font-mono" title="${this.esc(fileName)}">${this.esc(fileName)}</div>
+                        <div class="flex items-center space-x-1.5 pt-1">
+                            <label class="flex-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-center text-xs font-semibold rounded-lg cursor-pointer transition">
+                                <i class="fa-solid fa-upload mr-1"></i> เลือกไฟล์
+                                <input type="file" accept=".xlsx, .xls, .csv" onchange="app.handleFileUpload('${l}', event)" class="hidden">
+                            </label>
+                            <button onclick="app.refreshLine('${l}')" class="p-1.5 bg-dark-700 hover:bg-dark-600 text-gray-300 rounded-lg transition" title="Refresh Line"><i class="fa-solid fa-rotate text-xs"></i></button>
+                            <button onclick="app.removeLineFile('${l}')" class="p-1.5 bg-red-900/60 hover:bg-red-900 text-red-300 rounded-lg transition" title="Remove Line File"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            }
+
+            renderTargetModalGrid() {
+                const container = this.el('target-inputs-container');
+                if (!container) return;
+                container.innerHTML = '';
+                this.lines.forEach(l => {
+                    const t = this.targets[l]?.target || 1200;
+                    const foT = this.targets[l]?.foTarget || 6000;
+
+                    const div = document.createElement('div');
+                    div.className = 'bg-dark-900 border border-dark-700 p-3 rounded-xl space-y-2';
+                    div.innerHTML = `
+                        <div class="font-bold text-white text-xs">${l} Target Setting</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Target / Shift (เป้าหมายกะ)</label>
+                                <input type="number" id="target-${l}" value="${t}" class="w-full bg-dark-800 border border-dark-700 rounded px-2 py-1 text-white font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">FO Target (เป้าหมายใบสั่ง)</label>
+                                <input type="number" id="fotarget-${l}" value="${foT}" class="w-full bg-dark-800 border border-dark-700 rounded px-2 py-1 text-white font-mono text-xs">
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            renderFilesCount() {
+                const count = this.lines.filter(l => this.lineData[l] && this.lineData[l].length > 0).length;
+                this.setText('active-files-count', count);
+                this.renderLineFilesModalGrid();
+            }
+
+            showModal(id) { const m = this.el(id); if (m) m.classList.remove('hidden'); }
+            hideModal(id) { const m = this.el(id); if (m) m.classList.add('hidden'); }
+            openFilesModal() { this.showModal('modal-files'); }
+            closeFilesModal() { this.hideModal('modal-files'); }
+            openTargetModal() { this.renderTargetModalGrid(); this.showModal('modal-target'); }
+            closeTargetModal() { this.hideModal('modal-target'); }
+            closeEmailModal() { this.hideModal('modal-email'); }
+            closeAiModal() { this.hideModal('modal-ai'); }
+
+            closeTopModal() {
+                const ids = ['modal-ai', 'modal-email', 'modal-target', 'modal-files'];
+                for (const id of ids) {
+                    const m = this.el(id);
+                    if (m && !m.classList.contains('hidden')) { m.classList.add('hidden'); return true; }
+                }
+                return false;
+            }
+
+            showNotification(message, type = 'success') {
+                let stack = this.el('toast-stack');
+                if (!stack) {
+                    stack = document.createElement('div');
+                    stack.id = 'toast-stack';
+                    stack.className = 'fixed bottom-5 right-5 z-[60] flex flex-col items-end space-y-2 pointer-events-none';
+                    document.body.appendChild(stack);
+                }
+
+                // ข้อความซ้ำติด ๆ กัน ไม่ต้องเด้งซ้อน
+                const last = stack.lastElementChild;
+                if (last && last.dataset.msg === String(message)) return;
+
+                // เด้งพร้อมกันเกิน 4 อัน ให้ตัวเก่าหายไปก่อน
+                while (stack.children.length >= 4) stack.removeChild(stack.firstElementChild);
+
+                let colorClass = 'bg-emerald-600 text-white border-emerald-500';
+                let icon = 'fa-circle-check';
+                if (type === 'error') { colorClass = 'bg-red-600 text-white border-red-500'; icon = 'fa-circle-exclamation'; }
+                else if (type === 'warning') { colorClass = 'bg-amber-600 text-white border-amber-500'; icon = 'fa-triangle-exclamation'; }
+                else if (type === 'info') { colorClass = 'bg-blue-600 text-white border-blue-500'; icon = 'fa-circle-info'; }
+
+                const notif = document.createElement('div');
+                notif.dataset.msg = String(message);
+                notif.className = `px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold flex items-center space-x-2 transition-all duration-300 max-w-[380px] ${colorClass}`;
+                const i = document.createElement('i');
+                i.className = `fa-solid ${icon}`;
+                const span = document.createElement('span');
+                span.textContent = message; // ใช้ textContent กันชื่อไฟล์แปลก ๆ ทำ layout พัง
+                notif.appendChild(i);
+                notif.appendChild(span);
+                stack.appendChild(notif);
+
+                setTimeout(() => {
+                    notif.style.opacity = '0';
+                    setTimeout(() => notif.remove(), 300);
+                }, type === 'error' ? 6000 : 3500);
+            }
+        }
+
+        let app;
+
+        function bootDashboard() {
+            try {
+                app = new ProductionDashboard();
+                window.app = app;
+                app.init();
+            } catch (err) {
+                console.error('[Boot]', err);
+                const box = document.getElementById('runtime-error-bar');
+                const txt = document.getElementById('runtime-error-text');
+                if (box && txt) {
+                    txt.textContent = 'เริ่มระบบไม่สำเร็จ: ' + (err && err.message ? err.message : 'ไม่ทราบสาเหตุ') + ' — กรุณากดรีเฟรชหน้า (F5)';
+                    box.classList.remove('hidden');
+                }
+            }
+        }
+
+        // ดักข้อผิดพลาดที่หลุดรอด ไม่ให้หน้าจอค้างเงียบ ๆ โดยผู้ใช้ไม่รู้ตัว
+        window.addEventListener('error', (e) => {
+            console.error('[GlobalError]', e.error || e.message);
+            if (window.app && typeof app.reportError === 'function') {
+                app.reportError('พบข้อผิดพลาดในระบบ', e.error || { message: e.message });
+            }
+        });
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('[UnhandledRejection]', e.reason);
+            if (window.app && typeof app.reportError === 'function') {
+                app.reportError('งานเบื้องหลังทำงานไม่สำเร็จ', e.reason);
+            }
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootDashboard);
+        } else {
+            bootDashboard();
+        }
+    </script>
+
+<script>
+/* ===== LIVE PRODUCTION LOG BRIDGE ===== */
+(function(){
+  const LOG_KEY='production_control_dashboard_log_v1';
+  const META_KEY='production_control_dashboard_meta_v1';
+  let lastRaw=null;
+
+  function pad2(n){return String(n).padStart(2,'0');}
+  function localStamp(ms){
+    const d=new Date(ms);
+    if(isNaN(d.getTime())) return '';
+    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
+  }
+  function normalizeLine(v){
+    const m=String(v||'').toUpperCase().match(/(?:LINE\s*)?(\d{1,2})/);
+    if(!m) return '';
+    const n=Number(m[1]);
+    return n>=1&&n<=18?'LINE'+String(n).padStart(2,'0'):'';
+  }
+  function eventMs(x){
+    const m=String(x?.eventId||'').match(/^EVT-(\d+)-/);
+    return m?Number(m[1]):0;
+  }
+  function mapLog(x){
+    const line=normalizeLine(x.line);
+    const ms=eventMs(x);
+    const dt=ms?localStamp(ms):String(x.dateTime||'');
+    const prodDate=String(x.productionDate||'').trim()||(dt?dt.slice(0,10):'');
+    return {
+      'Date Time':dt,
+      'Production Date':prodDate,
+      'Line':line,
+      'FO':String(x.productionFo||x.fo||x.masterFo||'').trim(),
+      'Style':String(x.style||'').trim(),
+      'Color':String(x.color||'').trim(),
+      'Time Slot':String(x.timeSlot||'').trim(),
+      'Type':String(x.type||'').toUpperCase().trim(),
+      'Qty':Number(x.qty||0),
+      'Source':'LIVE LOG'+(x.source?' • '+x.source:''),
+      'Status':'ACTIVE',
+      'Downtime (min)':0,
+      'Reason':'',
+      'JOB ID':String(x.jobId||'').trim(),
+      'Master FO':String(x.masterFo||'').trim(),
+      'Event ID':String(x.eventId||'').trim()
+    };
+  }
+  function setLiveBadge(count){
+    const badge=document.getElementById('standalone-badge');
+    if(!badge) return;
+    badge.classList.remove('hidden');
+    badge.innerHTML='<i class="fa-solid fa-link text-emerald-300"></i><span>LIVE LOG • '+count.toLocaleString()+' records</span>';
+    badge.className='px-3 py-1 bg-emerald-900/50 border border-emerald-600/50 text-emerald-300 text-xs rounded-lg font-medium flex items-center space-x-1';
+  }
+  function applyLogs(showToast=false){
+    if(!window.app) return;
+    const raw=localStorage.getItem(LOG_KEY);
+    if(!raw||raw===lastRaw) return;
+    let logs=[];
+    try{logs=JSON.parse(raw);}catch{return;}
+    if(!Array.isArray(logs)) return;
+    lastRaw=raw;
+
+    const grouped={};
+    logs.forEach(x=>{
+      const r=mapLog(x);
+      if(!r.Line) return;
+      (grouped[r.Line] ||= []).push(r);
+    });
+
+    app.lineData=grouped;
+    app.fileHandles={};
+    app.renderFilesCount();
+    app.populateFilterDropdowns();
+    app.updateAllViews();
+    setLiveBadge(logs.length);
+
+    if(showToast&&typeof app.showNotification==='function'){
+      app.showNotification('เชื่อม Production Log สำเร็จ '+logs.length.toLocaleString()+' รายการ','success');
+    }
+  }
+  function addProductionButton(){
+    if(document.getElementById('btn-back-production')) return;
+    const actions=document.querySelector('header > div:last-child');
+    if(!actions) return;
+    const btn=document.createElement('button');
+    btn.id='btn-back-production';
+    btn.className='px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5';
+    btn.innerHTML='<i class="fa-solid fa-industry"></i><span>Production Control</span>';
+    btn.onclick=()=>location.href='index.html';
+    actions.insertBefore(btn,actions.firstChild);
+  }
+  function start(){
+    if(!window.app){setTimeout(start,250);return;}
+    addProductionButton();
+    applyLogs(true);
+    setInterval(()=>applyLogs(false),2000);
+    window.addEventListener('storage',e=>{if(e.key===LOG_KEY){lastRaw=null;applyLogs(false);}});
+    window.PRODUCTION_LOG_DASHBOARD_BRIDGE={refresh:()=>{lastRaw=null;applyLogs(true);},key:LOG_KEY,metaKey:META_KEY};
+  }
+  start();
+})();
+</script>\n</body>
+</html>
