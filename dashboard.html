@@ -3092,143 +3092,172 @@ Please provide:
     </script>
 
 <script>
-/* ===== LIVE PRODUCTION LOG BRIDGE: SERVER + GITHUB STATIC ===== */
+/* =========================================================
+   LIVE LOG RECEIVER — additive connection only
+   ========================================================= */
 (function(){
-  const LOG_KEY='production_control_dashboard_log_v1';
-  const META_KEY='production_control_dashboard_meta_v1';
-  const LINES=Array.from({length:18},(_,i)=>'LINE'+String(i+1).padStart(2,'0'));
-  const STATIC_HOST=/github\.io$/i.test(location.hostname);
-  let lastSignature='';
+  const DASHBOARD_LOG_KEY = 'production_control_dashboard_log_v1';
+  const DASHBOARD_META_KEY = 'production_control_dashboard_meta_v1';
+  const STATIC_HOST = /github\.io$/i.test(location.hostname);
+  const LINES = Array.from({length:18}, (_,i)=>'LINE'+String(i+1).padStart(2,'0'));
+  let lastSignature = '';
 
-  function pad2(n){return String(n).padStart(2,'0');}
-  function localStamp(ms){
-    const d=new Date(ms);
-    if(isNaN(d.getTime())) return '';
-    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
-  }
   function normalizeLine(v){
-    const m=String(v||'').toUpperCase().match(/(?:LINE\s*)?(\d{1,2})/);
+    const m = String(v || '').toUpperCase().match(/(?:LINE\s*)?(\d{1,2})/);
     if(!m) return '';
-    const n=Number(m[1]);
-    return n>=1&&n<=18?'LINE'+String(n).padStart(2,'0'):'';
+    const n = Number(m[1]);
+    return n >= 1 && n <= 18 ? 'LINE' + String(n).padStart(2,'0') : '';
   }
-  function eventMs(x){
-    const m=String(x?.eventId||'').match(/^EVT-(\d+)-/);
-    return m?Number(m[1]):0;
-  }
-  function mapLog(x){
-    const line=normalizeLine(x.line);
-    const ms=eventMs(x);
-    const dt=ms?localStamp(ms):String(x.dateTime||'');
-    const prodDate=String(x.productionDate||'').trim()||(dt?dt.slice(0,10):'');
+
+  function toDashboardRow(x){
     return {
-      'Date Time':dt,
-      'Production Date':prodDate,
-      'Line':line,
-      'FO':String(x.productionFo||x.fo||x.masterFo||'').trim(),
-      'Style':String(x.style||'').trim(),
-      'Color':String(x.color||'').trim(),
-      'Time Slot':String(x.timeSlot||'').trim(),
-      'Type':String(x.type||'').toUpperCase().trim(),
-      'Qty':Number(x.qty||0),
-      'Source':String(x._bridgeSource||'LIVE LOG')+(x.source?' • '+x.source:''),
-      'Status':'ACTIVE',
-      'Downtime (min)':Number(x.downtime||0),
-      'Reason':String(x.reason||''),
-      'JOB ID':String(x.jobId||'').trim(),
-      'Master FO':String(x.masterFo||'').trim(),
-      'Event ID':String(x.eventId||'').trim()
+      'Date Time': x && x.dateTime || '',
+      'Production Date': x && x.productionDate || '',
+      'Line': normalizeLine(x && x.line),
+      'FO': String(x && (x.productionFo || x.fo || x.masterFo) || '').trim(),
+      'Style': String(x && x.style || '').trim(),
+      'Color': String(x && x.color || '').trim(),
+      'Time Slot': String(x && x.timeSlot || '').trim(),
+      'Type': String(x && x.type || '').toUpperCase().trim(),
+      'Qty': Number(x && x.qty || 0),
+      'Source': 'LIVE LOG',
+      'Status': 'ACTIVE',
+      'Downtime (min)': Number(x && x.downtime || 0),
+      'Reason': String(x && x.reason || ''),
+      'JOB ID': String(x && x.jobId || '').trim(),
+      'Master FO': String(x && x.masterFo || '').trim(),
+      'Event ID': String(x && x.eventId || '').trim()
     };
   }
-  function signature(logs,mode){
-    const last=logs.length?logs[logs.length-1]:{};
-    return mode+'|'+logs.length+'|'+String(last.eventId||'')+'|'+logs.reduce((s,x)=>s+Number(x.qty||0),0);
-  }
-  function setLiveBadge(count,mode){
-    const badge=document.getElementById('standalone-badge');
-    if(!badge) return;
-    badge.classList.remove('hidden');
-    const server=mode==='SERVER LOG';
-    badge.innerHTML='<i class="fa-solid '+(server?'fa-server':'fa-link')+'"></i><span>'+mode+' • '+count.toLocaleString()+' records</span>';
-    badge.className='px-3 py-1 '+(server?'bg-cyan-900/50 border-cyan-600/50 text-cyan-300':'bg-emerald-900/50 border-emerald-600/50 text-emerald-300')+' border text-xs rounded-lg font-medium flex items-center space-x-1';
-  }
-  function applyLogs(logs,mode,showToast=false){
-    if(!window.app||!Array.isArray(logs)) return;
-    const sig=signature(logs,mode);
-    if(sig===lastSignature) return;
-    lastSignature=sig;
 
-    const grouped={};
-    logs.forEach(x=>{
-      const r=mapLog({...x,_bridgeSource:mode});
-      if(!r.Line) return;
-      (grouped[r.Line] ||= []).push(r);
-    });
-
-    app.lineData=grouped;
-    app.fileHandles={};
-    app.renderFilesCount();
-    app.populateFilterDropdowns();
-    app.updateAllViews();
-    setLiveBadge(logs.length,mode);
-
-    if(showToast&&typeof app.showNotification==='function'){
-      app.showNotification('เชื่อม '+mode+' สำเร็จ '+logs.length.toLocaleString()+' รายการ','success');
-    }
-  }
   function readBrowserLogs(){
-    let logs=[];
-    try{logs=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');}catch{}
-    return Array.isArray(logs)?logs:[];
+    try{
+      const x = JSON.parse(localStorage.getItem(DASHBOARD_LOG_KEY) || '[]');
+      return Array.isArray(x) ? x : [];
+    }catch(e){ return []; }
   }
+
   async function readServerLogs(){
     if(STATIC_HOST) return null;
-    let success=0;
-    const rows=[];
-    const results=await Promise.allSettled(LINES.map(async line=>{
-      const res=await fetch('/api/line/state?line='+encodeURIComponent(line),{cache:'no-store'});
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const data=await res.json();
-      return Array.isArray(data.logs)?data.logs:[];
-    }));
+    const all = [];
+    let okCount = 0;
+    const results = await Promise.allSettled(
+      LINES.map(async line=>{
+        const res = await fetch('/api/line/state?line=' + encodeURIComponent(line), {cache:'no-store'});
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return Array.isArray(data.logs) ? data.logs : [];
+      })
+    );
     results.forEach(r=>{
-      if(r.status==='fulfilled'){
-        success++;
-        (r.value||[]).forEach(x=>rows.push(x));
+      if(r.status === 'fulfilled'){
+        okCount++;
+        (r.value || []).forEach(x=>all.push(x));
       }
     });
-    return success>0?rows:null;
+    return okCount ? all : null;
   }
-  async function refresh(showToast=false){
+
+  function sig(rows, mode){
+    const last = rows.length ? rows[rows.length-1] : {};
+    return [mode, rows.length, String(last && last.eventId || ''),
+      rows.reduce((s,x)=>s + Number(x && x.qty || 0),0)].join('|');
+  }
+
+  function showLiveBadge(count, mode){
+    const badge = document.getElementById('standalone-badge');
+    if(!badge) return;
+    badge.classList.remove('hidden');
+    const server = mode === 'SERVER LOG';
+    badge.className =
+      'px-3 py-1 border text-xs rounded-lg font-medium flex items-center space-x-1 ' +
+      (server
+        ? 'bg-cyan-900/50 border-cyan-600/50 text-cyan-300'
+        : 'bg-emerald-900/50 border-emerald-600/50 text-emerald-300');
+    badge.innerHTML =
+      '<i class="fa-solid ' + (server ? 'fa-server' : 'fa-link') + '"></i>' +
+      '<span>' + mode + ' • ' + Number(count || 0).toLocaleString() + ' records</span>';
+  }
+
+  function applyLogs(logs, mode, notify){
+    if(!window.app || !Array.isArray(logs)) return;
+    const signature = sig(logs, mode);
+    if(signature === lastSignature) return;
+    lastSignature = signature;
+
+    const grouped = {};
+    LINES.forEach(line=>{ grouped[line] = []; });
+    const rawByLine = {};
+
+    logs.forEach(x=>{
+      const line = normalizeLine(x && x.line);
+      if(!line) return;
+      (rawByLine[line] ||= []).push(toDashboardRow(x));
+    });
+
+    LINES.forEach(line=>{
+      const rows = rawByLine[line] || [];
+      grouped[line] = typeof app.mapRowsToRecords === 'function'
+        ? app.mapRowsToRecords(rows, line, mode)
+        : rows;
+    });
+
+    app.lineData = grouped;
+    app.fileHandles = {};
+    if(typeof app.renderFilesCount === 'function') app.renderFilesCount();
+    if(typeof app.populateFilterDropdowns === 'function') app.populateFilterDropdowns();
+    if(typeof app.updateAllViews === 'function') app.updateAllViews();
+    showLiveBadge(logs.length, mode);
+
+    if(notify && typeof app.showNotification === 'function'){
+      app.showNotification('เชื่อม ' + mode + ' สำเร็จ ' + logs.length.toLocaleString() + ' รายการ', 'success');
+    }
+  }
+
+  async function refreshLiveLog(notify=false){
     try{
-      const serverLogs=await readServerLogs();
-      if(serverLogs!==null){
-        applyLogs(serverLogs,'SERVER LOG',showToast);
+      const serverLogs = await readServerLogs();
+      if(serverLogs !== null){
+        applyLogs(serverLogs, 'SERVER LOG', notify);
         return;
       }
-    }catch(e){}
-    applyLogs(readBrowserLogs(),'LIVE LOG',showToast);
+    }catch(e){ console.warn('[LiveLogReceiver] server', e); }
+    applyLogs(readBrowserLogs(), 'LIVE LOG', notify);
   }
+
   function addProductionButton(){
     if(document.getElementById('btn-back-production')) return;
-    const actions=document.querySelector('header > div:last-child');
+    const actions = document.querySelector('header > div:last-child');
     if(!actions) return;
-    const btn=document.createElement('button');
-    btn.id='btn-back-production';
-    btn.className='px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5';
-    btn.innerHTML='<i class="fa-solid fa-industry"></i><span>Production Control</span>';
-    btn.onclick=()=>location.href='index.html';
-    actions.insertBefore(btn,actions.firstChild);
+    const btn = document.createElement('button');
+    btn.id = 'btn-back-production';
+    btn.type = 'button';
+    btn.className = 'px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5';
+    btn.innerHTML = '<i class="fa-solid fa-industry"></i><span>Production Control</span>';
+    btn.addEventListener('click', ()=>{ location.href = 'index.html'; });
+    actions.insertBefore(btn, actions.firstChild);
   }
-  function start(){
-    if(!window.app){setTimeout(start,250);return;}
+
+  function bootLiveLogReceiver(){
+    if(!window.app){ setTimeout(bootLiveLogReceiver,200); return; }
     addProductionButton();
-    refresh(true);
-    setInterval(()=>refresh(false),3000);
-    window.addEventListener('storage',e=>{if(e.key===LOG_KEY){lastSignature='';refresh(false);}});
-    window.PRODUCTION_LOG_DASHBOARD_BRIDGE={refresh:()=>{lastSignature='';return refresh(true);},key:LOG_KEY,metaKey:META_KEY};
+    refreshLiveLog(true);
+    setInterval(()=>refreshLiveLog(false),3000);
+    window.addEventListener('storage', e=>{
+      if(e.key === DASHBOARD_LOG_KEY){
+        lastSignature = '';
+        refreshLiveLog(false);
+      }
+    });
+    window.EXECUTIVE_DASHBOARD_LIVE_LOG = {
+      refresh: ()=>{ lastSignature=''; return refreshLiveLog(true); },
+      logKey: DASHBOARD_LOG_KEY,
+      metaKey: DASHBOARD_META_KEY
+    };
   }
-  start();
+
+  bootLiveLogReceiver();
 })();
-</script>\n</body>
+</script>
+\n</body>
 </html>
