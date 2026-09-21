@@ -5370,7 +5370,7 @@ function currentLineOneDriveMirrorPath(){
 <script>
 /* SERVER BRIDGE V1.34: connects consolidated V1.31 UI logic to the real Node server. */
 (function(){
-  const SERVER_ENABLED = location.protocol === "http:" || location.protocol === "https:";
+  const SERVER_ENABLED = (location.protocol === "http:" || location.protocol === "https:") && location.hostname !== "wasankanlaya79-design.github.io";
   if(!SERVER_ENABLED) return;
 
   async function api(path, options={}){
