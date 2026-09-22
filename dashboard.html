@@ -266,7 +266,7 @@
             <!-- Batch Multi-File Upload Button -->
             <label class="px-3 py-1.5 bg-indigo-800/80 hover:bg-indigo-700 text-indigo-100 border border-indigo-600/50 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5 cursor-pointer" title="อัปโหลด Excel หลายไฟล์พร้อมกัน ระบบจะจับคู่สายให้อัตโนมัติ">
                 <i class="fa-solid fa-file-import text-cyan-300"></i><span>Batch Upload All Lines</span>
-                <input type="file" multiple accept=".xlsx, .xls, .csv" onchange="app.handleBatchUpload(event)" class="hidden">
+                <input type="file" multiple accept=".xlsx,.xls,.xlsm,.xlsb,.xlt,.xltx,.xltm,.xml,.csv,.ods,.fods,.txt,.prn,.dif,.slk,.sylk,.dbf,.wk1,.wk3,.wk4,.wks,.123,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,text/csv,application/xml,text/xml" onchange="app.handleBatchUpload(event)" class="hidden">
             </label>
 
             <button onclick="app.openFilesModal()" id="btn-manage-files" class="px-3 py-1.5 bg-dark-700 hover:bg-dark-600 text-gray-200 border border-dark-600 text-xs font-semibold rounded-lg shadow transition flex items-center space-x-1.5">
@@ -812,7 +812,7 @@
                     <div class="flex items-center space-x-2">
                         <label class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition cursor-pointer flex items-center">
                             <i class="fa-solid fa-upload mr-1.5"></i> Batch Multi-File Upload
-                            <input type="file" multiple accept=".xlsx, .xls, .csv" onchange="app.handleBatchUpload(event)" class="hidden">
+                            <input type="file" multiple accept=".xlsx,.xls,.xlsm,.xlsb,.xlt,.xltx,.xltm,.xml,.csv,.ods,.fods,.txt,.prn,.dif,.slk,.sylk,.dbf,.wk1,.wk3,.wk4,.wks,.123,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,text/csv,application/xml,text/xml" onchange="app.handleBatchUpload(event)" class="hidden">
                         </label>
                         <button onclick="app.clearAllFiles()" class="px-3 py-1.5 bg-red-900/60 hover:bg-red-900 text-red-200 rounded-lg font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> Clear All</button>
                     </div>
@@ -2951,7 +2951,7 @@ Please provide:
                         <div class="flex items-center space-x-1.5 pt-1">
                             <label class="flex-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-center text-xs font-semibold rounded-lg cursor-pointer transition">
                                 <i class="fa-solid fa-upload mr-1"></i> เลือกไฟล์
-                                <input type="file" accept=".xlsx, .xls, .csv" onchange="app.handleFileUpload('${l}', event)" class="hidden">
+                                <input type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.xlt,.xltx,.xltm,.xml,.csv,.ods,.fods,.txt,.prn,.dif,.slk,.sylk,.dbf,.wk1,.wk3,.wk4,.wks,.123,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,text/csv,application/xml,text/xml" onchange="app.handleFileUpload('${l}', event)" class="hidden">
                             </label>
                             <button onclick="app.refreshLine('${l}')" class="p-1.5 bg-dark-700 hover:bg-dark-600 text-gray-300 rounded-lg transition" title="Refresh Line"><i class="fa-solid fa-rotate text-xs"></i></button>
                             <button onclick="app.removeLineFile('${l}')" class="p-1.5 bg-red-900/60 hover:bg-red-900 text-red-300 rounded-lg transition" title="Remove Line File"><i class="fa-solid fa-trash text-xs"></i></button>
