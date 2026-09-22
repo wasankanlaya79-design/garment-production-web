@@ -1,1 +1,5670 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Production Control V1.35 — JOB ID</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#fff; --line:#dfe7f1; --text:#162033; --muted:#64748b;
+  --blue:#2563eb; --blue2:#eff6ff; --green:#15803d; --green2:#f0fdf4;
+  --orange:#c2410c; --orange2:#fff7ed; --red:#dc2626; --break:#fff8ee;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{background:#0f172a;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.topbar h1{margin:0;font-size:20px}
+.demo{font-size:12px;background:#7c2d12;padding:6px 10px;border-radius:999px}
+.wrap{max-width:1180px;margin:auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 18px rgba(15,23,42,.05);padding:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px 12px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700}
+.field input,.field select{width:100%;height:38px;border:1px solid #d7dfeb;border-radius:8px;padding:0 10px;font-size:13px;background:#fff;color:#172033}
+.actions{display:flex;gap:8px;align-items:end}
+button{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.primary{background:var(--blue);color:#fff}
+.secondary{background:#e2e8f0;color:#334155}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:12px;background:#f8fafc;text-align:center}
+.kpi span{display:block;color:var(--muted);font-size:12px}
+.kpi b{display:block;font-size:23px;margin-top:5px}
+.kpi.finish{background:var(--green2);border-color:#bbf7d0}
+.plan-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.plan-head h2{margin:0;font-size:17px}
+.daybar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px;margin:12px 0 6px}
+.daybar strong{min-width:120px}
+.ot-group{display:flex;gap:6px;flex-wrap:wrap}
+.ot-btn{padding:7px 10px;border:1px solid #cbd5e1;background:white;color:#334155}
+.ot-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.day-summary{margin-left:auto;color:#334155;font-size:12px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1050px}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);font-size:12px;text-align:center;white-space:nowrap}
+th{background:#f8fafc;position:sticky;top:0;z-index:2}
+tr.break{background:var(--break);color:#a64b00}
+tr.ot.off{opacity:.38}
+td.diff.neg{color:var(--red);font-weight:700}
+td.date{font-weight:700;color:#1d4ed8}
+td.problem{min-width:110px}
+.complete{margin-top:12px;padding:12px;border:1px solid #bbf7d0;background:var(--green2);border-radius:10px;font-weight:700;color:#166534}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+@media(max-width:1000px){
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+ .grid,.kpis{grid-template-columns:1fr}
+}
+
+.line-login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:#eef3f9;
+}
+.line-login-card{
+  width:min(460px,100%);
+  background:#fff;
+  border:1px solid #dfe7f1;
+  border-radius:18px;
+  box-shadow:0 16px 40px rgba(15,23,42,.10);
+  padding:28px;
+}
+.line-login-card h1{
+  margin:0 0 6px;
+  font-size:24px;
+}
+.line-login-card p{
+  margin:0 0 20px;
+  color:#64748b;
+  font-size:13px;
+}
+.line-login-card label{
+  display:block;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.line-login-card input{
+  width:100%;
+  height:52px;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:0 14px;
+  font-size:18px;
+  text-transform:uppercase;
+}
+.line-login-actions{
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+}
+.line-error{
+  color:#b91c1c;
+  font-size:12px;
+  min-height:18px;
+  margin-top:8px;
+}
+.line-badge{
+  background:#1d4ed8;
+  color:#fff;
+  font-weight:800;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+}
+.logout-btn{
+  background:#e2e8f0;
+  color:#334155;
+  padding:7px 10px;
+}
+.app-hidden{display:none!important}
+
+.line-overview-screen{
+  min-height:100vh;
+  background:#eef3f9;
+  padding:0;
+}
+.line-overview-header{
+  height:64px;
+  background:#fff;
+  border-bottom:1px solid #dfe7f1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 24px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.line-overview-header h1{
+  font-size:20px;
+  margin:0;
+}
+.line-overview-header .sub{
+  color:#64748b;
+  font-size:12px;
+}
+.line-overview-wrap{
+  max-width:1500px;
+  margin:auto;
+  padding:24px;
+}
+.line-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(180px,1fr));
+  gap:18px;
+}
+.line-card{
+  background:#fff;
+  border:1px solid #dfe7f1;
+  border-radius:16px;
+  padding:18px;
+  min-height:160px;
+  box-shadow:0 8px 22px rgba(15,23,42,.05);
+  cursor:pointer;
+  transition:.18s ease;
+  position:relative;
+}
+.line-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 14px 28px rgba(15,23,42,.10);
+  border-color:#93c5fd;
+}
+.line-card.selected{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+.line-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.line-card h3{
+  margin:0;
+  font-size:22px;
+  letter-spacing:.3px;
+}
+.status-pill{
+  padding:5px 9px;
+  border-radius:999px;
+  background:#f1f5f9;
+  color:#64748b;
+  font-size:11px;
+  font-weight:700;
+}
+.line-card p{
+  margin:16px 0 18px;
+  color:#64748b;
+  font-size:13px;
+}
+.line-progress{
+  height:8px;
+  border-radius:999px;
+  background:#edf2f7;
+  overflow:hidden;
+}
+.line-progress > span{
+  display:block;
+  height:100%;
+  width:0%;
+  background:#2563eb;
+}
+.line-card-foot{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+  color:#475569;
+  font-size:12px;
+}
+.line-select-note{
+  margin:0 0 16px;
+  color:#475569;
+  font-size:13px;
+}
+.line-login-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:50;
+}
+.line-login-modal.hidden{display:none!important}
+.line-login-box{
+  width:min(430px,100%);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 24px 60px rgba(15,23,42,.24);
+  padding:24px;
+}
+.line-login-box h2{
+  margin:0 0 6px;
+  font-size:22px;
+}
+.line-login-box p{
+  margin:0 0 16px;
+  color:#64748b;
+  font-size:13px;
+}
+.line-login-box input{
+  width:100%;
+  height:52px;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:0 14px;
+  font-size:18px;
+  text-transform:uppercase;
+}
+.line-login-modal-actions{
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+}
+.line-login-modal-actions button{flex:1}
+@media(max-width:1200px){
+  .line-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:760px){
+  .line-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:520px){
+  .line-grid{grid-template-columns:1fr}
+}
+
+
+.main-nav{
+  display:flex;gap:8px;align-items:center;margin-left:18px
+}
+.main-nav button{
+  background:#e2e8f0;color:#334155;padding:8px 12px
+}
+.main-nav button.active{
+  background:#2563eb;color:#fff
+}
+.planning-page{
+  min-height:100vh;background:#eef3f9
+}
+.planning-header{
+  height:64px;background:#fff;border-bottom:1px solid #dfe7f1;
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+  position:sticky;top:0;z-index:10
+}
+.planning-wrap{max-width:1500px;margin:auto;padding:24px}
+.plan-card{
+  background:#fff;border:1px solid #dfe7f1;border-radius:16px;
+  box-shadow:0 8px 22px rgba(15,23,42,.05);padding:18px
+}
+.plan-toolbar{
+  display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px
+}
+.plan-table-wrap{overflow:auto;border:1px solid #dfe7f1;border-radius:12px}
+.plan-table{width:100%;border-collapse:collapse;min-width:950px}
+.plan-table th,.plan-table td{
+  border-bottom:1px solid #e2e8f0;padding:9px 10px;font-size:12px;text-align:center
+}
+.plan-table th{background:#0f172a;color:#fff;position:sticky;top:0}
+.plan-table td input{
+  width:100%;height:34px;border:1px solid #cbd5e1;border-radius:7px;padding:0 8px;font-size:12px
+}
+.plan-table td input[readonly]{
+  border-color:transparent;background:transparent;text-align:center
+}
+.plan-actions{
+  display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap
+}
+.plan-actions button{
+  height:28px;border:0;border-radius:7px;padding:0 8px;font-size:11px;font-weight:800;cursor:pointer
+}
+.plan-actions .edit{background:#dbeafe;color:#1d4ed8}
+.plan-actions .insert{background:#dcfce7;color:#166534}
+.plan-actions .delete{background:#fee2e2;color:#b91c1c}
+.plan-actions button:disabled{opacity:.35;cursor:not-allowed}
+
+.planner-lock{
+  display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #dfe7f1;
+  border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;color:#475569
+}
+.fo-select{
+  width:100%;height:54px;border:1px solid #d7dfeb;border-radius:12px;padding:0 14px;font-size:16px;background:#fff
+}
+.readonly-field{background:#f8fafc!important;color:#475569}
+
+
+.save-plan-btn{
+  background:#15803d;color:#fff;
+}
+.edit-fo-btn{
+  background:#f59e0b;color:#fff;
+}
+.locked-overlay-note{
+  margin-top:10px;
+  padding:10px 12px;
+  border:1px solid #bbf7d0;
+  background:#f0fdf4;
+  color:#166534;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+}
+button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.production-input-card{
+  background:#fff;border:1px solid #dfe7f1;border-radius:14px;padding:16px;margin-bottom:14px
+}
+.production-input-head{
+  display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px
+}
+.prod-status{
+  padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;background:#f1f5f9;color:#475569
+}
+.prod-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.prod-btn{min-height:78px;font-size:22px;font-weight:900;border-radius:12px;color:#fff}
+.prod-ok{background:#16a34a}
+.prod-repair{background:#eab308;color:#422006}
+.prod-ng{background:#dc2626}
+.prod-btn:disabled{opacity:.35;cursor:not-allowed}
+.prod-stats{display:grid;grid-template-columns:repeat(9,1fr);gap:10px;margin-top:12px}
+.prod-stat{border:1px solid #dfe7f1;border-radius:10px;padding:10px;text-align:center;background:#f8fafc}
+.prod-stat span{display:block;font-size:11px;color:#64748b}
+.prod-stat b{display:block;font-size:22px;margin-top:4px}
+.flash-ok{outline:4px solid rgba(22,163,74,.18)}
+.flash-repair{outline:4px solid rgba(234,179,8,.20)}
+.flash-ng{outline:4px solid rgba(220,38,38,.18)}
+@media(max-width:700px){
+  .prod-buttons,.prod-stats{grid-template-columns:1fr}
+}
+
+.input-mode-bar{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  margin:12px 0;padding:10px;border:1px solid #dfe7f1;border-radius:10px;background:#f8fafc
+}
+.mode-btn{
+  padding:8px 12px;border:1px solid #cbd5e1;background:#fff;color:#334155
+}
+.mode-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.cooldown-box{
+  margin-top:12px;border:1px solid #dfe7f1;border-radius:10px;overflow:hidden;background:#f8fafc
+}
+.cooldown-head{
+  display:flex;justify-content:space-between;gap:8px;padding:8px 10px;font-size:12px;font-weight:700
+}
+.cooldown-track{height:14px;background:#e5e7eb;overflow:hidden}
+.cooldown-fill{height:100%;width:0%;transition:width .08s linear}
+.cooldown-fill.ok{background:#16a34a}
+.cooldown-fill.repair{background:#eab308}
+.cooldown-fill.ng{background:#dc2626}
+.keyboard-hint{
+  font-size:12px;color:#475569;margin-left:auto
+}
+
+.day-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:8px;
+  margin:8px 0 10px;
+}
+.day-kpi{
+  border:1px solid #dfe7f1;
+  border-radius:10px;
+  padding:9px 8px;
+  background:#fff;
+  text-align:center;
+}
+.day-kpi span{
+  display:block;
+  font-size:10px;
+  color:#64748b;
+}
+.day-kpi b{
+  display:block;
+  font-size:19px;
+  margin-top:3px;
+}
+.day-kpi.daily{
+  background:#eff6ff;
+  border-color:#bfdbfe;
+}
+.day-kpi.cumulative{
+  background:#f0fdf4;
+  border-color:#bbf7d0;
+}
+.day-kpi.cumulative span{color:#166534}
+.day-kpi.daily span{color:#1d4ed8}
+@media(max-width:1100px){
+  .day-kpi-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:650px){
+  .day-kpi-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+.history-panel{
+  background:#fff;border:1px solid #dfe7f1;border-radius:14px;padding:16px;margin-top:14px
+}
+.history-table-wrap{overflow:auto;border:1px solid #dfe7f1;border-radius:10px}
+.history-table{width:100%;border-collapse:collapse;min-width:1050px}
+.history-table th,.history-table td{
+  padding:8px 9px;border-bottom:1px solid #e2e8f0;font-size:11px;text-align:center;white-space:nowrap
+}
+.history-table th{background:#0f172a;color:#fff}
+.day-lock-note{
+  display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;color:#475569;
+  font-size:10px;font-weight:800;margin-left:6px
+}
+
+/* Compact FO form */
+.fo-compact-grid .field.wide{grid-column:span 2}
+.fo-compact-grid .field.full{grid-column:1/-1}
+.fo-compact-grid .field.narrow{max-width:170px}
+.fo-compact-grid .field.medium{max-width:230px}
+@media(max-width:1200px){.grid{grid-template-columns:repeat(4,minmax(140px,1fr))}}
+@media(max-width:900px){
+  .grid{grid-template-columns:repeat(2,minmax(150px,1fr))}
+  .fo-compact-grid .field.wide{grid-column:span 2}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr}
+  .fo-compact-grid .field.wide,
+  .fo-compact-grid .field.full{grid-column:auto}
+  .fo-compact-grid .field.narrow,
+  .fo-compact-grid .field.medium{max-width:none}
+}
+
+/* V27 Operator Easy View */
+.live-today-card{
+  background:#fff;
+  border:1px solid #dfe7f1;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+  box-shadow:0 4px 18px rgba(15,23,42,.05);
+}
+.live-today-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.live-today-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.live-today-title h2{
+  margin:0;
+  font-size:18px;
+}
+.live-meta{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.live-chip{
+  border:1px solid #dbe4ef;
+  background:#f8fafc;
+  color:#334155;
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:11px;
+  font-weight:800;
+}
+.live-chip.status{
+  background:#eff6ff;
+  border-color:#bfdbfe;
+  color:#1d4ed8;
+}
+.live-slot-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.live-slot{
+  border:1px solid #dbe4ef;
+  border-radius:10px;
+  padding:8px 10px;
+  background:#f8fafc;
+  text-align:center;
+}
+.live-slot span{
+  display:block;
+  color:#64748b;
+  font-size:10px;
+}
+.live-slot b{
+  display:block;
+  margin-top:3px;
+  font-size:17px;
+}
+.section-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:2px 0 8px;
+  font-size:12px;
+  font-weight:800;
+  color:#475569;
+}
+.section-no{
+  width:22px;height:22px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#0f172a;color:#fff;font-size:11px;
+}
+.production-input-card .production-input-head .note{
+  max-width:1050px;
+}
+@media(max-width:900px){
+  .live-slot-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .live-slot-grid{grid-template-columns:1fr}
+}
+
+/* V28 Production Transaction Log */
+.input-log-card{
+  background:#fff;
+  border:1px solid #dfe7f1;
+  border-radius:14px;
+  padding:14px;
+  margin:12px 0;
+  box-shadow:0 4px 18px rgba(15,23,42,.05);
+}
+.input-log-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.input-log-head h2{
+  margin:0;
+  font-size:17px;
+}
+.input-log-badge{
+  padding:5px 9px;
+  border-radius:999px;
+  background:#ecfdf5;
+  color:#166534;
+  border:1px solid #bbf7d0;
+  font-size:11px;
+  font-weight:800;
+}
+.input-log-wrap{
+  overflow:auto;
+  border:1px solid #dfe7f1;
+  border-radius:10px;
+  max-height:300px;
+}
+.input-log-table{
+  width:100%;
+  min-width:1150px;
+  border-collapse:collapse;
+}
+.input-log-table th,
+.input-log-table td{
+  border-bottom:1px solid #e2e8f0;
+  padding:8px 9px;
+  font-size:11px;
+  text-align:center;
+  white-space:nowrap;
+}
+.input-log-table th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#0f172a;
+  color:#fff;
+}
+.input-log-ok{color:#15803d;font-weight:800}
+.input-log-repair{color:#a16207;font-weight:800}
+.input-log-ng{color:#b91c1c;font-weight:800}
+.input-log-source{
+  color:#475569;
+  font-size:10px;
+}
+
+/* V29 Side Transaction Log */
+.production-workspace{
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(360px,.9fr);
+  gap:12px;
+  align-items:start;
+  margin-bottom:12px;
+}
+.production-workspace .production-input-card,
+.production-workspace .input-log-card{
+  margin:0;
+}
+.production-workspace .input-log-card{
+  position:sticky;
+  top:72px;
+  max-height:560px;
+}
+.production-workspace .input-log-wrap{
+  max-height:205px; /* แสดงประมาณ 5 รายการล่าสุด แล้วเลื่อนแนวตั้งดูย้อนหลัง */
+  overflow-y:auto;
+  overflow-x:auto;
+}
+.production-workspace .input-log-table{
+  min-width:760px;
+}
+.production-workspace .input-log-table th,
+.production-workspace .input-log-table td{
+  padding:6px 7px;
+  font-size:10px;
+}
+.production-workspace .input-log-head h2{
+  font-size:15px;
+}
+.production-workspace .input-log-head .note{
+  font-size:10px;
+}
+.production-workspace .input-log-badge{
+  font-size:9px;
+  padding:4px 7px;
+}
+@media(max-width:1150px){
+  .production-workspace{
+    grid-template-columns:1fr;
+  }
+  .production-workspace .input-log-card{
+    position:static;
+    max-height:none;
+  }
+  .production-workspace .input-log-wrap{
+    max-height:205px;
+  }
+}
+
+/* V33 Export / Print */
+.report-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:8px 0 10px;
+}
+.report-toolbar button{
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:800;
+}
+.export-excel{background:#15803d;color:#fff}
+.export-csv{background:#0f766e;color:#fff}
+.export-print{background:#334155;color:#fff}
+
+@media print{
+  body{background:#fff!important}
+  .topbar,
+  .line-overview-screen,
+  .planning-page,
+  .report-toolbar,
+  .production-input-card,
+  .input-log-card,
+  .section-label,
+  button,
+  .demo,
+  .note:not(.print-keep){
+    display:none!important;
+  }
+  #appShell{
+    display:block!important;
+  }
+  .wrap{
+    max-width:none!important;
+    padding:0!important;
+  }
+  .card,
+  .live-today-card,
+  .history-panel{
+    box-shadow:none!important;
+    border:1px solid #cbd5e1!important;
+    break-inside:avoid;
+  }
+  .tablewrap,
+  .history-table-wrap{
+    overflow:visible!important;
+    max-height:none!important;
+  }
+  table{
+    font-size:9px!important;
+  }
+  th,td{
+    padding:4px 5px!important;
+  }
+}
+
+/* V34 Per-day export controls */
+.day-export-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:6px 0 8px;
+}
+.day-export-toolbar button{
+  padding:6px 9px;
+  border-radius:7px;
+  font-size:10px;
+  font-weight:800;
+}
+.day-export-excel{background:#15803d;color:#fff}
+.day-export-csv{background:#0f766e;color:#fff}
+.day-export-print{background:#334155;color:#fff}
+@media print{
+  .day-export-toolbar{display:none!important}
+}
+
+/* V38 Local-first storage status */
+.storage-status-card{
+  background:#fff;
+  border:1px solid #dfe7f1;
+  border-radius:14px;
+  padding:12px;
+  margin:10px 0 12px;
+  box-shadow:0 4px 18px rgba(15,23,42,.05);
+}
+.storage-status-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.storage-status-head h2{
+  margin:0;
+  font-size:16px;
+}
+.storage-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.storage-box{
+  border:1px solid #dbe4ef;
+  border-radius:10px;
+  padding:10px;
+  background:#f8fafc;
+}
+.storage-box span{
+  display:block;
+  font-size:10px;
+  color:#64748b;
+}
+.storage-box b{
+  display:block;
+  margin-top:3px;
+  font-size:15px;
+}
+.storage-ok{background:#f0fdf4;border-color:#bbf7d0}
+.storage-wait{background:#fff7ed;border-color:#fed7aa}
+.storage-bad{background:#fef2f2;border-color:#fecaca}
+.queue-list{
+  margin-top:10px;
+  max-height:160px;
+  overflow:auto;
+  border:1px solid #dfe7f1;
+  border-radius:8px;
+}
+.queue-list table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:720px;
+}
+.queue-list th,.queue-list td{
+  padding:6px 7px;
+  border-bottom:1px solid #e2e8f0;
+  font-size:10px;
+  text-align:center;
+  white-space:nowrap;
+}
+.queue-list th{
+  background:#0f172a;
+  color:#fff;
+  position:sticky;
+  top:0;
+}
+.storage-controls{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.storage-controls button{
+  font-size:10px;
+  padding:6px 9px;
+}
+@media(max-width:800px){
+  .storage-grid{grid-template-columns:1fr}
+}
+
+/* ===== V1.7 SMART FACTORY OVERVIEW ===== */
+.line-overview-screen{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 18% 8%,rgba(37,99,235,.08),transparent 25%),
+    linear-gradient(180deg,#f8fbff 0,#edf4fb 30%,#e8f0f8 100%);
+  color:#0f2a4d;
+}
+.line-overview-header{
+  min-height:96px;
+  height:auto;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid #dce7f2;
+  padding:10px 28px;
+  box-shadow:0 4px 18px rgba(15,42,77,.06);
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.overview-brand{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  min-width:0;
+}
+.overview-logo{
+  width:440px;
+  max-width:32vw;
+  height:70px;
+  object-fit:contain;
+  object-position:left center;
+  background:#fff;
+}
+.overview-title-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.overview-title-icon{
+  width:42px;height:42px;border-radius:12px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#e8f1fb,#d7e7f7);
+  color:#0f3b6d;font-size:24px;
+  border:1px solid #cadbeb;
+}
+.line-overview-header h1{
+  font-size:28px;
+  color:#0b2d55;
+  letter-spacing:.1px;
+}
+.line-overview-header .sub{
+  color:#55708f;
+  font-size:13px;
+  margin-top:3px;
+}
+.overview-nav-area{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.line-overview-header .main-nav{
+  margin-left:0;
+}
+.line-overview-header .main-nav button{
+  border-radius:10px;
+  padding:10px 16px;
+  font-size:13px;
+  box-shadow:none;
+}
+.line-overview-header .main-nav button.active{
+  background:linear-gradient(180deg,#2d7df0,#1160ce);
+  box-shadow:0 5px 12px rgba(37,99,235,.22);
+}
+#overviewClock{
+  font-size:13px!important;
+  color:#163a63!important;
+  white-space:nowrap;
+}
+
+.overview-summary{
+  max-width:1600px;
+  margin:14px auto 0;
+  padding:0 26px;
+}
+.overview-summary-card{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:0;
+  background:rgba(255,255,255,.97);
+  border:1px solid #d7e6f3;
+  border-radius:14px;
+  box-shadow:0 8px 24px rgba(19,54,91,.08);
+  overflow:hidden;
+}
+.ov-kpi{
+  min-height:90px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:14px 20px;
+  border-right:1px solid #dce7f2;
+}
+.ov-kpi:last-child{border-right:0}
+.ov-icon{
+  width:48px;height:48px;border-radius:13px;
+  display:grid;place-items:center;
+  font-size:23px;font-weight:900;
+  flex:0 0 auto;
+}
+.ov-icon.green{background:#dcf8e8;color:#109047}
+.ov-icon.blue{background:#e1efff;color:#1c5fa7}
+.ov-icon.orange{background:#fff0d9;color:#d97911}
+.ov-icon.gold{background:#ffedcf;color:#c96900}
+.ov-icon.mint{background:#dff8e8;color:#13a14d}
+.ov-kpi small{
+  display:block;color:#496782;font-size:12px;font-weight:700;margin-bottom:2px
+}
+.ov-kpi strong{
+  display:inline-block;color:#092b54;font-size:25px;line-height:1
+}
+.ov-kpi em{
+  font-style:normal;color:#637b94;font-size:11px;margin-left:5px
+}
+.ov-mini-progress{
+  height:6px;background:#dfe8f2;border-radius:999px;overflow:hidden;margin-top:8px;width:120px;max-width:100%
+}
+.ov-mini-progress span{display:block;height:100%;background:#17aa55;border-radius:999px}
+
+.line-overview-wrap{
+  max-width:1600px;
+  margin:auto;
+  padding:18px 26px 14px;
+}
+.overview-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  margin-bottom:12px;
+}
+.line-select-note{  margin:0;
+  color:#173c65;
+  font-size:17px;
+  font-weight:900;
+}
+.overview-tools{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.overview-search{
+  width:260px;
+  height:38px;
+  border:1px solid #c8d8e7;
+  border-radius:10px;
+  background:#fff;
+  padding:0 12px;
+  color:#163a63;
+  outline:none;
+}
+.overview-search:focus{border-color:#4c93e5;box-shadow:0 0 0 3px rgba(76,147,229,.12)}
+.view-btn{
+  height:38px;
+  border:1px solid #c9d8e7;
+  background:#f7fbff;
+  color:#345b7f;
+  padding:0 14px;
+}
+.view-btn.active{
+  background:linear-gradient(180deg,#2f86f1,#1568d7);
+  color:#fff;border-color:#1f70d9
+}
+.line-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(180px,1fr));
+  gap:14px;
+}
+.line-card{
+  background:rgba(255,255,255,.98);
+  border:1px solid #dbe6f0;
+  border-radius:13px;
+  padding:13px 14px;
+  min-height:155px;
+  box-shadow:0 6px 18px rgba(15,42,77,.06);
+  cursor:pointer;
+  transition:.18s ease;
+  overflow:hidden;
+}
+.line-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 25px rgba(15,42,77,.12);
+  border-color:#8ebbe8;
+}
+.line-card.selected{
+  border-color:#2c7de3;
+  box-shadow:0 0 0 3px rgba(44,125,227,.11);
+}
+.line-card::before{
+  content:"";
+  position:absolute;
+  left:13px;top:14px;
+  width:4px;height:25px;border-radius:5px;
+  background:#204c78;
+}
+.line-card.status-running::before{background:#14a34a}
+.line-card.status-ready::before{background:#f59e0b}
+.line-card.status-paused::before{background:#f59e0b}
+.line-card.status-closed::before{background:#64748b}
+.line-card-head{padding-left:12px}
+.line-card h3{
+  font-size:20px;color:#0a2b50;font-weight:900
+}
+.status-pill{
+  padding:5px 9px;
+  background:#edf2f7;color:#56708a;
+  font-size:10px;font-weight:900
+}
+.status-pill.running{background:#d9f7e2;color:#12803d}
+.status-pill.ready,.status-pill.paused{background:#fff0d7;color:#d07009}
+.status-pill.closed{background:#e9eef4;color:#596f84}
+.line-card p{
+  margin:10px 0 10px 12px;
+  color:#526e88;font-size:12px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.line-progress{
+  height:8px;
+  margin-left:0;
+  background:#e4ecf4;
+}
+.line-progress > span{background:linear-gradient(90deg,#17ae54,#20bd62)}
+.line-progress > span.waiting{background:#f0a22d}
+.line-card-percent{
+  font-size:10px;
+  text-align:right;
+  color:#496987;
+  margin-top:-17px;
+  margin-bottom:6px;
+  position:relative;
+}
+.line-card-foot{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:0;
+  margin-top:12px;
+  color:#526b83;
+  font-size:10px;
+}
+.line-card-foot > span{
+  padding:0 7px;
+  border-right:1px solid #dce5ee;
+}
+.line-card-foot > span:first-child{padding-left:0}
+.line-card-foot > span:last-child{border-right:0;padding-right:0}
+.line-card-foot b{
+  display:block;
+  color:#0b2d55;
+  font-size:14px;
+  margin-top:3px;
+}
+
+.overview-footer{
+  background:linear-gradient(90deg,#123a66,#0f3158);
+  color:#fff;
+  min-height:72px;
+  display:grid;
+  grid-template-columns:300px 1fr 360px;
+  gap:20px;
+  align-items:center;
+  padding:12px 28px;
+  margin-top:12px;
+}
+.footer-developer{font-weight:900;font-size:15px}
+.footer-developer small,.footer-center,.footer-system small{
+  color:#cbd9e7;font-size:10px;line-height:1.45
+}
+.footer-center{border-left:1px solid rgba(255,255,255,.2);padding-left:22px}
+.footer-system{text-align:right}
+.footer-system b{display:block;font-size:13px}
+.system-ready{color:#77e39f;font-weight:900}
+
+.line-grid.list-view{
+  grid-template-columns:1fr;
+}
+.line-grid.list-view .line-card{
+  min-height:90px;
+  display:grid;
+  grid-template-columns:170px 1fr 280px;
+  align-items:center;
+  gap:16px;
+}
+.line-grid.list-view .line-card p{margin:0}
+.line-grid.list-view .line-card-foot{margin:0}
+
+@media(max-width:1300px){
+  .overview-logo{width:360px}
+  .line-grid{grid-template-columns:repeat(4,1fr)}
+  .overview-summary-card{grid-template-columns:repeat(3,1fr)}
+  .ov-kpi:nth-child(3){border-right:0}
+}
+@media(max-width:900px){
+  .line-overview-header{position:relative;align-items:flex-start;gap:12px;flex-direction:column}
+  .overview-logo{width:100%;max-width:430px}
+  .overview-summary-card{grid-template-columns:1fr 1fr}
+  .line-grid{grid-template-columns:repeat(2,1fr)}
+  .overview-footer{grid-template-columns:1fr;text-align:left}
+  .footer-center{border-left:0;padding-left:0}
+  .footer-system{text-align:left}
+}
+@media(max-width:560px){
+  .line-grid{grid-template-columns:1fr}
+  .overview-summary-card{grid-template-columns:1fr}
+  .overview-toolbar{align-items:flex-start;flex-direction:column}
+  .overview-search{width:100%}
+}
+
+
+/* =========================================================
+   V1.11 PREMIUM SMART FACTORY UI
+   Visual redesign only — production logic unchanged
+   ========================================================= */
+:root{
+  --sf-navy:#0b2d55;
+  --sf-blue:#1568d7;
+  --sf-blue2:#2f86f1;
+  --sf-green:#1db45a;
+  --sf-orange:#f39a21;
+  --sf-red:#ed4b4b;
+  --sf-slate:#64748b;
+  --sf-bg:#edf4fb;
+  --sf-border:#d8e5f0;
+  --sf-text:#102a43;
+  --sf-muted:#60758a;
+  --sf-shadow:0 10px 26px rgba(28,67,105,.08);
+}
+
+.line-overview-screen{
+  min-height:100vh;
+  background:
+    linear-gradient(180deg,rgba(246,250,254,.96),rgba(232,241,249,.98)),
+    radial-gradient(circle at 88% 4%,rgba(67,139,214,.12),transparent 26%);
+  color:var(--sf-text);
+}
+
+.line-overview-header{
+  min-height:112px;
+  height:auto;
+  padding:12px 30px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(251,253,255,.95) 60%,rgba(234,244,253,.95) 100%);
+  border-bottom:1px solid #dbe8f3;
+  box-shadow:0 4px 14px rgba(21,72,118,.06);
+  position:relative;
+  overflow:hidden;
+}
+.line-overview-header::after{
+  content:"";
+  position:absolute;
+  right:0;top:0;bottom:0;width:40%;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,0),rgba(229,240,249,.3)),
+    repeating-linear-gradient(90deg,transparent 0 30px,rgba(43,111,177,.025) 30px 31px);
+  pointer-events:none;
+}
+.overview-brand{position:relative;z-index:1;display:flex;align-items:center;gap:26px;min-width:0}
+.overview-logo{
+  width:430px;
+  max-width:30vw;
+  height:76px;
+  object-fit:contain;
+  object-position:left center;
+  filter:drop-shadow(0 2px 2px rgba(15,45,80,.04));
+}
+.overview-title-row{display:flex;align-items:center;gap:14px}
+.overview-title-icon{
+  width:48px;height:48px;border-radius:15px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#eef5fb,#d9e8f5);
+  border:1px solid #cfdeea;
+  color:#486d91;
+  font-size:25px;
+  box-shadow:inset 0 1px 0 #fff;
+}
+.line-overview-header h1{
+  margin:0;
+  font-size:30px;
+  line-height:1.05;
+  letter-spacing:-.2px;
+  color:#0a2b50;
+  font-weight:900;
+}
+.line-overview-header .sub{margin-top:5px;font-size:13px;color:#57718a}
+.overview-nav-area{position:relative;z-index:1;display:flex;align-items:center;gap:12px}
+.line-overview-header .main-nav{display:flex;gap:8px}
+.line-overview-header .main-nav button{
+  min-height:44px;
+  padding:0 18px;
+  border-radius:11px;
+  border:1px solid #d7e4ef;
+  background:#eef3f8;
+  color:#1a3d61;
+  font-weight:900;
+  box-shadow:0 2px 4px rgba(20,52,82,.04);
+}
+.line-overview-header .main-nav button.active{
+  color:#fff;
+  border-color:#1b70d7;
+  background:linear-gradient(180deg,#2f86f1,#1161cf);
+  box-shadow:0 7px 15px rgba(24,105,213,.24);
+}
+#overviewClock{font-size:13px!important;font-weight:800;color:#163a63!important;white-space:nowrap}
+
+.overview-summary{
+  max-width:1680px;
+  margin:16px auto 0;
+  padding:0 28px;
+}
+.overview-summary-card{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  background:rgba(255,255,255,.97);
+  border:1px solid #d6e5f0;
+  border-radius:15px;
+  overflow:hidden;
+  box-shadow:var(--sf-shadow);
+}
+.ov-kpi{
+  min-height:98px;
+  padding:16px 22px;
+  display:flex;align-items:center;gap:14px;
+  border-right:1px solid #dce7f0;
+  position:relative;
+}
+.ov-kpi:last-child{border-right:0}
+.ov-kpi::after{
+  content:"";
+  position:absolute;left:22px;right:22px;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(21,104,215,.15),transparent);
+}
+.ov-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:grid;place-items:center;
+  font-size:24px;font-weight:900;
+  flex:0 0 auto;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+}
+.ov-icon.green{background:#dcf7e6;color:#119145}
+.ov-icon.blue{background:#e2efff;color:#2366ad}
+.ov-icon.orange{background:#fff0d9;color:#d47b15}
+.ov-icon.gold{background:#ffedd2;color:#c86c09}
+.ov-icon.mint{background:#dff7e8;color:#16a34a}
+.ov-kpi small{display:block;font-size:12px;color:#4c6882;font-weight:800;margin-bottom:3px}
+.ov-kpi strong{font-size:28px;line-height:1;color:#0b2d55;letter-spacing:.2px}
+.ov-kpi em{font-style:normal;font-size:11px;color:#617990;margin-left:5px}
+.ov-mini-progress{width:126px;max-width:100%;height:7px;background:#dfe8f2;border-radius:99px;margin-top:8px;overflow:hidden}
+.ov-mini-progress span{display:block;height:100%;background:linear-gradient(90deg,#1db45a,#2bc36a);border-radius:99px}
+
+.line-overview-wrap{max-width:1680px;margin:auto;padding:18px 28px 14px}
+.overview-toolbar{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 13px;
+}
+.line-select-note{
+  margin:0;font-size:19px;font-weight:900;color:#173b62;display:flex;align-items:center;gap:8px
+}
+.overview-tools{display:flex;align-items:center;gap:9px}
+.overview-search{
+  width:280px;height:40px;padding:0 13px;
+  border:1px solid #c8d9e7;border-radius:10px;background:white;color:#183e63;
+  outline:none;box-shadow:inset 0 1px 2px rgba(18,54,87,.03)
+}
+.overview-search:focus{border-color:#4d95e7;box-shadow:0 0 0 3px rgba(77,149,231,.12)}
+.view-btn{
+  height:40px;padding:0 15px;border-radius:10px;border:1px solid #cbdbea;
+  background:#f7fbff;color:#365e82;font-weight:800
+}
+.view-btn.active{background:linear-gradient(180deg,#2f86f1,#1568d7);color:#fff;border-color:#2470d2}
+
+.line-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(180px,1fr));
+  gap:14px;
+}
+.line-card{
+  min-height:164px;
+  padding:14px 14px 13px;
+  background:linear-gradient(180deg,#fff,#fbfdff);
+  border:1px solid #d9e6f0;
+  border-radius:14px;
+  box-shadow:0 7px 17px rgba(17,55,91,.055);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  position:relative;
+  overflow:hidden;
+}
+.line-card:hover{
+  transform:translateY(-2px);
+  border-color:#92bbe2;
+  box-shadow:0 13px 28px rgba(16,57,96,.11);
+}
+.line-card.selected{border-color:#2b7edc;box-shadow:0 0 0 3px rgba(43,126,220,.11),0 12px 25px rgba(16,57,96,.10)}
+.line-card::before{
+  content:"";
+  position:absolute;left:14px;top:15px;
+  width:4px;height:27px;border-radius:6px;background:#264f77;
+}
+.line-card.status-running::before{background:var(--sf-green)}
+.line-card.status-ready::before,.line-card.status-paused::before{background:var(--sf-orange)}
+.line-card.status-closed::before{background:#6b8298}
+.line-card-head{padding-left:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.line-card h3{font-size:20px;margin:0;color:#0a2b50;font-weight:900;letter-spacing:.1px}
+.status-pill{
+  padding:5px 9px;border-radius:999px;background:#edf2f7;color:#5c7185;
+  font-size:10px;font-weight:900;white-space:nowrap
+}
+.status-pill.running{background:#dcf7e5;color:#12863f}
+.status-pill.ready,.status-pill.paused{background:#fff0d8;color:#d47710}
+.status-pill.closed{background:#e9eef3;color:#607488}
+.line-card p{
+  margin:10px 0 10px 12px;
+  font-size:12px;color:#506c87;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.line-progress{height:8px;border-radius:999px;background:#e5edf5;overflow:hidden;margin:0 0 0 0}
+.line-progress>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#1ab456,#22c363)}
+.line-progress>span.waiting{background:linear-gradient(90deg,#f1a126,#ffb947)}
+.line-card-percent{
+  margin-top:-17px;margin-bottom:8px;padding-right:2px;
+  text-align:right;position:relative;font-size:10px;font-weight:900;color:#355b80
+}
+.line-card-foot{
+  display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;color:#61788e;font-size:10px
+}
+.line-card-foot>span{padding:0 8px;border-right:1px solid #dce7ef}
+.line-card-foot>span:first-child{padding-left:0}
+.line-card-foot>span:last-child{padding-right:0;border-right:0}
+.line-card-foot b{display:block;margin-top:2px;font-size:14px;color:#0b2d55}
+
+.overview-footer{
+  margin-top:14px;
+  min-height:78px;
+  display:grid;grid-template-columns:320px 1fr 380px;
+  align-items:center;gap:20px;padding:14px 30px;
+  background:linear-gradient(90deg,#133c68,#0f335b 65%,#0c2b4f);
+  color:white;
+  box-shadow:0 -3px 12px rgba(10,37,66,.08)
+}
+.footer-developer{font-size:16px;font-weight:900}
+.footer-developer small,.footer-center,.footer-system small{font-size:10px;color:#cedbe7;line-height:1.45}
+.footer-center{padding-left:22px;border-left:1px solid rgba(255,255,255,.2)}
+.footer-system{text-align:right}
+.footer-system b{font-size:13px}
+.system-ready{color:#73e49d;font-size:11px;font-weight:900}
+
+.line-grid.list-view{grid-template-columns:1fr}
+.line-grid.list-view .line-card{
+  min-height:88px;
+  display:grid;grid-template-columns:200px 1fr 320px;align-items:center;gap:16px
+}
+.line-grid.list-view .line-card p{margin:0}
+.line-grid.list-view .line-card-foot{margin:0}
+
+@media(max-width:1400px){
+  .overview-logo{width:360px}
+  .line-grid{grid-template-columns:repeat(4,minmax(190px,1fr))}
+}
+@media(max-width:1100px){
+  .line-overview-header{align-items:flex-start;flex-direction:column}
+  .overview-logo{width:420px;max-width:100%}
+  .overview-summary-card{grid-template-columns:repeat(2,1fr)}
+  .ov-kpi{border-bottom:1px solid #dce7f0}
+  .line-grid{grid-template-columns:repeat(3,1fr)}
+  .overview-footer{grid-template-columns:1fr}
+  .footer-center{border-left:0;padding-left:0}
+  .footer-system{text-align:left}
+}
+@media(max-width:760px){
+  .line-grid{grid-template-columns:repeat(2,1fr)}
+  .overview-toolbar{align-items:flex-start;flex-direction:column}
+  .overview-tools{width:100%;flex-wrap:wrap}
+  .overview-search{width:100%}
+}
+@media(max-width:520px){
+  .overview-summary-card,.line-grid{grid-template-columns:1fr}
+  .line-overview-header{padding:12px 16px}
+  .line-overview-wrap,.overview-summary{padding-left:14px;padding-right:14px}
+}
+
+
+/* V1.14 LOGO FIX */
+.overview-logo{
+  width:360px !important;
+  max-width:28vw !important;
+  height:76px !important;
+  display:block !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+  background:#fff !important;
+}
+@media(max-width:1100px){
+  .overview-logo{
+    width:360px !important;
+    max-width:100% !important;
+    height:70px !important;
+  }
+}
+
+</style>
+</head>
+<body data-master-version="V63" data-baseline="MASTER_CLEAN">
+
+<div id="lineLoginScreen" class="line-overview-screen" aria-hidden="false">
+  <div class="line-overview-header">
+    <div class="overview-brand">
+      <img class="overview-logo" src="/assets/tni_faculty_logistics_logo.png?v=114" alt="TNI • Faculty • Logistics Logo">
+      <div>
+        <div class="overview-title-row">
+          <div class="overview-title-icon">⚙</div>
+          <div>
+            <h1>แผงควบคุมการผลิต — เลือกไลน์</h1>
+            <div class="sub">เลือก Line ที่ต้องการใช้งาน แล้วกรอกรหัส Line เพื่อเข้าสู่หน้าการผลิต</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overview-nav-area">
+      <div class="main-nav">
+        <button class="active">▥ หน้าผลิต</button>
+        <button id="goPlanningBtn">▣ แผนการผลิต</button>
+      </div>
+      <div id="overviewClock"></div>
+    </div>
+  </div>
+
+  <div class="overview-summary">
+    <div class="overview-summary-card">
+      <div class="ov-kpi">
+        <div class="ov-icon green">▥</div>
+        <div>
+          <small>ไลน์ที่กำลังผลิต</small>
+          <strong id="ovRunningLines">0 / 18</strong><em>Line</em>
+          <div class="ov-mini-progress"><span id="ovRunningBar" style="width:0%"></span></div>
+        </div>
+      </div>
+      <div class="ov-kpi">
+        <div class="ov-icon blue">◆</div>
+        <div>
+          <small>ผลผลิตรวมวันนี้</small>
+          <strong id="ovProductionToday">0</strong><em>ชิ้น</em>
+        </div>
+      </div>
+      <div class="ov-kpi">
+        <div class="ov-icon orange">◎</div>
+        <div>
+          <small>เป้าหมายรวมวันนี้</small>
+          <strong id="ovTargetToday">0</strong><em>ชิ้น</em>
+        </div>
+      </div>
+      <div class="ov-kpi">
+        <div class="ov-icon gold">▥</div>
+        <div>
+          <small>คงเหลือจากเป้าหมาย</small>
+          <strong id="ovRemainingToday">0</strong><em>ชิ้น</em>
+        </div>
+      </div>
+      <div class="ov-kpi">
+        <div class="ov-icon mint">✓</div>
+        <div>
+          <small>ประสิทธิภาพรวม</small>
+          <strong id="ovEfficiency">0.0%</strong>
+          <div class="ov-mini-progress"><span id="ovEfficiencyBar" style="width:0%"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="line-overview-wrap">
+    <div class="overview-toolbar">
+      <div class="line-select-note">☷ เลือกจากทั้งหมด 18 Line</div>
+      <div class="overview-tools">
+        <input id="overviewSearch" class="overview-search" placeholder="ค้นหา Line หรือ FO (เช่น LINE01)">
+        <button id="overviewGridBtn" class="view-btn active">▦ มุมมองการ์ด</button>
+        <button id="overviewListBtn" class="view-btn">☷ มุมมองรายการ</button>
+      </div>
+    </div>
+    <div id="lineGrid" class="line-grid"></div>
+  </div>
+
+  <div class="overview-footer">
+    <div class="footer-developer">
+      พัฒนาโดย&nbsp; อ.วสันต์ กัลยา
+      <small>Production Control V1.35 • JOB ID</small>
+    </div>
+    <div class="footer-center">
+      ผู้ช่วยคณบดีด้านหลักสูตรภาคพิเศษและการพัฒนาการเรียนรู้ตลอดชีวิต<br>
+      อาจารย์ประจำหลักสูตรสาขาวิชาโลจิสติกส์และดิจิทัลซัพพลายเชน • คณะเทคโนโลยีดิจิทัลเพื่อธุรกิจอุตสาหกรรม • สถาบันเทคโนโลยีไทย-ญี่ปุ่น
+    </div>
+    <div class="footer-system">
+      <b>TNI Production Control System</b>
+      <small>Efficiency | Quality | Traceability | Data-Driven Improvement</small><br>
+      <span class="system-ready">● ระบบพร้อมใช้งาน</span>
+    </div>
+  </div>
+</div>
+
+<div id="lineLoginModal" class="line-login-modal hidden" aria-hidden="true">
+  <div class="line-login-box">
+    <h2 id="modalLineTitle">เข้าสู่ Line</h2>
+    <p id="modalLineText">กรอกรหัสของ Line ที่เลือก</p>
+
+    <label style="display:block;font-size:12px;font-weight:800;margin-bottom:6px">รหัส Line</label>
+    <input id="lineCodeInput" autocomplete="off" placeholder="เช่น LINE01" maxlength="6">
+
+    <div id="lineLoginError" class="line-error"></div>
+
+    <div class="line-login-modal-actions">
+      <button id="cancelLineLoginBtn" class="secondary">ยกเลิก</button>
+      <button id="lineLoginBtn" class="primary">เข้าสู่ Line</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="planningPage" class="planning-page app-hidden" aria-hidden="true">
+  <div class="planning-header">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div>
+        <h1 style="margin:0;font-size:20px">แผนการผลิตสินค้า</h1>
+        <div class="sub">ทุกคนเปิดดูแผนได้ • การเพิ่มหรือแก้ไขแผนต้องใช้รหัส</div>
+      </div>
+      <div class="main-nav">
+        <button id="goProductionFromPlan">หน้าผลิต</button>
+        <button class="active">แผนการผลิต</button>
+      </div>
+    </div>
+    <div id="plannerModeBadge" class="planner-lock">โหมดดูอย่างเดียว</div>
+  </div>
+  <div class="planning-wrap">
+    <div class="plan-card">
+      <div class="plan-toolbar">
+        <div>
+          <b>Production Plan Master</b>
+          <div class="note">ข้อมูลนี้ใช้เป็น Master สำหรับดึงงานย่อยไปยังหน้าผลิต • 1 แถว = 1 Production Job • ระบบใช้ JOB ID แยก Size / Line ไม่ให้ชนกัน</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="importPlanExcelBtn" class="export-excel">โหลดแผนจาก Excel 🔒</button>
+          <button id="downloadPlanTemplateBtn" class="secondary">ดาวน์โหลด Template Excel</button>
+          <button id="unlockPlannerBtn" class="primary">เพิ่ม / แก้ไขแผน 🔒</button>
+          <button id="addPlanRowBtn" class="secondary app-hidden">+ เพิ่มแถว</button>
+          <button id="lockPlannerBtn" class="secondary app-hidden">ล็อกการแก้ไข</button>
+          <input id="planExcelFileInput" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.xlt,.xltx,.xltm,.xml,.csv,.ods,.fods,.txt,.prn,.dif,.slk,.sylk,.dbf,.wk1,.wk3,.wk4,.wks,.123,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,text/csv,application/xml,text/xml" class="app-hidden">
+        </div>
+      </div>
+      
+<div style="margin:12px 0;padding:10px;border:1px solid #dfe7f1;border-radius:10px;background:#f8fafc">
+  <b>JOB Assignment Control</b>
+  <div class="note">ระบบล็อกที่ระดับ <b>JOB ID</b> ไม่ใช่ Master FO ดังนั้น Master FO เดียวกันสามารถมีหลาย Size / หลาย Line ได้ โดยงานย่อยแต่ละ JOB ID จะไม่ถูกเปิดซ้ำจนกว่าจะ CLOSED</div>
+</div>
+
+<div id="planImportStatus" class="note" style="margin:8px 0;padding:8px 10px;border:1px solid #dfe7f1;border-radius:8px;background:#f8fafc">
+  โหลดแผนจาก Excel: JOB ID / Master FO / Production FO / Style Name / สี / Process / Size / Line / Job Qty / SAM / Eff / Master Order Qty
+</div>
+<div style="margin:8px 0 6px;font-size:12px;font-weight:800;color:#173f68">
+  หัวตาราง: JOB ID → Master FO → Production FO → Style → สี → Process → Size → Line → Job Qty → SAM → Eff → Master Order Qty → จัดการ
+</div>
+<div class="plan-table-wrap">
+        <table class="plan-table">
+          <thead>
+            <tr>
+              <th style="min-width:220px">JOB ID</th>
+              <th style="width:170px">Master FO</th>
+              <th style="width:180px">Production FO</th>
+              <th style="min-width:200px">Style Name</th>
+              <th style="width:130px">สี</th>
+              <th style="width:120px">Process</th>
+              <th style="width:110px">Size</th>
+              <th style="width:70px">Line</th>
+              <th style="width:110px">Job Qty</th>
+              <th style="width:100px">SAM</th>
+              <th style="width:90px">Eff</th>
+              <th style="width:140px">Master Order Qty</th>
+              <th style="width:220px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="planTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div id="closeFoPinModal" class="line-login-modal hidden" aria-hidden="true">
+  <div class="line-login-box">
+    <h2>หัวหน้า Line อนุมัติปิด FO</h2>
+    <p>ใช้เฉพาะกรณีต้องปิด FO ก่อนผลิตครบ เช่น มีคำสั่งหยุดการผลิต</p>
+
+    <label style="display:block;font-size:12px;font-weight:800;margin-bottom:6px">รหัสหัวหน้า Line</label>
+    <input id="closeFoPinInput" type="password" autocomplete="off" placeholder="รหัส 12345">
+
+    <label style="display:block;font-size:12px;font-weight:800;margin:12px 0 6px">เหตุผลที่ปิด FO</label>
+    <input id="closeFoReasonInput" type="text" autocomplete="off" placeholder="เช่น คำสั่งหยุดการผลิต">
+
+    <div id="closeFoPinError" class="line-error"></div>
+
+    <div class="line-login-modal-actions">
+      <button id="closeFoPinCancel" class="secondary">ยกเลิก</button>
+      <button id="closeFoPinConfirm" class="primary">ยืนยันปิด FO</button>
+    </div>
+  </div>
+</div>
+
+<div id="addQtyPinModal" class="line-login-modal hidden" aria-hidden="true">
+  <div class="line-login-box">
+    <h2>เพิ่มยอดงาน</h2>
+    <p>ยอดผลิตถึง Cutting Qty แล้ว กรุณาใส่รหัส 12345 และกำหนดยอด Cutting Qty ใหม่</p>
+
+    <label style="display:block;font-size:12px;font-weight:800;margin-bottom:6px">รหัสอนุมัติ</label>
+    <input id="addQtyPinInput" type="password" autocomplete="off" placeholder="รหัส 12345">
+
+    <label style="display:block;font-size:12px;font-weight:800;margin:12px 0 6px">Cutting Qty ใหม่</label>
+    <input id="addQtyValueInput" type="number" min="1" placeholder="ต้องมากกว่ายอดเดิม">
+
+    <div id="addQtyError" class="line-error"></div>
+
+    <div class="line-login-modal-actions">
+      <button id="addQtyCancel" class="secondary">ยกเลิก</button>
+      <button id="addQtyConfirm" class="primary">ยืนยันเพิ่มยอด</button>
+    </div>
+  </div>
+</div>
+
+<div id="foEditPinModal" class="line-login-modal hidden" aria-hidden="true">
+  <div class="line-login-box">
+    <h2>ยืนยันสิทธิ์แก้ไข FO</h2>
+    <p>FO นี้ถูกบันทึกแผนแล้ว กรุณาใส่รหัสเพื่อปลดล็อกการแก้ไข</p>
+    <label style="display:block;font-size:12px;font-weight:800;margin-bottom:6px">รหัสแก้ไข FO</label>
+    <input id="foEditPinInput" type="password" autocomplete="off" placeholder="รหัส 12345">
+    <div id="foEditPinError" class="line-error"></div>
+    <div class="line-login-modal-actions">
+      <button id="foEditPinCancel" class="secondary">ยกเลิก</button>
+      <button id="foEditPinConfirm" class="primary">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="plannerImportPinModal" class="line-login-modal hidden" aria-hidden="true">
+  <div class="line-login-box">
+    <h2>ยืนยันสิทธิ์โหลดแผนจาก Excel</h2>
+    <p>เฉพาะฝ่ายวางแผน กรุณาใส่รหัสก่อนเลือกไฟล์ Excel</p>
+
+    <label style="display:block;font-size:12px;font-weight:800;margin-bottom:6px">Planner PIN</label>
+    <input id="plannerImportPinInput" type="password" autocomplete="off" placeholder="รหัส 12345">
+
+    <div id="plannerImportPinError" class="line-error"></div>
+
+    <div class="line-login-modal-actions">
+      <button id="plannerImportPinCancel" class="secondary">ยกเลิก</button>
+      <button id="plannerImportPinConfirm" class="primary">ยืนยันและเลือกไฟล์</button>
+    </div>
+  </div>
+</div>
+
+<div id="plannerPinModal" class="line-login-modal hidden" aria-hidden="true">
+  <div class="line-login-box">
+    <h2>ยืนยันสิทธิ์แก้ไขแผน</h2>
+    <p>กรอกรหัสฝ่ายวางแผนเพื่อเพิ่มหรือแก้ไข Production Plan Master</p>
+    <label style="display:block;font-size:12px;font-weight:800;margin-bottom:6px">Planner PIN</label>
+    <input id="plannerPinInput" type="password" autocomplete="off" placeholder="รหัสฝ่ายวางแผน">
+    <div id="plannerPinError" class="line-error"></div>
+    <div class="line-login-modal-actions">
+      <button id="plannerPinCancel" class="secondary">ยกเลิก</button>
+      <button id="plannerPinConfirm" class="primary">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<div id="appShell" class="app-hidden" aria-hidden="true">
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <h1 style="margin:0">Production Planning</h1>
+    <span id="currentLineBadge" class="line-badge">LINE--</span><span class="live-chip" id="lineStorageBadge">ข้อมูลแยกตาม Line</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="demo">SERVER V1.34 • IMPORT ALL AS TEXT</div>
+    <button id="logoutLineBtn" class="logout-btn">ออกจาก Line</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="note" style="margin:0 0 10px">เข้าสู่ระบบแล้ว: แสดงเฉพาะ Line ที่เลือกและยืนยันรหัสแล้ว</div>
+  
+<div class="card">
+  <div style="margin-bottom:8px">
+    <h2 style="margin:0 0 2px;font-size:18px">ตั้งค่าหัวงาน (FO) — <span id="foLineName">Line ปัจจุบัน</span></h2>
+    <div class="note" style="font-size:11px">เลือก JOB ID จาก Production Plan Master แล้วระบบจะดึง Master FO, Production FO, Size, Line, Job Qty, Style, Color, SAM และ Eff ให้อัตโนมัติ • ข้อมูล Production / Log / History แยกเก็บตาม Line โดยไม่ปะปนกัน เพื่อลดความผิดพลาดจากการคีย์ซ้ำ • Cutting Qty ใช้เป็นยอดสั่งผลิตจริง • Target/Hr คำนวณใหม่จากค่า SAM ทุกครั้ง แล้วปัดเฉพาะผลลัพธ์สุดท้าย: ต่ำกว่า .50 ปัดลง และตั้งแต่ .50 ปัดขึ้น</div>
+  </div>
+
+  <div class="grid fo-compact-grid">
+    <div class="field narrow">
+      <label>Line</label>
+      <input id="lineField" value="" readonly>
+    </div>
+
+    <div class="field wide">
+      <label>JOB ID</label>
+      <input id="jobIdField" class="readonly-field" value="" readonly placeholder="ดึงจาก Production Plan">
+    </div>
+
+    <div class="field wide">
+      <label>Master FO</label>
+      <input id="masterFoField" class="readonly-field" value="" readonly>
+    </div>
+
+    <div class="field wide">
+      <label>Production FO</label>
+      <input id="productionFoField" class="readonly-field" value="" readonly>
+    </div>
+
+    <div class="field wide">
+      <label>Production Job</label>
+      <select id="foSelect" class="fo-select"><option value="">-- เลือก JOB ID จากแผนการผลิต --</option></select><input id="fo" type="hidden" value="">
+      <div id="foAssignmentMsg" class="note" style="margin-top:6px"></div>
+    </div>
+
+    <div class="field medium">
+      <label>Size</label>
+      <input id="sizeField" class="readonly-field" value="" readonly>
+    </div>
+
+    <div class="field medium">
+      <label>Process</label>
+      <input id="processField" class="readonly-field" value="" readonly>
+    </div>
+
+    <div class="field narrow">
+      <label>Job Qty</label>
+      <input id="jobQtyField" class="readonly-field" type="number" min="0" value="" readonly>
+    </div>
+
+    <div class="field wide">
+      <label>Style Name</label>
+      <input id="style" class="readonly-field" value="" readonly>
+    </div>
+
+    <div class="field medium">
+      <label>Color</label>
+      <input id="color" class="readonly-field" value="" readonly>
+    </div>
+
+    <div class="field narrow">
+      <label>Master Order Qty</label>
+      <input id="orderQty" class="readonly-field" type="number" min="0" value="" readonly>
+    </div>
+
+    <div class="field narrow">
+      <label>Production Qty (Job Qty)</label>
+      <input id="qty" type="number" min="1" value="500">
+    </div>
+
+    <div class="field narrow">
+      <label>Previous Cumulative</label>
+      <input id="previousCum" type="number" min="0" value="0">
+    </div>
+
+    <div class="field narrow">
+      <label>SAM (Min.Sec/Pc)</label>
+      <input id="sam" class="readonly-field" value="" readonly placeholder="ดึงจากแผนการผลิต">
+      <div id="samCalcNote" class="note" style="margin-top:4px;font-size:10px"></div>
+    </div>
+
+    <div class="field narrow">
+      <label>Manpower</label>
+      <input id="manpower" type="number" min="1" value="15">
+    </div>
+
+    <div class="field narrow">
+      <label>Eff (%)</label>
+      <input id="eff" type="number" min="0" max="100" step="0.01"
+             value="40" placeholder="เช่น 40">
+    </div>
+
+    <div class="field narrow">
+      <label>เป้าหมายผลิต/ชั่วโมง (Target/Hr)</label>
+      <input id="targetHrCalc" class="readonly-field" value="0" readonly>
+      <div class="note" style="margin-top:4px;font-size:10px">
+        (Manpower × 60 ÷ SAM) × Eff
+      </div>
+    </div>
+
+    <div class="field narrow">
+      <label>Production Date</label>
+      <input id="start" type="date">
+    </div>
+
+    <div class="field narrow">
+      <label>เวลาเริ่มผลิต (Start Time)</label>
+      <select id="startTime">
+        <option value="08:00" selected>08:00</option>
+        <option value="09:00">09:00</option>
+        <option value="10:00">10:00</option>
+        <option value="11:00">11:00</option>
+        <option value="13:00">13:00</option>
+        <option value="14:00">14:00</option>
+        <option value="15:00">15:00</option>
+        <option value="16:00">16:00</option>
+        <option value="17:30">17:30</option>
+        <option value="18:30">18:30</option>
+        <option value="19:30">19:30</option>
+      </select>
+      <div class="note" style="margin-top:4px;font-size:10px">
+        ใช้กำหนดช่วงเวลาเริ่มผลิตของวันแรกในตาราง วันถัดไปเริ่มตามตารางบริษัท
+      </div>
+    </div>
+
+    <div class="field wide">
+      <label>ตารางบริษัท</label>
+      <input value="วันแรกเริ่มตาม Start Time / วันถัดไปเริ่ม 08:00 / พัก 12:00-13:00 / 17:00-17:30 / OT 17:30-20:30" readonly>
+    </div>
+  </div>
+
+  <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+    <button class="primary" id="calcBtn">คำนวณแผนการผลิต</button>
+    <button class="secondary" id="resetBtn">รีเซ็ต OT</button>
+    <button class="save-plan-btn" id="saveFoPlanBtn">บันทึกแผน</button>
+    <button class="edit-fo-btn app-hidden" id="editFoPlanBtn">แก้ไข FO 🔒</button>
+  </div>
+  <div id="foPlanLockNote" class="locked-overlay-note app-hidden">
+    แผน FO นี้ถูกบันทึกและล็อกแล้ว หากต้องการแก้ไขให้กด “แก้ไข FO” และใส่รหัส 12345
+  </div>
+</div>
+
+
+  <div class="section-label"><span class="section-no">0</span>ข้อมูลแผน FO</div>
+  <div class="card">
+    <div class="kpis">
+      <div class="kpi"><span>เป้าหมายผลิต/ชั่วโมง</span><b id="kTargetHr">-</b></div>
+      <div class="kpi"><span>ยอดที่ต้องผลิต</span><b id="kQty">-</b></div>
+      <div class="kpi"><span>วันผลิตตามแผน</span><b id="kDays">-</b></div>
+      <div class="kpi"><span>ชั่วโมงปกติรวม</span><b id="kRegular">-</b></div>
+      <div class="kpi"><span>OT รวม</span><b id="kOt">-</b></div>
+      <div class="kpi finish"><span>คาดว่าจบ FO</span><b id="kFinish">-</b></div>
+    </div>
+  </div>
+
+  
+
+<div class="section-label"><span class="section-no">1</span>สถานการณ์การผลิตวันนี้</div>
+<div class="live-today-card" id="liveTodayCard">
+  <div class="live-today-head">
+    <div class="live-today-title">
+      <h2>Live Production Today</h2>
+      <div class="live-meta">
+        <span class="live-chip" id="liveDate">วันที่ -</span>
+        <span class="live-chip" id="liveLine">LINE--</span>
+        <span class="live-chip" id="liveFo">FO -</span>
+        <span class="live-chip status" id="liveStatus">READY</span>
+      </div>
+    </div>
+    <div class="note">ดูสถานะวันนี้ได้ทันทีโดยไม่ต้องเลื่อนลงหาตาราง</div>
+  </div>
+
+  <div class="prod-stats">
+    <div class="prod-stat"><span id="dailyTargetLabel">Target วันนี้</span><b id="dailyTargetTotal">0</b></div>
+    <div class="prod-stat"><span id="dailyProductionLabel">ผลิตวันนี้ (OK+NG)</span><b id="dailyProductionTotal">0</b></div>
+    <div class="prod-stat"><span>Achievement วันนี้</span><b id="dailyAchievement">0.0%</b></div>
+    <div class="prod-stat"><span>OK</span><b id="okTotal">0</b></div>
+    <div class="prod-stat"><span>Repair</span><b id="repairTotal">0</b></div>
+    <div class="prod-stat"><span>NG</span><b id="ngTotal">0</b></div>
+    <div class="prod-stat"><span>เป้าหมายที่ต้องผลิต (อ้างอิงยอดตัด)</span><b id="cuttingTargetTotal">0</b></div>
+    <div class="prod-stat"><span>งานดีสะสม</span><b id="foCumulativeTotal">0</b></div>
+    <div class="prod-stat"><span>ยอดงานที่ต้องผลิต</span><b id="remainingTotal">0</b></div>
+  </div>
+
+  <div class="live-slot-grid">
+    <div class="live-slot"><span>ช่วงเวลาปัจจุบัน</span><b id="liveSlot">-</b></div>
+    <div class="live-slot"><span>Target ชั่วโมงนี้</span><b id="liveSlotTarget">0</b></div>
+    <div class="live-slot"><span>ผลิตชั่วโมงนี้ (OK+NG)</span><b id="liveSlotActual">0</b></div>
+    <div class="live-slot"><span>Diff ชั่วโมงนี้</span><b id="liveSlotDiff">0</b></div>
+  </div>
+</div>
+
+
+<div class="section-label"><span class="section-no">2</span>ป้อนผลการผลิต + Log ล่าสุด</div>
+<div class="production-workspace">
+
+<div class="production-input-card" id="productionInputCard">
+  <div class="production-input-head">
+    <div>
+      <h2 style="margin:0;font-size:18px">Production Input</h2>
+      <div class="note">
+        OK และ NG ใช้เป็นยอดการผลิต • ยอดงานที่ต้องผลิต = ยอดตัด - ชิ้นงานที่ผลิตได้สะสม (OK+NG) • FO ปิดได้ 2 กรณี: งานดีครบ Cutting Qty ระบบปิดอัตโนมัติ หรือหัวหน้า Line ปิดก่อนครบด้วยรหัส 12345 และระบุเหตุผล • หากยังไม่ปิด FO ระบบยกยอดไปวันถัดไปอัตโนมัติ • FO เดียวกันไม่สามารถเปิดผลิตพร้อมกันหลาย Line ได้ • Repair บันทึกเพื่อวิเคราะห์ประสิทธิภาพเท่านั้น
+        และไม่นำไปรวม Target, Actual Cum, Diff, %, Remaining หรือยอดจบ FO
+        • ต้องบันทึกแผน FO ก่อนจึงเริ่มผลิตได้
+      </div>
+    </div>
+    <div id="prodStatus" class="prod-status">READY</div>
+  </div>
+
+  <div class="input-mode-bar">
+    <b>รูปแบบการป้อนข้อมูล:</b>
+    <button id="buttonModeBtn" class="mode-btn active">โหมดปุ่มหน้าจอ</button>
+    <button id="keyboardModeBtn" class="mode-btn">โหมดคีย์บอร์ด 1 / 2 / 3</button>
+    <span class="keyboard-hint" id="keyboardHint">ปุ่มหน้าจอหน่วง 10 วินาที</span>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button id="startProdBtn" class="primary">เริ่มผลิต</button>
+    <button id="pauseProdBtn" class="secondary" disabled>พักงาน</button>
+    <button id="resumeProdBtn" class="secondary" disabled>ทำงานต่อ</button>
+    <button id="closeProdBtn" class="secondary" disabled>ปิด FO 🔒 (หัวหน้า)</button>
+    <button id="newFoBtn" class="primary app-hidden">เริ่ม FO ใหม่</button>
+    <button id="addQtyBtn" class="edit-fo-btn app-hidden">เพิ่มยอดงาน 🔒</button>
+  </div>
+
+  <div class="prod-buttons">
+    <button id="okBtn" class="prod-btn prod-ok" disabled>OK +1</button>
+    <button id="repairBtn" class="prod-btn prod-repair" disabled>REPAIR +1</button>
+    <button id="ngBtn" class="prod-btn prod-ng" disabled>NG +1</button>
+  </div>
+
+
+  <div id="cooldownBox" class="cooldown-box">
+    <div class="cooldown-head">
+      <span id="cooldownText">พร้อมบันทึก</span>
+      <span id="cooldownSeconds"></span>
+    </div>
+    <div class="cooldown-track">
+      <div id="cooldownFill" class="cooldown-fill"></div>
+    </div>
+  </div>
+
+</div>
+
+
+
+<div class="input-log-card">
+  <div class="input-log-head">
+    <div>
+      <h2>Log ล่าสุด (เลื่อนดูย้อนหลังได้)</h2>
+      <div class="note">แสดง 5 รายการล่าสุด • JOB ID ถูกบันทึกทุก Transaction เพื่อแยกงาน Size / Line อย่างถูกต้อง</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+      <div class="input-log-badge" id="inputLogBadge">0 รายการ • Excel Master → OneDrive</div>
+      <button id="exportLogExcelBtn" class="day-export-excel">Excel Log</button>
+      <button id="exportLogCsvBtn" class="day-export-csv">CSV Log</button>
+      <button id="printLogBtn" class="day-export-print">พิมพ์ Log</button>
+    </div>
+  </div>
+
+  <div class="input-log-wrap">
+    <table class="input-log-table">
+      <thead>
+        <tr>
+          <th>ลำดับ</th>
+          <th>Date Time</th>
+          <th>Production Date</th>
+          <th>Line</th>
+          <th>FO</th>
+          <th>Style</th>
+          <th>Color</th>
+          <th>Time Slot</th>
+          <th>Type</th>
+          <th>Qty</th>
+          <th>Source</th>
+          <th>Event ID</th>
+          <th>JOB ID</th>
+        </tr>
+      </thead>
+      <tbody id="inputLogBody">
+        <tr><td colspan="13">ยังไม่มีการบันทึกข้อมูล</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+</div>
+
+<div class="report-toolbar">
+  <button id="exportExcelBtn" class="export-excel">ดาวน์โหลด Excel</button>
+  <button id="exportCsvBtn" class="export-csv">ดาวน์โหลด CSV</button>
+  <button id="printReportBtn" class="export-print">สั่งพิมพ์ / PDF</button>
+</div>
+<div class="section-label"><span class="section-no">3</span>สถานะการบันทึก Local / Excel / OneDrive</div>
+<div class="storage-status-card">
+  <div class="storage-status-head">
+    <div>
+      <h2>Local-First Storage</h2>
+      <div class="note">Server บันทึก Event ลง Local Queue ที่เครื่องแม่ก่อน → Excel Master ของ Line → OneDrive Mirror • Excel เปิดค้างหรือเน็ตหลุด หน้างานยังบันทึกต่อได้</div>
+    </div>
+    <div class="storage-controls">
+      <span class="input-log-badge" id="serverModeBadge">SERVER MODE • Local First</span>
+    </div>
+  </div>
+
+  <div class="storage-grid">
+    <div id="localQueueBox" class="storage-box storage-ok">
+      <span>Local Queue</span>
+      <b id="localQueueStatus">SAVED • 0 pending</b>
+    </div>
+    <div id="excelMasterBox" class="storage-box storage-ok">
+      <span>Excel Master</span>
+      <b id="excelMasterStatus">READY</b>
+    </div>
+    <div id="oneDriveBox" class="storage-box storage-ok">
+      <span>OneDrive Mirror</span>
+      <b id="oneDriveStatus">SYNCED</b>
+    </div>
+  </div>
+
+  <div class="queue-list">
+    <table>
+      <thead>
+        <tr>
+          <th>Event ID</th>
+          <th>Line</th>
+          <th>FO</th>
+          <th>Type</th>
+          <th>Qty</th>
+          <th>Queue</th>
+          <th>Excel</th>
+          <th>OneDrive</th>
+        </tr>
+      </thead>
+      <tbody id="pendingQueueBody">
+        <tr><td colspan="8">ไม่มีรายการค้าง</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section-label"><span class="section-no">4</span>Production Board รายชั่วโมงและแผน OT</div>
+<div class="card">
+    <div class="plan-head">
+      <h2>Production Board รายชั่วโมง — OK + NG เป็นยอดผลิต / Repair แยกบันทึก</h2>
+      <div id="recalcStatus" style="font-size:12px;font-weight:700;color:#2563eb"></div>
+      <div class="note">OT ของแต่ละวันแยกอิสระ 0–3 ชั่วโมง • เลือกค่า OT แล้วกด “เปลี่ยนแปลง” ระบบจึงคำนวณแผนใหม่ทั้ง FO</div>
+    </div>
+    <div id="days"></div>
+    <div id="complete" class="complete"></div>
+    <div class="note">หลักการ: การกดเลือก OT เป็นเพียงการเลือกค่า ยังไม่กระทบแผน จนกว่าจะกดปุ่ม “เปลี่ยนแปลง” ของวันนั้น จากนั้นระบบจะคำนวณใหม่ทั้ง FO และเมื่อยอดผลิตตามแผนครบ Cutting Qty ระบบจะหยุดสร้างแถว เวลา และ OT ต่อทันที</div>
+  </div>
+
+<div class="section-label"><span class="section-no">5</span>ประวัติและยอดสะสม FO</div>
+<div class="history-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <div>
+      <h2 style="margin:0;font-size:17px">FO History / Daily Summary</h2>
+      <div class="note">สรุปแผนและผลงานรายวัน ยกยอดสะสมต่อเนื่องจนจบ FO</div>
+    </div>
+    <button id="refreshHistoryBtn" class="secondary">รีเฟรชประวัติ</button>
+  </div>
+  <div class="history-table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>วันที่</th>
+          <th>Target วันนี้</th>
+          <th>OK วันนี้</th>
+          <th>Repair วันนี้</th>
+          <th>NG วันนี้</th>
+          <th>ผลิตวันนี้ (OK+NG)</th>
+          <th>Achievement</th>
+          <th>FO Cum (OK+NG)</th>
+          <th>Good Cum (OK)</th>
+          <th>Remaining (งานดี)</th>
+          <th>OT</th>
+          <th>สถานะวัน</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+
+
+
+
+
+
+let INPUT_MODE="BUTTON"; // BUTTON | KEYBOARD
+let INPUT_LOCKED=false;
+let INPUT_LOCK_UNTIL=0;
+let INPUT_TIMER=null;
+
+function thaiVoice(){
+  const voices=window.speechSynthesis?.getVoices?.()||[];
+  const thai=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith("th"));
+  const femaleHints=["female","หญิง","narisa","kanya","pattara","siri"];
+  return thai.find(v=>femaleHints.some(h=>String(v.name||"").toLowerCase().includes(h))) || thai[0] || voices[0] || null;
+}
+function speakThai(text){
+  try{
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="th-TH";
+    u.rate=1;
+    u.pitch=1.05;
+    const v=thaiVoice();
+    if(v) u.voice=v;
+    window.speechSynthesis.speak(u);
+  }catch{}
+}
+
+function inputLabel(type){
+  return type==="ok"?"OK":type==="repair"?"Repair":"NG";
+}
+function acceptedVoice(type){
+  return `บันทึกข้อมูล ${inputLabel(type)} เรียบร้อย`;
+}
+function duplicateVoice(){
+  return "ห้ามกดซ้ำระหว่างที่ขึ้นแถบ 15 วินาที";
+}
+function speakDuplicateWarning(){
+  const now=Date.now();
+  if(now-LAST_DUPLICATE_VOICE_AT<900) return;
+  LAST_DUPLICATE_VOICE_AT=now;
+  speakThai(INPUT_MODE==="KEYBOARD"
+    ? duplicateVoice()
+    : "ห้ามกดซ้ำ กรุณารอให้ครบ 10 วินาที");
+}
+
+function setInputMode(mode){
+  if(INPUT_LOCKED){
+    speakDuplicateWarning();
+    return;
+  }
+  INPUT_MODE=mode;
+  document.getElementById("buttonModeBtn").classList.toggle("active",mode==="BUTTON");
+  document.getElementById("keyboardModeBtn").classList.toggle("active",mode==="KEYBOARD");
+  document.getElementById("keyboardHint").textContent=
+    mode==="KEYBOARD"
+      ?"คีย์บอร์ด: 1 = OK • 2 = REPAIR • 3 = NG • ปุ่มอื่นไม่บันทึก • แถบหน่วง 15 วินาที"
+      :"ปุ่มหน้าจอ: OK / REPAIR / NG • หน่วง 10 วินาที";
+  updateProductionUi();
+}
+
+function startInputCooldown(type){
+  const seconds=INPUT_MODE==="KEYBOARD"?15:10;
+  INPUT_LOCKED=true;
+  INPUT_LOCK_UNTIL=Date.now()+seconds*1000;
+
+  const fill=document.getElementById("cooldownFill");
+  const text=document.getElementById("cooldownText");
+  const secEl=document.getElementById("cooldownSeconds");
+
+  fill.className=`cooldown-fill ${type}`;
+  fill.style.width="0%";
+  text.textContent=`บันทึก ${inputLabel(type)} แล้ว — กรุณารอ`;
+  secEl.textContent=`${seconds} วิ`;
+
+  clearInterval(INPUT_TIMER);
+  const started=Date.now();
+  const total=seconds*1000;
+
+  INPUT_TIMER=setInterval(()=>{
+    const elapsed=Date.now()-started;
+    const pct=Math.min(100,(elapsed/total)*100);
+    const remain=Math.max(0,Math.ceil((total-elapsed)/1000));
+    fill.style.width=`${pct}%`;
+    secEl.textContent=remain>0?`${remain} วิ`:"";
+
+    if(elapsed>=total){
+      clearInterval(INPUT_TIMER);
+      INPUT_TIMER=null;
+      INPUT_LOCKED=false;
+      INPUT_LOCK_UNTIL=0;
+      fill.style.width="100%";
+      text.textContent="พร้อมบันทึก";
+      secEl.textContent="";
+      setTimeout(()=>{
+        if(!INPUT_LOCKED){
+          fill.style.width="0%";
+          fill.className="cooldown-fill";
+        }
+      },250);
+      updateProductionUi();
+    }
+  },80);
+
+  updateProductionUi();
+}
+
+function handleProductionInput(type,source){
+  if(PROD_STATUS!=="RUNNING"){
+    speakThai("ยังไม่ได้เริ่มผลิต");
+    return;
+  }
+
+  if(INPUT_LOCKED){
+    speakDuplicateWarning();
+    return;
+  }
+
+  // รับเฉพาะแหล่ง Input ที่เลือก
+  if(INPUT_MODE==="BUTTON" && source!=="BUTTON") return;
+  if(INPUT_MODE==="KEYBOARD" && source!=="KEYBOARD") return;
+
+  const result=bumpProduction(type);
+  if(!result || !result.accepted) return;
+
+  // สร้าง Transaction Log หลังยืนยันว่ารับยอดสำเร็จเท่านั้น
+  appendProductionLog(type,source,result.rowKey);
+
+  speakThai(acceptedVoice(type));
+  startInputCooldown(type);
+}
+
+
+const PROD_ROWS={};
+const PRODUCTION_LOG=[]; // เตรียม map ไป DATA_LOG / Excel Master บนเครื่องแม่
+let EVENT_SEQ=0;
+let PROD_STATUS="READY";
+const ADD_QTY_PIN="12345";
+const LINE_HEAD_CLOSE_PIN="12345";
+const SUPERVISOR_CLOSE_SECRET=Symbol("SUPERVISOR_CLOSE_SECRET");
+let SERVER_CLOSE_AUTH_CONTEXT=null;
+
+let FO_CLOSE_REASON="";
+const DAILY_LOCKED=new Set();
+const AUDIT_LOG=[];
+let LAST_RENDERED_PLAN_DATES=[];
+const FO_ASSIGNMENT_MASTER={}; 
+// DEMO structure prepared for server master:
+// FO_ASSIGNMENT_MASTER[fo] = {
+//   fo, style, color, assignedLine, status, assignedAt, closedAt
+// }
+
+
+
+const LOCAL_EVENT_QUEUE=[];
+let EXCEL_FILE_LOCKED=false;
+let ONEDRIVE_ONLINE=true;
+
+function queueItemFromLog(logItem){
+  return {
+    eventId:logItem.eventId,
+    line:logItem.line,
+    fo:logItem.fo,
+    type:logItem.type,
+    qty:logItem.qty,
+    queueStatus:"SAVED",
+    excelStatus:"WAITING",
+    oneDriveStatus:"WAITING"
+  };
+}
+
+function renderStorageStatus(){
+  const lineQueue=ACTIVE_LINE
+    ? LOCAL_EVENT_QUEUE.filter(x=>x.line===ACTIVE_LINE)
+    : LOCAL_EVENT_QUEUE;
+
+  const q=lineQueue.filter(x=>x.excelStatus!=="SAVED" || x.oneDriveStatus!=="SYNCED");
+
+  const localBox=document.getElementById("localQueueBox");
+  const excelBox=document.getElementById("excelMasterBox");
+  const odBox=document.getElementById("oneDriveBox");
+
+  const localText=document.getElementById("localQueueStatus");
+  const excelText=document.getElementById("excelMasterStatus");
+  const odText=document.getElementById("oneDriveStatus");
+
+  if(localText) localText.textContent=`SAVED • ${q.length} pending`;
+  if(localBox) localBox.className="storage-box storage-ok";
+
+  if(EXCEL_FILE_LOCKED){
+    if(excelText) excelText.textContent="WAITING • FILE LOCKED";
+    if(excelBox) excelBox.className="storage-box storage-wait";
+  }else{
+    const pendingExcel=lineQueue.filter(x=>x.excelStatus!=="SAVED").length;
+    if(excelText) excelText.textContent=pendingExcel?`WRITING • ${pendingExcel} pending`:"SAVED";
+    if(excelBox) excelBox.className="storage-box storage-ok";
+  }
+
+  if(!ONEDRIVE_ONLINE){
+    if(odText) odText.textContent="WAITING • OFFLINE";
+    if(odBox) odBox.className="storage-box storage-wait";
+  }else{
+    const pendingOd=lineQueue.filter(x=>x.oneDriveStatus!=="SYNCED").length;
+    if(odText) odText.textContent=pendingOd?`SYNCING • ${pendingOd} pending`:"SYNCED";
+    if(odBox) odBox.className="storage-box storage-ok";
+  }
+
+  const body=document.getElementById("pendingQueueBody");
+  if(body){
+    const rows=[...lineQueue].slice(-8).reverse();
+    body.innerHTML=rows.length?rows.map(x=>`
+      <tr>
+        <td>${x.eventId}</td>
+        <td>${x.line}</td>
+        <td>${x.fo}</td>
+        <td>${x.type}</td>
+        <td>${x.qty}</td>
+        <td>${x.queueStatus}</td>
+        <td>${x.excelStatus}</td>
+        <td>${x.oneDriveStatus}</td>
+      </tr>
+    `).join(""):'<tr><td colspan="8">ไม่มีรายการค้าง</td></tr>';
+  }
+}
+
+function flushLocalQueue(){
+  // ขั้นที่ 1: เขียน Excel Master ถ้าไฟล์ไม่ถูก Excel lock
+  if(!EXCEL_FILE_LOCKED){
+    LOCAL_EVENT_QUEUE.forEach(x=>{
+      if(x.excelStatus!=="SAVED"){
+        x.excelStatus="SAVED";
+      }
+    });
+  }
+
+  // ขั้นที่ 2: Mirror ไป OneDrive เฉพาะรายการที่ Excel local save แล้ว
+  if(ONEDRIVE_ONLINE){
+    LOCAL_EVENT_QUEUE.forEach(x=>{
+      if(x.excelStatus==="SAVED" && x.oneDriveStatus!=="SYNCED"){
+        x.oneDriveStatus="SYNCED";
+      }
+    });
+  }
+
+  renderStorageStatus();
+}
+
+function enqueueAcceptedEvent(logItem){
+  const exists=LOCAL_EVENT_QUEUE.some(x=>x.eventId===logItem.eventId);
+  if(exists) return;
+
+  LOCAL_EVENT_QUEUE.push(queueItemFromLog(logItem));
+  renderStorageStatus();
+  flushLocalQueue();
+}
+
+
+const LINE_WORKSPACES={}; // Browser DEMO: แยก state ตาม LINE01...LINE18
+
+function emptyLineWorkspace(line){
+  return {
+    line,
+    form:{
+      jobId:"",
+      masterFo:"",
+      productionFo:"",
+      size:"",
+      process:"",
+      jobQty:"",
+      fo:"",
+      foSelect:"",
+      style:"",
+      color:"",
+      orderQty:"",
+      qty:"",
+      previousCum:0,
+      sam:"",
+      eff:"40",
+      manpower:15,
+      start:isoToday(),
+      startTime:"08:00",
+      endTime:"17:00" // internal compatibility only; no End Time control on web
+    },
+    prodRows:{},
+    productionLog:[],
+    eventSeq:0,
+    prodStatus:"READY",
+    foPlanLocked:false,
+    foCloseReason:"",
+    dailyLocked:[],
+    auditLog:[],
+    otByDay:{},
+    otDraft:{},
+    inputMode:"BUTTON"
+  };
+}
+
+function getLineWorkspace(line){
+  const key=String(line||"").toUpperCase();
+  if(!LINE_WORKSPACES[key]) LINE_WORKSPACES[key]=emptyLineWorkspace(key);
+  return LINE_WORKSPACES[key];
+}
+
+function captureCurrentLineWorkspace(){
+  if(!ACTIVE_LINE) return;
+  const w=getLineWorkspace(ACTIVE_LINE);
+
+  w.form={
+    jobId:document.getElementById("jobIdField")?.value||"",
+    masterFo:document.getElementById("masterFoField")?.value||"",
+    productionFo:document.getElementById("productionFoField")?.value||document.getElementById("fo")?.value||"",
+    size:document.getElementById("sizeField")?.value||"",
+    process:document.getElementById("processField")?.value||"",
+    jobQty:document.getElementById("jobQtyField")?.value||"",
+    fo:document.getElementById("fo")?.value||"",
+    foSelect:document.getElementById("foSelect")?.value||"",
+    style:document.getElementById("style")?.value||"",
+    color:document.getElementById("color")?.value||"",
+    orderQty:document.getElementById("orderQty")?.value||"",
+    qty:document.getElementById("qty")?.value||"",
+    previousCum:document.getElementById("previousCum")?.value||0,
+    sam:document.getElementById("sam")?.value||"",
+    eff:document.getElementById("eff")?.value||"",
+    manpower:document.getElementById("manpower")?.value||15,
+    start:document.getElementById("start")?.value||isoToday(),
+    startTime:document.getElementById("startTime")?.value||"08:00",
+    endTime:"17:00" // retained internally for backward compatibility
+  };
+
+  w.prodRows=JSON.parse(JSON.stringify(PROD_ROWS));
+  w.productionLog=JSON.parse(JSON.stringify(PRODUCTION_LOG));
+  w.eventSeq=EVENT_SEQ;
+  w.prodStatus=PROD_STATUS;
+  w.foPlanLocked=FO_PLAN_LOCKED;
+  w.foCloseReason=FO_CLOSE_REASON;
+  w.dailyLocked=[...DAILY_LOCKED];
+  w.auditLog=JSON.parse(JSON.stringify(AUDIT_LOG));
+  w.otByDay=JSON.parse(JSON.stringify(state.otByDay||{}));
+  w.otDraft=JSON.parse(JSON.stringify(state.otDraft||{}));
+  w.inputMode=INPUT_MODE;
+}
+
+function clearObject(obj){
+  Object.keys(obj).forEach(k=>delete obj[k]);
+}
+
+function restoreLineWorkspace(line){
+  const w=getLineWorkspace(line);
+
+  clearObject(PROD_ROWS);
+  Object.assign(PROD_ROWS,JSON.parse(JSON.stringify(w.prodRows||{})));
+
+  PRODUCTION_LOG.length=0;
+  (w.productionLog||[]).forEach(x=>PRODUCTION_LOG.push(JSON.parse(JSON.stringify(x))));
+  EVENT_SEQ=Number(w.eventSeq||0);
+  PROD_STATUS=w.prodStatus||"READY";
+  FO_CLOSE_REASON=w.foCloseReason||"";
+
+  DAILY_LOCKED.clear();
+  (w.dailyLocked||[]).forEach(x=>DAILY_LOCKED.add(x));
+
+  AUDIT_LOG.length=0;
+  (w.auditLog||[]).forEach(x=>AUDIT_LOG.push(JSON.parse(JSON.stringify(x))));
+
+  state.otByDay=JSON.parse(JSON.stringify(w.otByDay||{}));
+  state.otDraft=JSON.parse(JSON.stringify(w.otDraft||{}));
+  INPUT_MODE=w.inputMode||"BUTTON";
+
+  const f=w.form||{};
+  const set=(id,val)=>{
+    const el=document.getElementById(id);
+    if(el) el.value=val??"";
+  };
+
+  set("jobIdField",f.jobId||"");
+  set("masterFoField",f.masterFo||f.fo||"");
+  set("productionFoField",f.productionFo||f.fo||"");
+  set("sizeField",f.size||"");
+  set("processField",f.process||"");
+  set("jobQtyField",f.jobQty||f.qty||"");
+  set("fo",f.productionFo||f.fo||"");
+  set("style",f.style||"");
+  set("color",f.color||"");
+  set("orderQty",f.orderQty||"");
+  set("qty",f.qty||"");
+  set("previousCum",f.previousCum??0);
+  set("sam",f.sam||"");
+  set("eff",f.eff || "40");
+  set("manpower",f.manpower||15);
+  set("start",f.start||isoToday());
+  set("startTime",f.startTime||"08:00");
+
+  refreshFoOptions();
+  set("foSelect",f.foSelect||f.jobId||"");
+
+  setFoPlanLocked(!!w.foPlanLocked);
+  setInputMode(INPUT_MODE);
+  renderProductionLog();
+  updateProductionUi();
+
+  const badge=document.getElementById("lineStorageBadge");
+  if(badge) badge.textContent=`${line} • ข้อมูลแยกเฉพาะ Line`;
+}
+
+function lineLocalPath(line){
+  return `E:\\ProductionControlData\\${line}\\Production_Control_${line}.xlsx`;
+}
+
+function lineOneDrivePath(line){
+  return `E:\\OneDrive - บริษัท เทพฤกษ์ จำกัด\\ProductionControl\\${line}\\Production_Control_${line}.xlsx`;
+}
+
+const ACTIVE_PROD_KEYS=new Set();
+let PLAN_DATES=[];
+let LAST_DUPLICATE_VOICE_AT=0;
+
+function currentProductionSlotKey(){
+  const now=new Date();
+  const yyyy=now.getFullYear();
+  const mm=String(now.getMonth()+1).padStart(2,"0");
+  const dd=String(now.getDate()).padStart(2,"0");
+  const todayIso=`${yyyy}-${mm}-${dd}`;
+  const mins=now.getHours()*60+now.getMinutes();
+
+  const slots=[
+    ["08:00-09:00",480,540],
+    ["09:00-10:00",540,600],
+    ["10:00-11:00",600,660],
+    ["11:00-12:00",660,720],
+    ["13:00-14:00",780,840],
+    ["14:00-15:00",840,900],
+    ["15:00-16:00",900,960],
+    ["16:00-17:00",960,1020],
+    ["17:30-18:30",1050,1110],
+    ["18:30-19:30",1110,1170],
+    ["19:30-20:30",1170,1230]
+  ];
+
+  const slot=slots.find(x=>mins>=x[1]&&mins<x[2])?.[0]||null;
+
+  // ถ้าวันนี้อยู่ในแผน ต้องลงข้อมูลตามวันและเวลาจริงเท่านั้น
+  if(PLAN_DATES.includes(todayIso)){
+    if(!slot) return null; // ช่วงพักหรือนอกเวลาผลิต
+    const key=`${todayIso}|${slot}`;
+    return ACTIVE_PROD_KEYS.has(key) ? key : null; // OT ที่ไม่ได้เปิดก็ห้ามรับ
+  }
+
+  // DEMO fallback: หากวันที่แผนไม่ใช่วันนี้ ให้ใช้แถวผลิตแรกที่ active
+  return ACTIVE_PROD_KEYS.values().next().value || null;
+}
+
+
+function makeEventId(){
+  EVENT_SEQ+=1;
+  return `EVT-${Date.now()}-${String(EVENT_SEQ).padStart(4,"0")}`;
+}
+
+function localDateTimeText(){
+  return new Date().toLocaleString("th-TH",{
+    year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",second:"2-digit"
+  });
+}
+
+function appendProductionLog(type,source,rowKey){
+  const [productionDate,timeSlot]=String(rowKey||"|").split("|");
+  const activeJobId=currentJobId();
+  const planItem=PLAN_MASTER.find(r=>
+    normalizeJobKey(r.jobId)===normalizeJobKey(activeJobId)
+  )||{};
+  const formValue=(id)=>document.getElementById(id)?.value||"";
+  const productionFo=
+    planItem.productionFo||planItem.fo||
+    formValue("productionFoField")||formValue("fo");
+
+  const item={
+    seq:PRODUCTION_LOG.length+1,
+    dateTime:localDateTimeText(),
+    productionDate:productionDate||"",
+    jobId:planItem.jobId||activeJobId||"",
+    masterFo:planItem.masterFo||formValue("masterFoField")||"",
+    productionFo:productionFo||"",
+    fo:productionFo||"",
+    style:planItem.style||formValue("style")||"",
+    color:planItem.color||formValue("color")||"",
+    process:planItem.process||formValue("processField")||"",
+    size:planItem.size||formValue("sizeField")||"",
+    line:ACTIVE_LINE||planItem.line||"",
+    planLine:planItem.line||"",
+    jobQty:planItem.jobQty||formValue("jobQtyField")||"",
+    sam:planItem.sam||formValue("sam")||"",
+    eff:(planItem.eff!==undefined && String(planItem.eff).trim()!=="")
+      ? planItem.eff : formValue("eff"),
+    masterOrderQty:planItem.orderQty||formValue("orderQty")||"",
+    orderQty:planItem.orderQty||formValue("orderQty")||"",
+    timeSlot:timeSlot||"",
+    type:String(type||"").toUpperCase(),
+    qty:1,
+    source:source||"",
+    eventId:makeEventId()
+  };
+  PRODUCTION_LOG.push(item);
+  renderProductionLog();
+
+  // Local-first: Event เข้า Queue ก่อน จากนั้นค่อยเขียน Excel / Mirror OneDrive
+  enqueueAcceptedEvent(item);
+
+  captureCurrentLineWorkspace();
+  return item;
+}
+
+function renderProductionLog(){
+  const body=document.getElementById("inputLogBody");
+  const badge=document.getElementById("inputLogBadge");
+  if(badge) badge.textContent=`${PRODUCTION_LOG.length} รายการ • Excel Master → OneDrive`;
+  if(!body) return;
+
+  if(PRODUCTION_LOG.length===0){
+    body.innerHTML='<tr><td colspan="13">ยังไม่มีการบันทึกข้อมูล</td></tr>';
+    return;
+  }
+
+  body.innerHTML=[...PRODUCTION_LOG].reverse().map(x=>{
+    const cls=x.type==="OK"?"input-log-ok":x.type==="REPAIR"?"input-log-repair":"input-log-ng";
+    return `
+      <tr>
+        <td>${x.seq}</td>
+        <td>${x.dateTime}</td>
+        <td>${x.productionDate}</td>
+        <td>${x.line}</td>
+        <td>${x.fo}</td>
+        <td>${x.style}</td>
+        <td>${x.color}</td>
+        <td>${x.timeSlot}</td>
+        <td class="${cls}">${x.type}</td>
+        <td>${x.qty}</td>
+        <td class="input-log-source">${x.source}</td>
+        <td>${x.eventId}</td>
+        <td>${x.jobId||""}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function productionTotals(){
+  let ok=0,repair=0,ng=0;
+  Object.values(PROD_ROWS).forEach(r=>{
+    ok+=Number(r.ok||0);
+    repair+=Number(r.repair||0);
+    ng+=Number(r.ng||0);
+  });
+  return {ok,repair,ng,production:ok+ng};
+}
+
+
+function todayIsoLocal(){
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=String(now.getMonth()+1).padStart(2,"0");
+  const d=String(now.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+
+function recordAudit(action,detail){
+  AUDIT_LOG.push({
+    at:new Date().toISOString(),
+    line:ACTIVE_LINE,
+    fo:document.getElementById("fo")?.value||"",
+    action,
+    detail:String(detail||"")
+  });
+}
+
+function lockPastDays(){
+  const today=todayIsoLocal();
+  LAST_RENDERED_PLAN_DATES.forEach(d=>{
+    if(d<today) DAILY_LOCKED.add(d);
+  });
+}
+
+function isPastDayLocked(dateIso){
+  return DAILY_LOCKED.has(dateIso);
+}
+
+function getOtHoursForDate(dateIso){
+  const idx=LAST_RENDERED_PLAN_DATES.indexOf(dateIso);
+  if(idx<0) return 0;
+  const key=`DAY_${idx+1}_${dateIso}`;
+  return Number(state.otByDay[key]||0);
+}
+
+
+function safeFilePart(v){
+  return String(v||"").trim().replace(/[\\/:*?"<>|]+/g,"_").replace(/\s+/g,"_") || "NA";
+}
+
+function csvCell(v){
+  const s=String(v??"");
+  return `"${s.replace(/"/g,'""')}"`;
+}
+
+function currentFoMeta(){
+  return [
+    ["Line",ACTIVE_LINE||""],
+    ["JOB ID",currentJobId()],
+    ["Master FO",document.getElementById("masterFoField")?.value||""],
+    ["Production FO",document.getElementById("productionFoField")?.value||document.getElementById("fo")?.value||""],
+    ["Size",document.getElementById("sizeField")?.value||""],
+    ["Process",document.getElementById("processField")?.value||""],
+    ["Job Qty",document.getElementById("jobQtyField")?.value||""],
+    ["FO",document.getElementById("fo")?.value||""],
+    ["Style",document.getElementById("style")?.value||""],
+    ["Color",document.getElementById("color")?.value||""],
+    ["Order Qty",document.getElementById("orderQty")?.value||""],
+    ["Cutting Qty",document.getElementById("qty")?.value||""],
+    ["Previous Cumulative",document.getElementById("previousCum")?.value||""],
+    ["SAM",document.getElementById("sam")?.value||""],
+    ["Manpower",document.getElementById("manpower")?.value||""],
+    ["Production Date",document.getElementById("start")?.value||""],
+    ["Status",PROD_STATUS||""]
+  ];
+}
+
+function tableRowsFromElement(table){
+  if(!table) return [];
+  return [...table.querySelectorAll("tr")].map(tr=>
+    [...tr.querySelectorAll("th,td")].map(td=>td.innerText.trim())
+  );
+}
+
+function collectHourlyBoardRows(){
+  const all=[];
+  const tables=document.querySelectorAll("#days table");
+  tables.forEach((table,idx)=>{
+    if(idx>0) all.push([]);
+    const rows=tableRowsFromElement(table);
+    all.push(...rows);
+  });
+  return all;
+}
+
+function collectHistoryRows(){
+  const table=document.querySelector(".history-table");
+  return tableRowsFromElement(table);
+}
+
+function collectLogRows(){
+  const table=document.querySelector(".input-log-table");
+  return tableRowsFromElement(table);
+}
+
+function collectLiveKpis(){
+  return [
+    ["Target วันนี้",document.getElementById("dailyTargetTotal")?.innerText||"0"],
+    ["ผลิตวันนี้ (OK+NG)",document.getElementById("dailyProductionTotal")?.innerText||"0"],
+    ["Achievement วันนี้",document.getElementById("dailyAchievement")?.innerText||"0.0%"],
+    ["OK",document.getElementById("okTotal")?.innerText||"0"],
+    ["Repair",document.getElementById("repairTotal")?.innerText||"0"],
+    ["NG",document.getElementById("ngTotal")?.innerText||"0"],
+    ["เป้าหมายที่ต้องผลิต (อ้างอิงยอดตัด)",document.getElementById("cuttingTargetTotal")?.innerText||"0"],
+    ["งานดีสะสม",document.getElementById("foCumulativeTotal")?.innerText||"0"],
+    ["ยอดงานที่ต้องผลิต",document.getElementById("remainingTotal")?.innerText||"0"]
+  ];
+}
+
+function buildCsvReport(){
+  const lines=[];
+
+  lines.push(["PRODUCTION CONTROL REPORT"]);
+  lines.push([]);
+  lines.push(["FO INFORMATION"]);
+  currentFoMeta().forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["LIVE SUMMARY"]);
+  collectLiveKpis().forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["PRODUCTION BOARD"]);
+  collectHourlyBoardRows().forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["TRANSACTION LOG"]);
+  collectLogRows().forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["FO HISTORY / DAILY SUMMARY"]);
+  collectHistoryRows().forEach(r=>lines.push(r));
+
+  return "\uFEFF"+lines.map(r=>r.map(csvCell).join(",")).join("\r\n");
+}
+
+function downloadBlob(content,mime,filename){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+
+
+function dayBoardTableRows(dateIso){
+  const wrap=document.querySelector(`.tablewrap[data-day="${dateIso}"]`);
+  const table=wrap?.querySelector("table");
+  return tableRowsFromElement(table);
+}
+
+function daySummaryRows(dateIso){
+  const target=dailyTargetForDate(dateIso);
+  const daily=dailyProductionTotals(dateIso);
+  const cum=cumulativeProductionThroughDate(dateIso);
+  const prev=Number(document.getElementById("previousCum")?.value||0);
+  const cutting=Number(document.getElementById("qty")?.value||0);
+  const achievement=target>0?(daily.production/target)*100:0;
+  const foCum=prev+cum.production;
+  const goodCum=prev+cum.ok;
+  const remaining=Math.max(0,cutting-foCum);
+
+  return [
+    ["Date",dateIso],
+    ["Target Today",Math.round(target)],
+    ["Production Today (OK+NG)",daily.production],
+    ["Achievement",`${achievement.toFixed(1)}%`],
+    ["OK Today",daily.ok],
+    ["Repair Today",daily.repair],
+    ["NG Today",daily.ng],
+    ["งานดีสะสม",goodCum],
+    ["Good Cumulative (OK)",goodCum],
+    ["ยอดงานที่ต้องผลิต",remaining],
+    ["OT Hours",getOtHoursForDate(dateIso)]
+  ];
+}
+
+function dayLogRows(dateIso){
+  const head=["No.","Date Time","Production Date","Line","FO","Style","Color","Time Slot","Type","Qty","Source","Event ID","JOB ID"];
+  const rows=PRODUCTION_LOG
+    .filter(x=>String(x.productionDate)===String(dateIso))
+    .map(x=>[
+      x.seq,x.dateTime,x.productionDate,x.line,x.fo,x.style,x.color,x.timeSlot,x.type,x.qty,x.source,x.eventId,x.jobId||""
+    ]);
+  return [head,...rows];
+}
+
+function buildDayCsvReport(dateIso){
+  const lines=[];
+  lines.push(["PRODUCTION CONTROL DAILY REPORT"]);
+  lines.push([]);
+
+  lines.push(["FO INFORMATION"]);
+  currentFoMeta().forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["DAILY SUMMARY"]);
+  daySummaryRows(dateIso).forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["PRODUCTION BOARD"]);
+  dayBoardTableRows(dateIso).forEach(r=>lines.push(r));
+  lines.push([]);
+
+  lines.push(["TRANSACTION LOG"]);
+  dayLogRows(dateIso).forEach(r=>lines.push(r));
+
+  return "\uFEFF"+lines.map(r=>r.map(csvCell).join(",")).join("\r\n");
+}
+
+function exportDayCsv(dateIso){
+  const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
+  const line=safeFilePart(ACTIVE_LINE||"LINE");
+  downloadBlob(
+    buildDayCsvReport(dateIso),
+    "text/csv;charset=utf-8;",
+    `Production_Daily_${line}_${fo}_${dateIso}.csv`
+  );
+}
+
+function exportDayExcel(dateIso){
+  const meta=[["Field","Value"],...currentFoMeta()];
+  const summary=[["KPI","Value"],...daySummaryRows(dateIso)];
+  const board=dayBoardTableRows(dateIso);
+  const logs=dayLogRows(dateIso);
+
+  const excelHtml=`<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:11px}
+      h1{font-size:18px}
+      h2{font-size:14px;margin-top:18px}
+      table{border-collapse:collapse;margin-bottom:14px}
+      th{background:#0f172a;color:#fff}
+      th,td{border:1px solid #cbd5e1;padding:5px 7px}
+    </style>
+  </head>
+  <body>
+    <h1>Production Daily Report - ${dateIso}</h1>
+    ${htmlTableFromRows("FO Information",meta)}
+    ${htmlTableFromRows("Daily Summary",summary)}
+    ${htmlTableFromRows("Production Board",board)}
+    ${htmlTableFromRows("Transaction Log",logs)}
+  </body>
+  </html>`;
+
+  const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
+  const line=safeFilePart(ACTIVE_LINE||"LINE");
+  downloadBlob(
+    "\uFEFF"+excelHtml,
+    "application/vnd.ms-excel;charset=utf-8;",
+    `Production_Daily_${line}_${fo}_${dateIso}.xls`
+  );
+}
+
+function printDayReport(dateIso){
+  const meta=currentFoMeta();
+  const summary=daySummaryRows(dateIso);
+  const board=dayBoardTableRows(dateIso);
+  const logs=dayLogRows(dateIso);
+
+  const printHtml=`<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Production Daily Report ${dateIso}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:18px;font-size:11px;color:#111827}
+      h1{font-size:20px;margin:0 0 10px}
+      h2{font-size:14px;margin:18px 0 6px}
+      table{width:100%;border-collapse:collapse;margin-bottom:14px}
+      th{background:#0f172a;color:#fff}
+      th,td{border:1px solid #cbd5e1;padding:5px 6px;text-align:center}
+      @page{size:landscape;margin:10mm}
+    </style>
+  </head>
+  <body>
+    <h1>Production Daily Report - ${dateIso}</h1>
+    ${htmlTableFromRows("FO Information",[["Field","Value"],...meta])}
+    ${htmlTableFromRows("Daily Summary",[["KPI","Value"],...summary])}
+    ${htmlTableFromRows("Production Board",board)}
+    ${htmlTableFromRows("Transaction Log",logs)}
+    <script>window.onload=()=>window.print();<\/script>
+  </body>
+  </html>`;
+
+  const w=window.open("","_blank");
+  if(!w){
+    alert("Browser ปิดกั้นหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up");
+    return;
+  }
+  w.document.open();
+  w.document.write(printHtml);
+  w.document.close();
+}
+
+
+function buildLogCsv(){
+  const lines=[];
+  lines.push(["PRODUCTION TRANSACTION LOG"]);
+  lines.push([]);
+
+  lines.push(["FO INFORMATION"]);
+  currentFoMeta().forEach(r=>lines.push(r));
+  lines.push([]);
+  lines.push(["TRANSACTION LOG"]);
+  collectLogRows().forEach(r=>lines.push(r));
+
+  return "\uFEFF"+lines.map(r=>r.map(csvCell).join(",")).join("\r\n");
+}
+
+function exportLogCsv(){
+  const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
+  const line=safeFilePart(ACTIVE_LINE||"LINE");
+  downloadBlob(
+    buildLogCsv(),
+    "text/csv;charset=utf-8;",
+    `Production_Log_${line}_${fo}.csv`
+  );
+}
+
+function exportLogExcel(){
+  const meta=[["Field","Value"],...currentFoMeta()];
+  const logs=collectLogRows();
+
+  const excelHtml=`<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:11px}
+      h1{font-size:18px}
+      h2{font-size:14px;margin-top:18px}
+      table{border-collapse:collapse;margin-bottom:14px}
+      th{background:#0f172a;color:#fff}
+      th,td{border:1px solid #cbd5e1;padding:5px 7px}
+    </style>
+  </head>
+  <body>
+    <h1>Production Transaction Log</h1>
+    ${htmlTableFromRows("FO Information",meta)}
+    ${htmlTableFromRows("Transaction Log",logs)}
+  </body>
+  </html>`;
+
+  const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
+  const line=safeFilePart(ACTIVE_LINE||"LINE");
+  downloadBlob(
+    "\uFEFF"+excelHtml,
+    "application/vnd.ms-excel;charset=utf-8;",
+    `Production_Log_${line}_${fo}.xls`
+  );
+}
+
+function printLogOnly(){
+  const meta=currentFoMeta();
+  const logs=collectLogRows();
+
+  const printHtml=`<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Production Transaction Log</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:18px;font-size:11px;color:#111827}
+      h1{font-size:20px;margin:0 0 10px}
+      h2{font-size:14px;margin:18px 0 6px}
+      table{width:100%;border-collapse:collapse;margin-bottom:14px}
+      th{background:#0f172a;color:#fff}
+      th,td{border:1px solid #cbd5e1;padding:5px 6px;text-align:center}
+      @page{size:landscape;margin:10mm}
+    </style>
+  </head>
+  <body>
+    <h1>Production Transaction Log</h1>
+    ${htmlTableFromRows("FO Information",[["Field","Value"],...meta])}
+    ${htmlTableFromRows("Transaction Log",logs)}
+    <script>window.onload=()=>window.print();<\/script>
+  </body>
+  </html>`;
+
+  const w=window.open("","_blank");
+  if(!w){
+    alert("Browser ปิดกั้นหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up");
+    return;
+  }
+  w.document.open();
+  w.document.write(printHtml);
+  w.document.close();
+}
+
+
+function exportCsvReport(){
+  const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
+  const line=safeFilePart(ACTIVE_LINE||"LINE");
+  downloadBlob(
+    buildCsvReport(),
+    "text/csv;charset=utf-8;",
+    `Production_Report_${line}_${fo}.csv`
+  );
+}
+
+function htmlTableFromRows(title,rows){
+  const esc=v=>String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+
+  const trs=rows.map((r,ri)=>
+    `<tr>${r.map(v=>ri===0?`<th>${esc(v)}</th>`:`<td>${esc(v)}</td>`).join("")}</tr>`
+  ).join("");
+
+  return `<h2>${esc(title)}</h2><table>${trs}</table>`;
+}
+
+function exportExcelReport(){
+  const meta=[["Field","Value"],...currentFoMeta()];
+  const live=[["KPI","Value"],...collectLiveKpis()];
+  const board=collectHourlyBoardRows();
+  const log=collectLogRows();
+  const hist=collectHistoryRows();
+
+  const excelHtml=`<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:11px}
+      h1{font-size:18px}
+      h2{font-size:14px;margin-top:18px}
+      table{border-collapse:collapse;margin-bottom:14px}
+      th{background:#0f172a;color:#fff;font-weight:bold}
+      th,td{border:1px solid #cbd5e1;padding:5px 7px}
+    </style>
+  </head>
+  <body>
+    <h1>Production Control Report</h1>
+    ${htmlTableFromRows("FO Information",meta)}
+    ${htmlTableFromRows("Live Summary",live)}
+    ${htmlTableFromRows("Production Board",board)}
+    ${htmlTableFromRows("Transaction Log",log)}
+    ${htmlTableFromRows("FO History / Daily Summary",hist)}
+  </body>
+  </html>`;
+
+  const fo=safeFilePart(document.getElementById("fo")?.value||"FO");
+  const line=safeFilePart(ACTIVE_LINE||"LINE");
+  downloadBlob(
+    "\uFEFF"+excelHtml,
+    "application/vnd.ms-excel;charset=utf-8;",
+    `Production_Report_${line}_${fo}.xls`
+  );
+}
+
+function printProductionReport(){
+  window.print();
+}
+
+
+function renderHistory(){
+  const body=document.getElementById("historyBody");
+  if(!body) return;
+
+  const cuttingQty=Number(document.getElementById("qty")?.value||0);
+  const previousCum=Number(document.getElementById("previousCum")?.value||0);
+
+  let cumOk=0,cumNg=0,cumRepair=0;
+  const rows=[];
+
+  LAST_RENDERED_PLAN_DATES.forEach(date=>{
+    const daily=dailyProductionTotals(date);
+    cumOk+=daily.ok;
+    cumNg+=daily.ng;
+    cumRepair+=daily.repair;
+
+    const target=dailyTargetForDate(date);
+    const ach=target>0?(daily.production/target)*100:0;
+    const foCum=previousCum+cumOk+cumNg;
+    const goodCum=previousCum+cumOk;
+    const remaining=Math.max(0,cuttingQty-foCum);
+    const status = isPastDayLocked(date) ? "LOCKED" :
+                   date===todayIsoLocal() ? "CURRENT" :
+                   "PLANNED";
+
+    rows.push(`
+      <tr>
+        <td>${shortThaiDate(date)}</td>
+        <td>${Math.round(target)}</td>
+        <td>${daily.ok}</td>
+        <td>${daily.repair}</td>
+        <td>${daily.ng}</td>
+        <td>${daily.production}</td>
+        <td>${ach.toFixed(1)}%</td>
+        <td>${foCum}</td>
+        <td>${goodCum}</td>
+        <td>${remaining}</td>
+        <td>${getOtHoursForDate(date)} ชม.</td>
+        <td>${status}</td>
+      </tr>
+    `);
+  });
+
+  body.innerHTML=rows.length?rows.join(""):'<tr><td colspan="12">ยังไม่มีข้อมูล</td></tr>';
+}
+function productionDateForDailySummary(){
+  const now=new Date();
+  const yyyy=now.getFullYear();
+  const mm=String(now.getMonth()+1).padStart(2,"0");
+  const dd=String(now.getDate()).padStart(2,"0");
+  const todayIso=`${yyyy}-${mm}-${dd}`;
+
+  // ใช้วันที่จริงก่อน ถ้าวันนี้อยู่ในแผน
+  if(PLAN_DATES.includes(todayIso)) return todayIso;
+
+  // DEMO fallback: ถ้าแผนไม่ได้เริ่มวันนี้ ให้ใช้วันแรกของแผน
+  return PLAN_DATES[0] || document.getElementById("start")?.value || todayIso;
+}
+
+function dailyProductionTotals(dateIso){
+  let ok=0,repair=0,ng=0;
+  const prefix=`${dateIso}|`;
+  Object.entries(PROD_ROWS).forEach(([key,row])=>{
+    if(!key.startsWith(prefix)) return;
+    ok+=Number(row.ok||0);
+    repair+=Number(row.repair||0);
+    ng+=Number(row.ng||0);
+  });
+  return {ok,repair,ng,production:ok+ng};
+}
+
+function shortThaiDate(iso){
+  if(!iso) return "";
+  const [y,m,d]=String(iso).split("-");
+  if(!y||!m||!d) return iso;
+  return `${d}/${m}/${Number(y)+543}`;
+}
+
+
+function cumulativeProductionThroughDate(dateIso){
+  let ok=0,repair=0,ng=0;
+  Object.entries(PROD_ROWS).forEach(([key,row])=>{
+    const d=key.split("|")[0];
+    if(d<=dateIso){
+      ok+=Number(row.ok||0);
+      repair+=Number(row.repair||0);
+      ng+=Number(row.ng||0);
+    }
+  });
+  return {
+    ok,
+    repair,
+    ng,
+    production:ok+ng
+  };
+}
+
+function daySummaryHtml(dateIso,dailyTarget,cuttingQty,previousCum){
+  const daily=dailyProductionTotals(dateIso);
+  const cum=cumulativeProductionThroughDate(dateIso);
+  const achievement=dailyTarget>0 ? (daily.production/dailyTarget)*100 : 0;
+  const foGoodCumulative=previousCum+cum.ok;
+  const foProductionCumulative=previousCum+cum.production;
+  const remaining=Math.max(0,cuttingQty-foProductionCumulative);
+
+  return `
+    <div class="day-kpi-grid">
+      <div class="day-kpi daily">
+        <span>Target วันนี้ ${shortThaiDate(dateIso)}</span>
+        <b>${Math.round(dailyTarget)}</b>
+      </div>
+      <div class="day-kpi daily">
+        <span>ผลิตวันนี้ (OK+NG)</span>
+        <b>${daily.production}</b>
+      </div>
+      <div class="day-kpi daily">
+        <span>Achievement วันนี้</span>
+        <b>${achievement.toFixed(1)}%</b>
+      </div>
+      <div class="day-kpi daily">
+        <span>OK วันนี้</span>
+        <b>${daily.ok}</b>
+      </div>
+      <div class="day-kpi daily">
+        <span>Repair วันนี้</span>
+        <b>${daily.repair}</b>
+      </div>
+      <div class="day-kpi daily">
+        <span>NG วันนี้</span>
+        <b>${daily.ng}</b>
+      </div>
+      <div class="day-kpi cumulative">
+        <span>งานผลิตสะสม (OK+NG)</span>
+        <b>${previousCum+cum.production}</b>
+      </div>
+      <div class="day-kpi cumulative">
+        <span>ยอดงานที่ต้องผลิต</span>
+        <b>${remaining}</b>
+      </div>
+    </div>
+  `;
+}
+
+function dailyTargetForDate(dateIso){
+  const cuttingQty=Math.max(0,Number(document.getElementById("qty")?.value||0));
+  const previousCum=Math.max(0,Number(document.getElementById("previousCum")?.value||0));
+  const remainingAtStart=Math.max(0,cuttingQty-previousCum);
+
+  const sm=samMinutes(document.getElementById("sam")?.value);
+  const targetHr=targetHrFromSam(document.getElementById("sam")?.value);
+  if(!targetHr || !dateIso) return 0;
+
+  const planStart=document.getElementById("start")?.value;
+  if(!planStart) return 0;
+
+  let date=planStart;
+  let plannedCum=0;
+  let dayCount=0;
+
+  while(plannedCum<remainingAtStart && dayCount<120){
+    dayCount++;
+    const dayKey=`DAY_${dayCount}_${date}`;
+    const ot=Number(state.otByDay[dayKey]||0);
+
+    let dayTarget=0;
+    for(const slot of SHIFT){
+      if(plannedCum>=remainingAtStart) break;
+
+      const startTime=document.getElementById("startTime")?.value||"08:00";
+      const beforeStart=isBeforeFirstDayStart(dayCount,slot.time,startTime);
+      const active = !beforeStart && (slot.type==="WORK" || (slot.type==="OT" && slot.otNo<=ot));
+      if(!active || slot.type==="BREAK") continue;
+
+      const capacity=targetHr*slot.h;
+      const add=Math.min(capacity,remainingAtStart-plannedCum);
+      dayTarget+=add;
+      plannedCum+=add;
+    }
+
+    if(date===dateIso) return dayTarget;
+    date=nextDate(date);
+  }
+  return 0;
+}
+
+
+
+function liveDisplayDate(){
+  const d=productionDateForDailySummary();
+  return d ? shortThaiDate(d) : "-";
+}
+
+function liveCurrentSlotSummary(){
+  const key=currentProductionSlotKey();
+  const sm=samMinutes(document.getElementById("sam")?.value);
+  const targetHr=targetHrFromSam(document.getElementById("sam")?.value);
+
+  if(!key){
+    return {slot:"พัก / นอกเวลาผลิต",target:0,actual:0,diff:0};
+  }
+
+  const parts=String(key).split("|");
+  const slot=parts[1]||"-";
+  const row=PROD_ROWS[key]||{ok:0,repair:0,ng:0};
+  const actual=Number(row.ok||0)+Number(row.ng||0);
+  const target=ACTIVE_PROD_KEYS.has(key)?targetHr:0;
+  return {
+    slot,
+    target,
+    actual,
+    diff:actual-target
+  };
+}
+
+function updateLiveTodayHeader(){
+  const line=document.getElementById("liveLine");
+  const fo=document.getElementById("liveFo");
+  const status=document.getElementById("liveStatus");
+  const date=document.getElementById("liveDate");
+
+  if(line) line.textContent=ACTIVE_LINE||"LINE--";
+  if(fo) fo.textContent=`FO ${document.getElementById("fo")?.value||"-"}`;
+  if(status) status.textContent=PROD_STATUS||"READY";
+  if(date) date.textContent=`วันที่ ${liveDisplayDate()}`;
+
+  const s=liveCurrentSlotSummary();
+  const slot=document.getElementById("liveSlot");
+  const target=document.getElementById("liveSlotTarget");
+  const actual=document.getElementById("liveSlotActual");
+  const diff=document.getElementById("liveSlotDiff");
+
+  if(slot) slot.textContent=s.slot;
+  if(target) target.textContent=s.target>0?s.target.toFixed(0):"0";
+  if(actual) actual.textContent=s.actual;
+  if(diff){
+    diff.textContent=s.diff.toFixed(2);
+    diff.style.color=s.diff<0?"#dc2626":s.diff>0?"#15803d":"#334155";
+  }
+}
+
+
+function updateSamCalculationNote(){
+  const el=document.getElementById("samCalcNote");
+  const targetEl=document.getElementById("targetHrCalc");
+
+  const sam=document.getElementById("sam")?.value||"";
+  const manpower=Number(document.getElementById("manpower")?.value||0);
+  const effRaw=Number(document.getElementById("eff")?.value||0);
+  const eff=effDecimal();
+  const raw=rawTargetHrFromSam(sam);
+  const rounded=roundTargetHr(raw);
+
+  if(targetEl) targetEl.value=String(rounded>0 ? rounded : 0);
+
+  if(el){
+    el.textContent = raw>0
+      ? `(${manpower} × 60 ÷ ${sam}) × ${(eff*100).toFixed(2)}% = ${raw.toFixed(2)} → Target/Hr ${rounded}`
+      : "Target/Hr คำนวณจาก Manpower × 60 ÷ SAM × Eff";
+  }
+}
+
+
+async function pushCurrentLineStatusToServer(reason="STATUS_CHANGE"){
+  try{
+    if(!ACTIVE_LINE) return {skipped:true};
+
+    // captureCurrentLineWorkspace stores the current UI state in LINE_WORKSPACES
+    captureCurrentLineWorkspace();
+    const current=LINE_WORKSPACES[ACTIVE_LINE];
+    if(!current) return {skipped:true};
+
+    const copy=JSON.parse(JSON.stringify(current));
+    copy.productionLog=[];
+    copy.prodStatus=PROD_STATUS;
+    copy.statusReason=reason;
+    copy.statusUpdatedAt=new Date().toISOString();
+
+    const res=await fetch('/api/line/state',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({line:ACTIVE_LINE,workspace:copy})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok || data.ok===false){
+      throw new Error(data.message||`HTTP ${res.status}`);
+    }
+    return data;
+  }catch(e){
+    console.warn("pushCurrentLineStatusToServer",reason,e.message);
+    return {ok:false,error:e.message};
+  }
+}
+
+function updateProductionUi(){
+  updateSamCalculationNote();
+  const t=productionTotals();
+  const cuttingQty=Number(document.getElementById("qty")?.value||0);
+  const previousCum=Number(document.getElementById("previousCum")?.value||0);
+  const foCumulative=previousCum+t.production;
+  const goodCumulative=previousCum+t.ok;
+  // ยอดงานที่ต้องผลิต = Cutting Qty - ชิ้นงานที่ผลิตได้สะสม
+  // ชิ้นงานที่ผลิตได้สะสม = Previous Cumulative + OK + NG
+  // Repair ไม่ถือเป็นยอดผลิต
+  const remaining=Math.max(0,cuttingQty-foCumulative);
+
+  const dailyDate=productionDateForDailySummary();
+  const daily=dailyProductionTotals(dailyDate);
+  const dailyTarget=dailyTargetForDate(dailyDate);
+  const dailyAchievement=dailyTarget>0 ? (daily.production/dailyTarget)*100 : 0;
+
+  document.getElementById("dailyTargetTotal").textContent=Math.round(dailyTarget);
+  document.getElementById("dailyTargetLabel").textContent=`Target วันนี้ ${shortThaiDate(dailyDate)}`;
+  document.getElementById("dailyProductionTotal").textContent=daily.production;
+  document.getElementById("dailyProductionLabel").textContent=`ผลิตวันนี้ ${shortThaiDate(dailyDate)} (OK+NG)`;
+  document.getElementById("dailyAchievement").textContent=`${dailyAchievement.toFixed(1)}%`;
+
+  document.getElementById("okTotal").textContent=t.ok;
+  document.getElementById("repairTotal").textContent=t.repair;
+  document.getElementById("ngTotal").textContent=t.ng;
+  document.getElementById("cuttingTargetTotal").textContent=cuttingQty;
+  document.getElementById("foCumulativeTotal").textContent=goodCumulative;
+  document.getElementById("remainingTotal").textContent=remaining;
+  document.getElementById("prodStatus").textContent=PROD_STATUS;
+
+  const running=PROD_STATUS==="RUNNING";
+  const buttonMode=INPUT_MODE==="BUTTON";
+
+  // Processed cumulative uses Previous Cumulative + new OK/NG.
+  // This prevents a restarted/continued FO from processing beyond
+  // the original Cutting Qty without explicit approval.
+  const processedCumulative=previousCum+t.production;
+  const reachedCutting=processedCumulative>=cuttingQty;
+  const goodCompleted=goodCumulative>=cuttingQty;
+
+  const addQtyBtn=document.getElementById("addQtyBtn");
+  if(addQtyBtn) addQtyBtn.classList.toggle("app-hidden",!reachedCutting || goodCompleted);
+
+  const buttonModeBtn=document.getElementById("buttonModeBtn");
+  const keyboardModeBtn=document.getElementById("keyboardModeBtn");
+  if(buttonModeBtn) buttonModeBtn.disabled=INPUT_LOCKED;
+  if(keyboardModeBtn) keyboardModeBtn.disabled=INPUT_LOCKED;
+  document.getElementById("okBtn").disabled=!running || reachedCutting || !buttonMode || INPUT_LOCKED;
+  document.getElementById("repairBtn").disabled=!running || reachedCutting || !buttonMode || INPUT_LOCKED;
+  document.getElementById("ngBtn").disabled=!running || reachedCutting || !buttonMode || INPUT_LOCKED;
+
+  document.getElementById("startProdBtn").disabled=PROD_STATUS!=="READY" || !FO_PLAN_LOCKED;
+  document.getElementById("pauseProdBtn").disabled=!running;
+  document.getElementById("resumeProdBtn").disabled=PROD_STATUS!=="PAUSED";
+  // ปุ่มปิด FO ใช้เฉพาะ "ปิดก่อนครบ" โดยหัวหน้า Line
+  // ถ้าผลิตครบงานดีตาม Cutting Qty ระบบจะปิดอัตโนมัติ ไม่ต้องกดปุ่ม
+  const newFoBtn=document.getElementById("newFoBtn");
+  if(newFoBtn) newFoBtn.classList.toggle("app-hidden",PROD_STATUS!=="CLOSED");
+
+  const closeBtn=document.getElementById("closeProdBtn");
+  if(closeBtn){
+    closeBtn.disabled = !["RUNNING","PAUSED"].includes(PROD_STATUS);
+    closeBtn.title = closeBtn.disabled
+      ? "ปิด FO ได้เมื่อกำลังผลิต/พักงาน หรือระบบจะปิดอัตโนมัติเมื่อผลิตครบ"
+      : "ปิดก่อนครบ: ต้องใส่รหัสหัวหน้า Line และระบุเหตุผล";
+  }
+
+  // กรณีที่ 1: งานดีครบ Cutting Qty -> AUTO CLOSE เท่านั้น
+  if(goodCompleted && PROD_STATUS!=="CLOSED"){
+    finalizeFoClose("AUTO","ผลิตครบตามยอดตัด");
+    if(addQtyBtn) addQtyBtn.classList.add("app-hidden");
+  }else if(reachedCutting && PROD_STATUS!=="CLOSED"){
+    // OK+NG ถึง Cutting Qty แต่ OK ยังไม่ครบ: หยุด Input และรอเพิ่มยอดงาน
+    document.getElementById("prodStatus").textContent="ยอดผลิตถึง Cutting Qty — ต้องเพิ่มยอดงานเพื่อผลิตงานดีให้ครบ";
+    document.getElementById("okBtn").disabled=true;
+    document.getElementById("repairBtn").disabled=true;
+    document.getElementById("ngBtn").disabled=true;
+  }
+  updateLiveTodayHeader();
+}
+
+function bumpProduction(type){
+  if(PROD_STATUS!=="RUNNING") return false;
+
+  const key=currentProductionSlotKey();
+  if(!key){
+    speakThai("ขณะนี้อยู่นอกช่วงเวลาผลิต หรือไม่ได้เปิดโอที");
+    return false;
+  }
+
+  if(!PROD_ROWS[key]) PROD_ROWS[key]={ok:0,repair:0,ng:0};
+
+  const t=productionTotals();
+  const cuttingQty=Number(document.getElementById("qty")?.value||0);
+  const previousCum=Number(document.getElementById("previousCum")?.value||0);
+  const goodCumulative=previousCum+t.ok;
+  const remainingGood=Math.max(0,cuttingQty-goodCumulative);
+  const processedCumulative=previousCum+t.production;
+
+  // ห้ามบันทึกเพิ่มเมื่อ Previous Cumulative + OK + NG ถึง Cutting Qty
+  // หากงานดียังไม่ครบ ต้องอนุมัติเพิ่ม Cutting Qty ก่อนผลิตต่อ
+  if(processedCumulative>=cuttingQty){
+    speakThai("ยอดผลิตครบตามยอดสั่งตัดแล้ว กรุณาขออนุมัติเพิ่มยอดงาน");
+    return false;
+  }
+
+  // Repair เก็บเป็นสถิติแยก ไม่กระทบยอดผลิต/Target/Actual/Remaining
+  PROD_ROWS[key][type]=Number(PROD_ROWS[key][type]||0)+1;
+
+  updateProductionUi();
+  render();
+
+  const btnId=type==="ok"?"okBtn":type==="repair"?"repairBtn":"ngBtn";
+  const cls=type==="ok"?"flash-ok":type==="repair"?"flash-repair":"flash-ng";
+  const btn=document.getElementById(btnId);
+  if(btn){
+    btn.classList.add(cls);
+    setTimeout(()=>btn.classList.remove(cls),350);
+  }
+  return {accepted:true,rowKey:key};
+}
+
+function setProductionStatus(status){
+  if(PROD_STATUS==="CLOSED"){
+    if(status==="RUNNING"){
+      alert("FO เดิมปิดแล้ว กรุณากด “เริ่ม FO ใหม่” แล้วเลือก FO ใหม่ก่อน");
+    }
+    return;
+  }
+
+  const fo=document.getElementById("fo")?.value||"";
+
+  if(status==="RUNNING" && !FO_PLAN_LOCKED){
+    alert("กรุณาคำนวณ ตรวจสอบ และกด “บันทึกแผน” ก่อนเริ่มผลิต");
+    return;
+  }
+
+  if(status==="RUNNING"){
+    if(isFoLockedByAnotherLine(fo)){
+      const a=getFoAssignment(fo);
+      alert(`FO ${fo} ถูกใช้งานที่ ${a.assignedLine} ไม่สามารถเริ่มผลิตซ้ำได้`);
+      return;
+    }
+
+    const reserved=reserveFoForLine(fo,"RUNNING");
+    if(!reserved.ok){
+      alert(reserved.message);
+      return;
+    }
+  }
+
+  if(status==="PAUSED"){
+    updateFoAssignmentStatus(fo,"PAUSED");
+  }else if(status==="RUNNING"){
+    updateFoAssignmentStatus(fo,"RUNNING");
+  }
+
+  PROD_STATUS=status;
+  updateProductionUi();
+
+  // Source of truth for Overview:
+  // เริ่มผลิต/ทำงานต่อ = RUNNING, พักงาน = PAUSED
+  pushCurrentLineStatusToServer(`BUTTON_${status}`);
+}
+
+
+const FO_EDIT_PIN="12345";
+let FO_PLAN_LOCKED=false;
+
+function setFoPlanLocked(locked){
+  FO_PLAN_LOCKED=!!locked;
+
+  const editableIds=["foSelect","qty","previousCum","manpower","start","startTime"];
+  editableIds.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=FO_PLAN_LOCKED;
+  });
+
+  // Plan-derived fields are always read-only and stay that way
+  ["style","color","orderQty","sam","lineField","jobIdField","masterFoField","productionFoField","sizeField","processField","jobQtyField"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.readOnly=true;
+  });
+
+  const calcBtn=document.getElementById("calcBtn");
+  const resetBtn=document.getElementById("resetBtn");
+  const saveBtn=document.getElementById("saveFoPlanBtn");
+  const editBtn=document.getElementById("editFoPlanBtn");
+  const note=document.getElementById("foPlanLockNote");
+
+  if(calcBtn) calcBtn.disabled=FO_PLAN_LOCKED;
+  if(resetBtn) resetBtn.disabled=FO_PLAN_LOCKED;
+  if(saveBtn) saveBtn.classList.toggle("app-hidden",FO_PLAN_LOCKED);
+  if(editBtn) editBtn.classList.toggle("app-hidden",!FO_PLAN_LOCKED);
+  if(note) note.classList.toggle("app-hidden",!FO_PLAN_LOCKED);
+
+  render();
+}
+
+function saveFoPlan(){
+  const fo=document.getElementById("fo")?.value?.trim();
+  const qty=Number(document.getElementById("qty")?.value||0);
+  const sam=document.getElementById("sam")?.value?.trim();
+
+  if(!ACTIVE_LINE){
+    alert("กรุณาเข้าสู่ Line ก่อน");
+    return;
+  }
+  if(!fo){
+    alert("กรุณาเลือก JOB ID จากแผนการผลิต");
+    return;
+  }
+  if(qty<=0){
+    alert("กรุณาระบุ Cutting Qty");
+    return;
+  }
+  if(!sam){
+    alert("ไม่พบค่า SAM จากแผนการผลิต");
+    return;
+  }
+
+  if(isFoLockedByAnotherLine(fo)){
+    const a=getFoAssignment(fo);
+    alert(`ไม่สามารถบันทึกแผนได้: JOB ${currentJobId()} ถูกใช้งานที่ ${a.assignedLine}`);
+    return;
+  }
+
+  const ok=confirm(
+    `ยืนยันบันทึกแผน ${ACTIVE_LINE} / ${fo} ?\n\n`+
+    `หลังบันทึกแล้วจะไม่สามารถแก้ไขข้อมูลหรือ OT ได้\n`+
+    `หากต้องการแก้ไข ต้องกด “แก้ไข FO” และใส่รหัส 12345`
+  );
+  if(!ok) return;
+
+  const reserved=reserveFoForLine(fo,"READY");
+  if(!reserved.ok){
+    alert(reserved.message);
+    return;
+  }
+  recordAudit("SAVE_PLAN",`บันทึกและล็อกแผน FO / Assigned ${ACTIVE_LINE}`);
+  setFoPlanLocked(true);
+  captureCurrentLineWorkspace();
+}
+
+
+
+
+function finalizeFoClose(mode,reason,secret=null){
+  const fo=document.getElementById("fo")?.value||"";
+  const t=productionTotals();
+  const cuttingQty=Number(document.getElementById("qty")?.value||0);
+  const previousCum=Number(document.getElementById("previousCum")?.value||0);
+  const goodCumulative=previousCum+t.ok;
+
+  if(mode==="AUTO"){
+    if(cuttingQty<=0 || goodCumulative<cuttingQty){
+      console.warn("Blocked invalid AUTO close");
+      return false;
+    }
+    FO_CLOSE_REASON=reason||"ผลิตครบตามยอดตัด";
+    SERVER_CLOSE_AUTH_CONTEXT={
+      closeMode:"AUTO",
+      reason:FO_CLOSE_REASON,
+      goodCumulative,
+      cuttingQty
+    };
+    recordAudit("CLOSE_FO_AUTO",FO_CLOSE_REASON);
+  }else if(mode==="SUPERVISOR"){
+    if(secret!==SUPERVISOR_CLOSE_SECRET){
+      alert("ไม่อนุญาตให้ปิด FO: ต้องยืนยันรหัสหัวหน้า Line");
+      return false;
+    }
+    if(!String(reason||"").trim()){
+      alert("กรุณาระบุเหตุผลที่ปิด FO");
+      return false;
+    }
+    FO_CLOSE_REASON=String(reason).trim();
+    SERVER_CLOSE_AUTH_CONTEXT={
+      closeMode:"SUPERVISOR",
+      pin:LINE_HEAD_CLOSE_PIN,
+      reason:FO_CLOSE_REASON
+    };
+    recordAudit("CLOSE_FO_EARLY",FO_CLOSE_REASON);
+  }else{
+    return false;
+  }
+
+  updateFoAssignmentStatus(fo,"CLOSED");
+  PROD_STATUS="CLOSED";
+  updateProductionUi();
+
+  const status=document.getElementById("prodStatus");
+  if(status){
+    status.textContent=mode==="AUTO"
+      ? "FO COMPLETE — ผลิตครบตามยอดตัด"
+      : `CLOSED — ${FO_CLOSE_REASON} • ปิดโดยหัวหน้า Line`;
+  }
+
+  captureCurrentLineWorkspace();
+  pushCurrentLineStatusToServer(mode==="AUTO"?"AUTO_CLOSE":"SUPERVISOR_CLOSE");
+  if(mode==="SUPERVISOR") speakThai("ปิด เอฟโอ เรียบร้อย");
+  return true;
+}
+
+function openCloseFoModal(){
+  if(!["RUNNING","PAUSED"].includes(PROD_STATUS)){
+    alert("ปิด FO ได้เฉพาะตอนกำลังผลิตหรือพักงาน");
+    return;
+  }
+
+  const t=productionTotals();
+  const cuttingQty=Number(document.getElementById("qty")?.value||0);
+  const previousCum=Number(document.getElementById("previousCum")?.value||0);
+  const goodCumulative=previousCum+t.ok;
+
+  if(cuttingQty>0 && goodCumulative>=cuttingQty){
+    updateProductionUi();
+    return;
+  }
+
+  document.getElementById("closeFoPinInput").value="";
+  document.getElementById("closeFoReasonInput").value="";
+  document.getElementById("closeFoPinError").textContent="";
+  const modal=document.getElementById("closeFoPinModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  setTimeout(()=>document.getElementById("closeFoPinInput").focus(),80);
+}
+
+function closeCloseFoModal(){
+  const modal=document.getElementById("closeFoPinModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function confirmSupervisorCloseFo(){
+  const pin=document.getElementById("closeFoPinInput").value;
+  const reason=document.getElementById("closeFoReasonInput").value.trim();
+  const err=document.getElementById("closeFoPinError");
+
+  if(pin!==LINE_HEAD_CLOSE_PIN){
+    err.textContent="รหัสหัวหน้า Line ไม่ถูกต้อง";
+    document.getElementById("closeFoPinInput").focus();
+    return;
+  }
+  if(!reason){
+    err.textContent="กรุณาระบุเหตุผลที่ปิด FO";
+    document.getElementById("closeFoReasonInput").focus();
+    return;
+  }
+
+  if(!finalizeFoClose("SUPERVISOR",reason,SUPERVISOR_CLOSE_SECRET)){
+    err.textContent="ไม่สามารถปิด FO ได้";
+    return;
+  }
+  closeCloseFoModal();
+}
+
+function openAddQtyModal(){
+  const t=productionTotals();
+  const cuttingQty=Number(document.getElementById("qty")?.value||0);
+  const previousCum=Number(document.getElementById("previousCum")?.value||0);
+  const processedCumulative=previousCum+t.production;
+  if(processedCumulative<cuttingQty){
+    alert("ยังไม่ถึง Cutting Qty ไม่จำเป็นต้องเพิ่มยอดงาน");
+    return;
+  }
+
+  document.getElementById("addQtyPinInput").value="";
+  document.getElementById("addQtyValueInput").value="";
+  document.getElementById("addQtyValueInput").min=String(cuttingQty+1);
+  document.getElementById("addQtyError").textContent="";
+
+  const modal=document.getElementById("addQtyPinModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  setTimeout(()=>document.getElementById("addQtyPinInput").focus(),80);
+}
+
+function closeAddQtyModal(){
+  const modal=document.getElementById("addQtyPinModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function confirmAddQty(){
+  const pin=document.getElementById("addQtyPinInput").value;
+  const current=Number(document.getElementById("qty")?.value||0);
+  const next=Number(document.getElementById("addQtyValueInput").value||0);
+  const err=document.getElementById("addQtyError");
+
+  if(pin!==ADD_QTY_PIN){
+    err.textContent="รหัสไม่ถูกต้อง";
+    return;
+  }
+  if(!Number.isFinite(next) || next<=current){
+    err.textContent=`Cutting Qty ใหม่ต้องมากกว่า ${current}`;
+    return;
+  }
+
+  document.getElementById("qty").value=next;
+  recordAudit("ADD_QTY",`Cutting Qty ${current} -> ${next}`);
+  closeAddQtyModal();
+
+  // หลังอนุมัติเพิ่มยอด ให้คำนวณแผนใหม่ทั้งหมด
+  render();
+  updateProductionUi();
+  captureCurrentLineWorkspace();
+  speakThai("เพิ่มยอดงานเรียบร้อย");
+}
+
+function openFoEditPin(){
+  if(PROD_STATUS==="RUNNING"){
+    alert("กรุณาพักงานก่อนแก้ไข FO เพื่อป้องกันข้อมูลการผลิตคลาดเคลื่อน");
+    return;
+  }
+  document.getElementById("foEditPinInput").value="";
+  document.getElementById("foEditPinError").textContent="";
+  const modal=document.getElementById("foEditPinModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  setTimeout(()=>document.getElementById("foEditPinInput").focus(),80);
+}
+
+function closeFoEditPin(){
+  const modal=document.getElementById("foEditPinModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function confirmFoEditPin(){
+  const pin=document.getElementById("foEditPinInput").value;
+  if(pin!==FO_EDIT_PIN){
+    document.getElementById("foEditPinError").textContent="รหัสไม่ถูกต้อง";
+    return;
+  }
+
+  closeFoEditPin();
+  recordAudit("UNLOCK_FO_EDIT","ปลดล็อกแก้ไข FO ด้วย PIN");
+  setFoPlanLocked(false);
+}
+
+const PLANNER_PIN="12345";
+let PLANNER_EDIT=false;
+
+const PLAN_MASTER=[
+  {seq:1,jobId:"FO001-NS-L01",masterFo:"FO001",productionFo:"FO001",fo:"FO001",style:"T-SHIRT COTTON 30s",color:"Navy",process:"Sewing",size:"ไม่มี Size",line:"Line 01",jobQty:500,sam:"6.00",eff:"40",orderQty:500},
+  {seq:2,jobId:"FO002-NS-L01",masterFo:"FO002",productionFo:"FO002",fo:"FO002",style:"POLO PIQUE",color:"Black",process:"Sewing",size:"ไม่มี Size",line:"Line 01",jobQty:420,sam:"4.30",eff:"40",orderQty:420},
+  {seq:3,jobId:"FO003-NS-L02",masterFo:"FO003",productionFo:"FO003",fo:"FO003",style:"SPORT SHIRT",color:"White",process:"Sewing",size:"ไม่มี Size",line:"Line 02",jobQty:600,sam:"5.15",eff:"43",orderQty:600}
+];
+
+while(PLAN_MASTER.length<33){
+  PLAN_MASTER.push({seq:PLAN_MASTER.length+1,jobId:"",masterFo:"",productionFo:"",fo:"",style:"",color:"",process:"Sewing",size:"",line:"",jobQty:"",sam:"",eff:"40",orderQty:""});
+}
+
+
+function setPlanImportStatus(message,type="info"){
+  const el=document.getElementById("planImportStatus");
+  if(!el) return;
+  el.textContent=message;
+  el.style.color = type==="error" ? "#b91c1c" : type==="success" ? "#166534" : "#475569";
+  el.style.background = type==="error" ? "#fef2f2" : type==="success" ? "#f0fdf4" : "#f8fafc";
+  el.style.borderColor = type==="error" ? "#fecaca" : type==="success" ? "#bbf7d0" : "#dfe7f1";
+}
+
+function openPlannerImportPin(){
+  document.getElementById("plannerImportPinInput").value="";
+  document.getElementById("plannerImportPinError").textContent="";
+  const modal=document.getElementById("plannerImportPinModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  setTimeout(()=>document.getElementById("plannerImportPinInput").focus(),80);
+}
+
+function closePlannerImportPin(){
+  const modal=document.getElementById("plannerImportPinModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function confirmPlannerImportPin(){
+  const pin=document.getElementById("plannerImportPinInput").value;
+  if(pin!==PLANNER_PIN){
+    document.getElementById("plannerImportPinError").textContent="รหัสไม่ถูกต้อง";
+    return;
+  }
+  closePlannerImportPin();
+  document.getElementById("planExcelFileInput").value="";
+  document.getElementById("planExcelFileInput").click();
+}
+
+function normalizeHeader(v){
+  return String(v??"")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .replace(/[._-]+/g," ");
+}
+
+function headerIndexMap(headers){
+  const norm=headers.map(normalizeHeader);
+  const find=(aliases)=>norm.findIndex(h=>aliases.includes(h));
+
+  return {
+    seq: find(["ลำดับ","no","no.","seq","sequence"]),
+    jobId: find(["job id","job_id","jobid","รหัสงานย่อย","รหัสงาน"]),
+    masterFo: find(["master fo","master_fo","parent fo","fo ตัวแม่"]),
+    productionFo: find(["production fo","production_fo","child fo","fo ผลิต"]),
+    fo: find(["fo","fo no","fo number"]),
+    style: find(["style name","style","style_name","ชื่อ style","ชื่อรุ่น"]),
+    color: find(["color","colour","สี"]),
+    process: find(["process","กระบวนการ"]),
+    size: find(["size","ไซซ์","ไซร์"]),
+    line: find(["ไลน์","line","production line"]),
+    jobQty: find(["job qty","job_qty","plan qty","plan_qty","qty ผลิต","qty"]),
+    sam: find(["sam เย็บ","sam sewing","sam (min.sec/pc)","sam","sam min sec pc","sam min.sec/pc"]),
+    eff: find(["eff","efficiency","eff percent","eff_percent","ประสิทธิภาพ"]),
+    orderQty: find(["order qty","order quantity","order_qty","master order qty","po qty","ยอดสั่ง","ยอดสั่งผลิต"])
+  };
+}
+
+function validateAndImportPlanRows(rows){
+  if(!Array.isArray(rows) || rows.length===0) throw new Error("ไฟล์ไม่มีข้อมูล");
+  const firstRow=(rows[0]||[]).map(x=>cellText(x));
+  const map=headerIndexMap(firstRow);
+  const useHeader=hasKnownPlanHeader(map);
+  const startRow=useHeader?1:0;
+  const imported=[];
+  for(let i=startRow;i<rows.length;i++){
+    const r=rows[i]||[];
+    if(!rowHasAnyCell(r)) continue;
+    const item=rowFromMappedOrPlain(r,map,imported.length+1,useHeader);
+    if(!cellText(item.productionFo) && !cellText(item.masterFo)) continue;
+    imported.push(ensurePlanJobId(item,imported.length+1));
+  }
+  if(!imported.length) throw new Error("ไม่พบแถวข้อมูลที่นำเข้าได้");
+  const duplicateIds=[]; const seen=new Set();
+  imported.forEach(r=>{ const k=normalizeJobKey(r.jobId); if(seen.has(k)) duplicateIds.push(r.jobId); seen.add(k); });
+  if(duplicateIds.length) throw new Error(`JOB ID ซ้ำในไฟล์: ${[...new Set(duplicateIds)].slice(0,5).join(", ")}`);
+  const ok=confirm(`พบ Production Job ${imported.length} งาน\nระบบจะใช้ JOB ID แยกงานตาม Size / Line\n\nต้องการนำเข้าใช่หรือไม่?`);
+  if(!ok) return false;
+  PLAN_MASTER.length=0;
+  imported.forEach((r,i)=>PLAN_MASTER.push({...ensurePlanJobId(r,i+1),seq:i+1}));
+  ensurePlanMinRows();
+  renderPlanTable(); refreshFoOptions();
+  const mode=useHeader?"อ่านตามหัวตาราง":"อ่านตามคอลัมน์มาตรฐาน Planning Export";
+  const detail=`โหลดสำเร็จ ${imported.length} Production Job | ${mode} | JOB ID พร้อมใช้งาน`;
+  recordAudit("IMPORT_PLAN_JOB_ID",detail); setPlanImportStatus(detail,"success");
+  return true;
+}
+
+function parseCsvText(text){  const rows=[];
+  let row=[],cell="",quoted=false;
+
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    const next=text[i+1];
+
+    if(ch==='"'){
+      if(quoted && next==='"'){
+        cell+='"';
+        i++;
+      }else{
+        quoted=!quoted;
+      }
+    }else if(ch==="," && !quoted){
+      row.push(cell);
+      cell="";
+    }else if((ch==="\n" || ch==="\r") && !quoted){
+      if(ch==="\r" && next==="\n") i++;
+      row.push(cell);
+      cell="";
+      if(row.some(v=>String(v).trim()!=="")) rows.push(row);
+      row=[];
+    }else{
+      cell+=ch;
+    }
+  }
+  row.push(cell);
+  if(row.some(v=>String(v).trim()!=="")) rows.push(row);
+  return rows;
+}
+
+function loadSheetJs(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+    s.onload=()=>resolve(window.XLSX);
+    s.onerror=()=>reject(new Error("ไม่สามารถโหลดตัวอ่าน Excel ได้ กรุณาตรวจอินเทอร์เน็ต หรือบันทึกไฟล์เป็น CSV"));
+    document.head.appendChild(s);
+  });
+}
+
+async function importPlanFile(file){
+  if(!file) return;
+  setPlanImportStatus(`กำลังอ่านไฟล์ ${file.name}...`);
+
+  try{
+    const ext=(file.name.split(".").pop()||"").toLowerCase();
+
+    if(["csv","txt","prn"].includes(ext)){
+      const text=await file.text();
+      validateAndImportPlanRows(parseCsvText(text));
+      return;
+    }
+
+    const XLSX=await loadSheetJs();
+    const buffer=await file.arrayBuffer();
+    let wb;
+    try{
+      wb=XLSX.read(buffer,{type:"array",cellDates:true,cellText:false});
+    }catch(readErr){
+      throw new Error(`อ่านไฟล์ ${file.name} ไม่สำเร็จ: ไฟล์อาจเสียหาย เข้ารหัสด้วยรหัสผ่าน หรือไม่ใช่ Spreadsheet ที่รองรับ`);
+    }
+    const firstSheet=wb.SheetNames[0];
+    if(!firstSheet) throw new Error("ไม่พบ Sheet ในไฟล์");
+
+    const ws=wb.Sheets[firstSheet];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+    validateAndImportPlanRows(rows);
+
+  }catch(err){
+    console.error(err);
+    setPlanImportStatus(err?.message||"โหลดไฟล์ไม่สำเร็จ","error");
+    alert(err?.message||"โหลดไฟล์ไม่สำเร็จ");
+  }
+}
+
+function downloadPlanTemplateExcel(){
+  const rows=[
+    ["job_id","master_fo","production_fo","style_name","color","order_qty","process","size","line","qty","sam","eff_percent"],
+    ["FO260917001-S-L01","FO260917001","FO260917001","POLO-A01","BLACK",1000,"Sewing","S","Line 01",200,6,80],
+    ["FO260917001-M-L01","FO260917001","FO260917001","POLO-A01","BLACK",1000,"Sewing","M","Line 01",300,6,80],
+    ["FO260917009-NS-L01","FO260917009","FO260917009","UNIFORM-E01","BLACK",1000,"Sewing","ไม่มี Size","Line 01",500,6.2,80]
+  ];
+  const excelHtml=`<!doctype html><html><head><meta charset="utf-8"></head><body>${htmlTableFromRows("Production Plan Master — JOB ID",rows)}</body></html>`;
+  downloadBlob("\uFEFF"+excelHtml,"application/vnd.ms-excel;charset=utf-8;","Production_Plan_JOB_ID_Template.xls");
+}
+
+
+
+
+function normalizeJobToken(v){
+  return String(v??"").trim().toUpperCase()
+    .replace(/ไม่มี\s*SIZE|NO\s*SIZE/g,"NS")
+    .replace(/[^A-Z0-9ก-๙]+/g,"-")
+    .replace(/^-+|-+$/g,"");
+}
+function normalizedLineCode(v){
+  const s=String(v??"").trim();
+  const m=s.match(/(?:LINE\s*)?(\d{1,2})/i);
+  if(!m) return normalizeJobToken(s)||"LNA";
+  return `L${String(Number(m[1])).padStart(2,"0")}`;
+}
+function displayLineNumber(v){
+  const s=String(v??"").trim();
+  const m=s.match(/(?:LINE\s*)?(\d{1,2})/i);
+  if(!m) return s;
+  const num=Number(m[1]);
+  if(!Number.isFinite(num)) return s;
+  return String(num).padStart(2,"0");
+}
+function canonicalLineValue(v){
+  const d=displayLineNumber(v);
+  return /^(0[1-9]|1[0-8])$/.test(d) ? `Line ${d}` : String(v??"").trim();
+}
+function generateJobId(row,seq=1){
+  const prod=normalizeJobToken(row?.productionFo||row?.fo||row?.masterFo)||`JOB${String(seq).padStart(3,"0")}`;
+  const size=normalizeJobToken(row?.size)||"NS";
+  const line=normalizedLineCode(row?.line);
+  return `${prod}-${size}-${line}`;
+}
+function ensurePlanJobId(row,seq=1){
+  row.masterFo=cellText(row.masterFo||row.fo||row.productionFo);
+  row.productionFo=cellText(row.productionFo||row.fo||row.masterFo);
+  row.fo=row.productionFo;
+  row.process=cellText(row.process)||"Sewing";
+  row.size=cellText(row.size)||"ไม่มี Size";
+  row.jobQty=cellText(row.jobQty||row.qty||row.orderQty);
+  row.jobId=cellText(row.jobId)||generateJobId(row,seq);
+  return row;
+}
+function currentJobId(){
+  return String(document.getElementById("jobIdField")?.value||"").trim();
+}
+function normalizeJobKey(v){ return String(v||"").trim().toUpperCase(); }
+
+function cellText(v){
+  if(v===null || v===undefined) return "";
+  return String(v).trim();
+}
+function rowHasAnyCell(row){
+  return Array.isArray(row) && row.some(v=>cellText(v)!=="");
+}
+function rowHasPlanContent(r){
+  return ["jobId","masterFo","productionFo","line","style","color","process","size","jobQty","sam","eff","orderQty"]
+    .some(k=>cellText(r?.[k])!=="");
+}
+function rawCell(row,index){
+  return index>=0 ? cellText(row[index]) : "";
+}
+function hasKnownPlanHeader(map){
+  return ["jobId","masterFo","productionFo","line","style","color","process","size","jobQty","sam","eff","orderQty"]
+    .some(k=>Number(map?.[k])>=0);
+}
+function rowFromMappedOrPlain(row,map,seq,useHeader){
+  let out;
+  if(useHeader){
+    const masterFo=rawCell(row,map.masterFo) || rawCell(row,map.fo) || rawCell(row,map.productionFo);
+    const productionFo=rawCell(row,map.productionFo) || rawCell(row,map.fo) || masterFo;
+    out={
+      seq,
+      jobId:rawCell(row,map.jobId),
+      masterFo,
+      productionFo,
+      fo:productionFo,
+      style:rawCell(row,map.style),
+      color:rawCell(row,map.color),
+      process:rawCell(row,map.process)||"Sewing",
+      size:rawCell(row,map.size)||"ไม่มี Size",
+      line:rawCell(row,map.line),
+      jobQty:rawCell(row,map.jobQty) || rawCell(row,map.orderQty),
+      sam:rawCell(row,map.sam),
+      eff:rawCell(row,map.eff)||"40",
+      orderQty:rawCell(row,map.orderQty)
+    };
+  }else{
+    // New plain layout: master_fo, production_fo, style_name, color, order_qty, process, size, line, qty, sam, eff_percent
+    const masterFo=cellText(row[0]);
+    const productionFo=cellText(row[1])||masterFo;
+    out={seq,jobId:"",masterFo,productionFo,fo:productionFo,style:cellText(row[2]),color:cellText(row[3]),orderQty:cellText(row[4]),process:cellText(row[5])||"Sewing",size:cellText(row[6])||"ไม่มี Size",line:cellText(row[7]),jobQty:cellText(row[8]),sam:cellText(row[9]),eff:cellText(row[10])||"40"};
+  }
+  return ensurePlanJobId(out,seq);
+}
+function plainNumberText(v){
+  const s=String(v??"").replace(/,/g,"").trim();
+  const n=Number(s);
+  return Number.isFinite(n) ? String(n) : "";
+}
+
+function blankPlanRow(){
+  return {seq:0,jobId:"",masterFo:"",productionFo:"",fo:"",style:"",color:"",process:"Sewing",size:"",line:"",jobQty:"",sam:"",eff:"40",orderQty:""};
+}
+
+function renumberPlanMaster(){
+  PLAN_MASTER.forEach((r,i)=>{ r.seq=i+1; });
+}
+
+function ensurePlanMinRows(){
+  while(PLAN_MASTER.length<33){
+    PLAN_MASTER.push(blankPlanRow());
+  }
+  renumberPlanMaster();
+}
+
+function insertPlanRow(index,where="below"){
+  if(!PLANNER_EDIT){
+    openPlannerPin();
+    return;
+  }
+  const pos = where==="above" ? Math.max(0,index) : Math.min(PLAN_MASTER.length,index+1);
+  PLAN_MASTER.splice(pos,0,blankPlanRow());
+  renumberPlanMaster();
+  renderPlanTable();
+  refreshFoOptions();
+  setPlanImportStatus(`แทรกแถวใหม่แล้ว ที่ลำดับ ${pos+1}`,"success");
+}
+
+function deletePlanRow(index){
+  if(!PLANNER_EDIT){
+    openPlannerPin();
+    return;
+  }
+  const r=PLAN_MASTER[index]||{};
+  const label=[r.line,r.fo,r.style,r.color].filter(Boolean).join(" / ") || `แถวที่ ${index+1}`;
+  if(!confirm(`ต้องการลบ ${label} ใช่หรือไม่?`)) return;
+  PLAN_MASTER.splice(index,1);
+  ensurePlanMinRows();
+  renderPlanTable();
+  refreshFoOptions();
+  setPlanImportStatus(`ลบแถว ${index+1} แล้ว`,"success");
+}
+
+function editPlanRow(index){
+  if(!PLANNER_EDIT){
+    openPlannerPin();
+    return;
+  }
+  const input=document.querySelector(`#planTableBody input[data-i="${index}"][data-k="jobId"]`)
+    || document.querySelector(`#planTableBody input[data-i="${index}"]`);
+  if(input){
+    input.focus();
+    input.select?.();
+  }
+  setPlanImportStatus(`กำลังแก้ไขแถวที่ ${index+1}`,"info");
+}
+
+function addPlanRow(){
+  if(!PLANNER_EDIT){
+    openPlannerPin();
+    return;
+  }
+  PLAN_MASTER.push(blankPlanRow());
+  renumberPlanMaster();
+  renderPlanTable();
+  setPlanImportStatus(`เพิ่มแถวใหม่แล้ว ลำดับ ${PLAN_MASTER.length}`,"success");
+}
+
+function renderPlanTable(){
+  const body=document.getElementById("planTableBody"); if(!body)return;
+  PLAN_MASTER.forEach((r,i)=>ensurePlanJobId(r,i+1));
+  body.innerHTML=PLAN_MASTER.map((r,i)=>`
+    <tr>
+      <td><input data-i="${i}" data-k="jobId" value="${esc(r.jobId||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="masterFo" value="${esc(r.masterFo||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="productionFo" value="${esc(r.productionFo||r.fo||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="style" value="${esc(r.style||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="color" value="${esc(r.color||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="process" value="${esc(r.process||"Sewing")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="size" value="${esc(r.size||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="line" inputmode="numeric" maxlength="2" value="${esc(displayLineNumber(r.line||""))}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="jobQty" type="text" value="${esc(r.jobQty??"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="sam" value="${esc(r.sam||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="eff" value="${esc(r.eff||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="orderQty" type="text" value="${esc(r.orderQty??"")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><div class="plan-actions">
+        <button type="button" class="edit" data-act="edit" data-i="${i}">${PLANNER_EDIT?"แก้ไข":"แก้ไข 🔒"}</button>
+        <button type="button" class="insert" data-act="insertAbove" data-i="${i}" ${PLANNER_EDIT?"":"disabled"}>แทรกบน</button>
+        <button type="button" class="insert" data-act="insertBelow" data-i="${i}" ${PLANNER_EDIT?"":"disabled"}>แทรกล่าง</button>
+        <button type="button" class="delete" data-act="delete" data-i="${i}" ${PLANNER_EDIT?"":"disabled"}>ลบ</button>
+      </div></td>
+    </tr>`).join("");
+  if(PLANNER_EDIT){
+    body.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",()=>{
+      const i=Number(inp.dataset.i),k=inp.dataset.k;
+      if(k==="line"){
+        const digits=String(inp.value||"").replace(/\D/g,"").slice(0,2);
+        inp.value=digits;
+        PLAN_MASTER[i][k]=digits ? canonicalLineValue(digits) : "";
+      }else{
+        PLAN_MASTER[i][k]=inp.value;
+      }
+      if(k==="productionFo") PLAN_MASTER[i].fo=inp.value;
+      if(["productionFo","size","line"].includes(k) && !cellText(PLAN_MASTER[i].jobId)) PLAN_MASTER[i].jobId=generateJobId(PLAN_MASTER[i],i+1);
+      refreshFoOptions();
+    }));
+  }
+  body.querySelectorAll("button[data-act]").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=Number(btn.dataset.i),act=btn.dataset.act;
+    if(act==="edit")editPlanRow(i); if(act==="insertAbove")insertPlanRow(i,"above"); if(act==="insertBelow")insertPlanRow(i,"below"); if(act==="delete")deletePlanRow(i);
+  }));
+}
+
+function refreshFoOptions(){
+  const sel=document.getElementById("foSelect"); if(!sel)return;
+  const current=sel.value;
+  const active=String(ACTIVE_LINE||"").toUpperCase();
+  const rows=PLAN_MASTER.filter(r=>cellText(r.jobId||r.fo) && (!active || !cellText(r.line) || normalizedLineCode(r.line)===normalizedLineCode(active)));
+  sel.innerHTML='<option value="">-- เลือก JOB ID จากแผนการผลิต --</option>'+rows.map(r=>{
+    ensurePlanJobId(r,r.seq||1);
+    const size=r.size||"ไม่มี Size"; const qty=r.jobQty||r.orderQty||"";
+    return `<option value="${esc(r.jobId)}">${esc(r.jobId)} — ${esc(r.productionFo||r.fo)} — ${esc(size)} — Qty ${esc(qty)}</option>`;
+  }).join("");
+  if(rows.some(r=>r.jobId===current)) sel.value=current;
+}
+
+
+function normalizeFoKey(fo){
+  return String(fo||"").trim().toUpperCase();
+}
+
+function getFoAssignment(jobOrFo){
+  const key=normalizeJobKey(currentJobId()||jobOrFo);
+  return FO_ASSIGNMENT_MASTER[key]||null;
+}
+
+function isFoLockedByAnotherLine(jobOrFo){
+  const a=getFoAssignment(jobOrFo); if(!a)return false;
+  if(!["READY","RUNNING","PAUSED"].includes(String(a.status||"")))return false;
+  return String(a.assignedLine||"")!==String(ACTIVE_LINE||"");
+}
+
+function showFoAssignmentMessage(jobOrFo){
+  const el=document.getElementById("foAssignmentMsg"); if(!el)return;
+  const jobId=currentJobId()||String(jobOrFo||"").trim();
+  if(!jobId){el.textContent="";return;}
+  const a=FO_ASSIGNMENT_MASTER[normalizeJobKey(jobId)]||null;
+  if(!a){el.textContent=`JOB ${jobId} ยังว่าง สามารถนำเข้าผลิตได้`;el.style.color="#166534";return;}
+  if(["READY","RUNNING","PAUSED"].includes(a.status)){
+    if(a.assignedLine===ACTIVE_LINE){el.textContent=`JOB ${jobId} ถูกจองโดย ${a.assignedLine} (${a.status})`;el.style.color="#1d4ed8";}
+    else{el.textContent=`JOB ${jobId} กำลังใช้งานที่ ${a.assignedLine} (${a.status}) — ไม่สามารถเปิด JOB ซ้ำได้`;el.style.color="#b91c1c";}
+  }else{el.textContent=`JOB ${jobId} มีสถานะ ${a.status}`;el.style.color="#64748b";}
+}
+
+function reserveFoForLine(fo,status="READY"){
+  const jobId=currentJobId()||String(fo||"").trim(); const key=normalizeJobKey(jobId);
+  if(!key)return {ok:false,message:"ไม่พบ JOB ID"};
+  const existing=FO_ASSIGNMENT_MASTER[key]||null;
+  if(existing && ["READY","RUNNING","PAUSED"].includes(existing.status) && existing.assignedLine!==ACTIVE_LINE){return {ok:false,message:`JOB ${jobId} กำลังใช้งานที่ ${existing.assignedLine} (${existing.status})`};}
+  const item=PLAN_MASTER.find(r=>normalizeJobKey(r.jobId)===key)||{};
+  FO_ASSIGNMENT_MASTER[key]={jobId:key,masterFo:item.masterFo||"",productionFo:item.productionFo||item.fo||fo||"",fo:item.productionFo||item.fo||fo||"",size:item.size||"",jobQty:item.jobQty||"",style:item.style||"",color:item.color||"",assignedLine:ACTIVE_LINE,status,assignedAt:existing?.assignedAt||new Date().toISOString(),closedAt:null};
+  showFoAssignmentMessage(jobId); return {ok:true,assignment:FO_ASSIGNMENT_MASTER[key]};
+}
+
+function updateFoAssignmentStatus(fo,status){
+  const key=normalizeJobKey(currentJobId()||fo); const a=FO_ASSIGNMENT_MASTER[key]; if(!a)return;
+  a.status=status; if(status==="CLOSED")a.closedAt=new Date().toISOString(); showFoAssignmentMessage(key);
+}
+
+function releaseFoAssignmentForCurrentLine(){
+  const key=normalizeJobKey(currentJobId()||document.getElementById("fo")?.value||""); const a=FO_ASSIGNMENT_MASTER[key];
+  if(!a || a.assignedLine!==ACTIVE_LINE)return; a.status="CLOSED";a.closedAt=new Date().toISOString();showFoAssignmentMessage(key);
+}
+
+
+function prepareNewFo(){
+  if(PROD_STATUS!=="CLOSED"){
+    alert("FO ปัจจุบันยังไม่ปิด");
+    return;
+  }
+
+  // LINE-level history must continue across FO:
+  // DO NOT clear PRODUCTION_LOG, LOCAL_EVENT_QUEUE or EVENT_SEQ.
+  clearObject(PROD_ROWS);
+  DAILY_LOCKED.clear();
+  state.otByDay={};
+  state.otDraft={};
+  FO_CLOSE_REASON="";
+  PROD_STATUS="READY";
+  INPUT_LOCKED=false;
+  INPUT_LOCK_UNTIL=0;
+  clearInterval(INPUT_TIMER);
+  INPUT_TIMER=null;
+
+  // Reset only current FO configuration.
+  FO_PLAN_LOCKED=false;
+  setFoPlanLocked(false);
+
+  const set=(id,val)=>{
+    const el=document.getElementById(id);
+    if(el) el.value=val;
+  };
+
+  set("fo","");
+  set("jobIdField","");
+  set("masterFoField","");
+  set("productionFoField","");
+  set("sizeField","");
+  set("processField","");
+  set("jobQtyField","");
+  set("foSelect","");
+  set("style","");
+  set("color","");
+  set("orderQty","");
+  set("qty","");
+  set("previousCum",0);
+  set("sam","");
+  set("manpower",15);
+  set("start",isoToday());
+  set("startTime","08:00");
+
+  refreshFoOptions();
+  showFoAssignmentMessage("");
+  updateSamCalculationNote();
+  render();
+  updateProductionUi();
+  renderProductionLog();
+  renderStorageStatus();
+
+  recordAudit("NEW_FO_READY","เตรียม Line สำหรับเลือก FO ใหม่");
+  captureCurrentLineWorkspace();
+}
+
+function applyFoFromPlan(jobId){
+  if(FO_PLAN_LOCKED)return;
+  const item=PLAN_MASTER.find(r=>normalizeJobKey(r.jobId)===normalizeJobKey(jobId));
+  if(jobId && !item){alert(`ไม่พบ JOB ID ${jobId}`);return;}
+  document.getElementById("jobIdField").value=item?.jobId||"";
+  if(jobId && isFoLockedByAnotherLine(jobId)){
+    const a=getFoAssignment(jobId); alert(`JOB ${jobId} กำลังผลิตอยู่ที่ ${a.assignedLine} (${a.status}) ไม่สามารถเลือกซ้ำได้`);
+    document.getElementById("foSelect").value=""; document.getElementById("jobIdField").value=""; showFoAssignmentMessage(""); return;
+  }
+  Object.keys(PROD_ROWS).forEach(k=>delete PROD_ROWS[k]); renderProductionLog(); PROD_STATUS="READY"; INPUT_LOCKED=false;INPUT_LOCK_UNTIL=0;clearInterval(INPUT_TIMER);INPUT_TIMER=null;state.otByDay={};state.otDraft={};updateProductionUi();
+  document.getElementById("fo").value=item?.productionFo||item?.fo||"";
+  document.getElementById("productionFoField").value=item?.productionFo||item?.fo||"";
+  document.getElementById("masterFoField").value=item?.masterFo||item?.fo||"";
+  document.getElementById("sizeField").value=item?.size||"";
+  document.getElementById("processField").value=item?.process||"Sewing";
+  document.getElementById("jobQtyField").value=plainNumberText(item?.jobQty||item?.orderQty);
+  document.getElementById("style").value=item?.style||""; document.getElementById("color").value=item?.color||"";
+  document.getElementById("orderQty").value=plainNumberText(item?.orderQty); document.getElementById("sam").value=item?.sam||"";
+  document.getElementById("eff").value=(item&&item.eff!==undefined&&String(item.eff).trim()!=="")?item.eff:"40";
+  const cutting=document.getElementById("qty"); if(cutting) cutting.value=plainNumberText(item?.jobQty||item?.orderQty);
+  updateSamCalculationNote(); showFoAssignmentMessage(jobId); if(item)render();
+}
+
+function openPlanning(){
+  // ทุกคนเปิดดูหน้าแผนได้ โดยไม่ต้องใส่รหัส
+  document.getElementById("lineLoginScreen").classList.add("app-hidden");
+  document.getElementById("planningPage").classList.remove("app-hidden");
+  document.getElementById("planningPage").setAttribute("aria-hidden","false");
+  document.getElementById("appShell").classList.add("app-hidden");
+  renderPlanTable();
+}
+
+function closePlanning(){
+  document.getElementById("planningPage").classList.add("app-hidden");
+  document.getElementById("planningPage").setAttribute("aria-hidden","true");
+  if(ACTIVE_LINE){
+    document.getElementById("appShell").classList.remove("app-hidden");
+  }else{
+    document.getElementById("lineLoginScreen").classList.remove("app-hidden");
+  }
+}
+
+function openPlannerPin(){
+  document.getElementById("plannerPinInput").value="";
+  document.getElementById("plannerPinError").textContent="";
+  const modal=document.getElementById("plannerPinModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  setTimeout(()=>document.getElementById("plannerPinInput").focus(),80);
+}
+
+function closePlannerPin(){
+  document.getElementById("plannerPinModal").classList.add("hidden");
+}
+
+function unlockPlanner(){
+  const pin=document.getElementById("plannerPinInput").value;
+
+  if(pin!==PLANNER_PIN){
+    document.getElementById("plannerPinError").textContent="รหัสไม่ถูกต้อง";
+    return;
+  }
+
+  PLANNER_EDIT=true;
+  closePlannerPin();
+  document.getElementById("plannerModeBadge").textContent="โหมดแก้ไขแผน";
+  document.getElementById("unlockPlannerBtn").classList.add("app-hidden");
+  document.getElementById("addPlanRowBtn")?.classList.remove("app-hidden");
+  document.getElementById("lockPlannerBtn").classList.remove("app-hidden");
+  renderPlanTable();
+}
+
+function lockPlanner(){
+  PLANNER_EDIT=false;
+  document.getElementById("plannerModeBadge").textContent="โหมดดูอย่างเดียว";
+  document.getElementById("unlockPlannerBtn").classList.remove("app-hidden");
+  document.getElementById("addPlanRowBtn")?.classList.add("app-hidden");
+  document.getElementById("lockPlannerBtn").classList.add("app-hidden");
+  renderPlanTable();
+  refreshFoOptions();
+}
+
+const VALID_LINES = Array.from({length:18},(_,i)=>"LINE"+String(i+1).padStart(2,"0"));
+let ACTIVE_LINE = "";
+let SELECTED_LINE = "";
+
+function normalizeLineCode(v){
+  return String(v||"").trim().toUpperCase();
+}
+
+let OVERVIEW_LINE_DATA={};
+let OVERVIEW_VIEW_MODE="grid";
+
+function overviewTodayIso(){
+  const d=new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function overviewStatusInfo(status,hasFo){
+  const s=String(status||"READY").toUpperCase();
+  if(!hasFo) return {text:"ยังไม่พร้อม",cls:"closed"};
+  if(s==="RUNNING") return {text:"กำลังผลิต",cls:"running"};
+  if(s==="PAUSED") return {text:"พักงาน",cls:"paused"};
+  if(s==="CLOSED") return {text:"ปิด FO",cls:"closed"};
+  return {text:"รอเริ่มผลิต",cls:"ready"};
+}
+
+function overviewTargetHr(sam){
+  const raw=rawTargetHrFromSam(sam);
+  return roundTargetHr(raw);
+}
+
+function overviewDailyTarget(workspace){
+  const f=workspace?.form||{};
+  const cutting=Math.max(0,Number(f.qty||0));
+  const previous=Math.max(0,Number(f.previousCum||0));
+  const remaining=Math.max(0,cutting-previous);
+  const tph=overviewTargetHr(f.sam||"");
+  if(!tph || !remaining) return 0;
+  const today=overviewTodayIso();
+  const otMap=workspace?.otByDay||{};
+  let ot=0;
+  for(const [k,v] of Object.entries(otMap)){
+    if(String(k).endsWith(`_${today}`)){ot=Math.max(ot,Number(v||0));}
+  }
+  return Math.min(remaining,Math.round(tph*(8+ot)));
+}
+
+function overviewMetrics(line,payload){
+  const workspace=payload?.workspace||{};
+  const logs=Array.isArray(payload?.logs)?payload.logs:[];
+  const form=workspace.form||{};
+  const fo=String(form.fo||"").trim();
+  const cutting=Math.max(0,Number(form.qty||0));
+  const previous=Math.max(0,Number(form.previousCum||0));
+  const status=String(workspace.prodStatus||"READY").toUpperCase();
+  const today=overviewTodayIso();
+
+  let foProd=0,todayProd=0;
+  for(const r of logs){
+    const type=String(r.type||"").toUpperCase();
+    const qty=Number(r.qty||1);
+    const isProd=(type==="OK"||type==="NG");
+    if(isProd && (!fo || String(r.fo||"")===fo)) foProd+=qty;
+    if(isProd && String(r.productionDate||"")===today) todayProd+=qty;
+  }
+
+  const cumulative=previous+foProd;
+  const target=overviewDailyTarget(workspace);
+  const progress=cutting>0?Math.min(100,(cumulative/cutting)*100):0;
+
+  return {line,workspace,logs,fo,cutting,previous,status,todayProd,cumulative,target,progress};
+}
+
+function renderOverviewCards(){
+  const grid=document.getElementById("lineGrid");
+  if(!grid) return;
+  const q=String(document.getElementById("overviewSearch")?.value||"").trim().toUpperCase();
+
+  grid.classList.toggle("list-view",OVERVIEW_VIEW_MODE==="list");
+
+  grid.innerHTML=VALID_LINES.map(line=>{
+    const d=OVERVIEW_LINE_DATA[line]||overviewMetrics(line,{});
+    const info=overviewStatusInfo(d.status,!!d.fo);
+    const hay=`${line} ${d.fo||""}`.toUpperCase();
+    const hidden=q && !hay.includes(q);
+    const target=d.target||0;
+    const job=d.cutting||0;
+
+    return `
+      <div class="line-card status-${info.cls}" data-line="${line}" onclick="selectLine('${line}')" style="${hidden?'display:none':''}">
+        <div class="line-card-head">
+          <h3>${line}</h3>
+          <span class="status-pill ${info.cls}">${info.text}</span>
+        </div>
+        <p>◷ FO วันนี้&nbsp;&nbsp; ${d.fo||"-"}</p>
+        <div class="line-progress"><span class="${info.cls==='ready'?'waiting':''}" style="width:${d.progress.toFixed(1)}%"></span></div>
+        <div class="line-card-percent">${d.progress.toFixed(0)}%</div>
+        <div class="line-card-foot">
+          <span>ผลิตได้<b>${Math.round(d.cumulative||0).toLocaleString()}</b></span>
+          <span>เป้าหมาย<b>${Math.round(target).toLocaleString()}</b></span>
+          <span>ยอดงาน<b>${Math.round(job).toLocaleString()}</b></span>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function updateOverviewSummary(){
+  const rows=VALID_LINES.map(line=>OVERVIEW_LINE_DATA[line]||overviewMetrics(line,{}));
+  const running=rows.filter(x=>x.status==="RUNNING").length;
+  const production=rows.reduce((s,x)=>s+Number(x.todayProd||0),0);
+  const target=rows.reduce((s,x)=>s+Number(x.target||0),0);
+  const remaining=Math.max(0,target-production);
+  const efficiency=target>0?(production/target)*100:0;
+
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set("ovRunningLines",`${running} / 18`);
+  set("ovProductionToday",Math.round(production).toLocaleString());
+  set("ovTargetToday",Math.round(target).toLocaleString());
+  set("ovRemainingToday",Math.round(remaining).toLocaleString());
+  set("ovEfficiency",`${efficiency.toFixed(1)}%`);
+
+  const rb=document.getElementById("ovRunningBar");
+  const eb=document.getElementById("ovEfficiencyBar");
+  if(rb) rb.style.width=`${Math.min(100,(running/18)*100)}%`;
+  if(eb) eb.style.width=`${Math.min(100,efficiency)}%`;
+}
+
+async function refreshOverviewFromServer(){
+  renderOverviewCards();
+  updateOverviewSummary();
+
+  async function overviewApi(path){
+    const res=await fetch(path,{headers:{"Accept":"application/json"}});
+    let data={};
+    try{ data=await res.json(); }catch{}
+    if(!res.ok || data.ok===false){
+      throw new Error(data.message||`HTTP ${res.status}`);
+    }
+    return data;
+  }
+
+  const jobs=VALID_LINES.map(async line=>{
+    try{
+      const payload=await overviewApi(`/api/line/state?line=${encodeURIComponent(line)}&_=${Date.now()}`);
+      OVERVIEW_LINE_DATA[line]=overviewMetrics(line,payload);
+    }catch(e){
+      console.warn("overview line",line,e.message);
+    }
+  });
+
+  await Promise.allSettled(jobs);
+  renderOverviewCards();
+  updateOverviewSummary();
+}
+
+function renderLineGrid(){
+  renderOverviewCards();
+  updateOverviewSummary();
+  setTimeout(refreshOverviewFromServer,0);
+}
+
+function selectLine(line){
+  SELECTED_LINE=line;
+  document.querySelectorAll(".line-card").forEach(card=>{
+    card.classList.toggle("selected",card.dataset.line===line);
+  });
+
+  document.getElementById("modalLineTitle").textContent=`เข้าสู่ ${line}`;
+  document.getElementById("modalLineText").textContent=`กรอกรหัส ${line} เพื่อเข้าสู่หน้าการผลิตของ Line นี้`;
+  document.getElementById("lineCodeInput").value="";
+  document.getElementById("lineLoginError").textContent="";
+
+  const modal=document.getElementById("lineLoginModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+
+  setTimeout(()=>document.getElementById("lineCodeInput").focus(),80);
+}
+
+function closeLineModal(){
+  const modal=document.getElementById("lineLoginModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+  document.getElementById("lineCodeInput").value="";
+  document.getElementById("lineLoginError").textContent="";
+}
+
+function enterLine(){
+  const code=normalizeLineCode(document.getElementById("lineCodeInput").value);
+  const err=document.getElementById("lineLoginError");
+
+  if(!SELECTED_LINE){
+    err.textContent="กรุณาเลือก Line ก่อน";
+    return;
+  }
+
+  if(code!==SELECTED_LINE){
+    err.textContent=`รหัสไม่ถูกต้อง ต้องกรอกรหัส ${SELECTED_LINE}`;
+    return;
+  }
+
+  ACTIVE_LINE=SELECTED_LINE;
+  err.textContent="";
+
+  const loginScreen=document.getElementById("lineLoginScreen");
+  const appShell=document.getElementById("appShell");
+  const modal=document.getElementById("lineLoginModal");
+
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+  loginScreen.classList.add("app-hidden");
+  loginScreen.setAttribute("aria-hidden","true");
+  appShell.classList.remove("app-hidden");
+  appShell.setAttribute("aria-hidden","false");
+
+  document.getElementById("currentLineBadge").textContent=ACTIVE_LINE;
+  const foLineName=document.getElementById("foLineName");
+  if(foLineName) foLineName.textContent=ACTIVE_LINE;
+  const lf=document.getElementById("lineField");
+  if(lf) lf.value=ACTIVE_LINE;
+
+  document.title=`Production Planning - ${ACTIVE_LINE}`;
+  window.location.hash=`/line/${ACTIVE_LINE}`;
+
+  // โหลดเฉพาะ workspace ของ Line ที่เลือก
+  restoreLineWorkspace(ACTIVE_LINE);
+  render();
+  renderStorageStatus();
+}
+
+function logoutLine(){
+  // บันทึก state ของ Line ปัจจุบันไว้ใน workspace แยกก่อนออก
+  const leavingLine=ACTIVE_LINE;
+  captureCurrentLineWorkspace();
+
+  // Push snapshot ไป Server ทันทีก่อนล้าง ACTIVE_LINE
+  // เพื่อให้หน้า Overview เห็น RUNNING / FO / ยอดล่าสุดทันที
+  try{
+    const w=LINE_WORKSPACES[leavingLine];
+    if(leavingLine && w){
+      const copy=JSON.parse(JSON.stringify(w));
+      copy.productionLog=[];
+      fetch('/api/line/state',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({line:leavingLine,workspace:copy})
+      }).catch(e=>console.warn('overview pre-exit state push',e.message));
+    }
+  }catch(e){ console.warn('overview pre-exit snapshot',e.message); }
+
+  // ออกจากหน้าจอไม่เท่ากับปิด FO: assignment ของ FO ต้องคงอยู่จน CLOSED
+  ACTIVE_LINE="";
+  SELECTED_LINE="";
+
+  const appShell=document.getElementById("appShell");
+  const loginScreen=document.getElementById("lineLoginScreen");
+  appShell.classList.add("app-hidden");
+  appShell.setAttribute("aria-hidden","true");
+  loginScreen.classList.remove("app-hidden");
+  loginScreen.setAttribute("aria-hidden","false");
+
+  document.title="Production Control";
+  window.location.hash="";
+  renderLineGrid();
+  setTimeout(refreshOverviewFromServer,500);
+}
+
+function updateOverviewClock(){
+  const el=document.getElementById("overviewClock");
+  if(!el)return;
+  const now=new Date();
+  const d=now.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric"});
+  const t=now.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  el.textContent=`${d} | ${t}`;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("overviewSearch")?.addEventListener("input",renderOverviewCards);
+  document.getElementById("overviewGridBtn")?.addEventListener("click",()=>{
+    OVERVIEW_VIEW_MODE="grid";
+    document.getElementById("overviewGridBtn")?.classList.add("active");
+    document.getElementById("overviewListBtn")?.classList.remove("active");
+    renderOverviewCards();
+  });
+  document.getElementById("overviewListBtn")?.addEventListener("click",()=>{
+    OVERVIEW_VIEW_MODE="list";
+    document.getElementById("overviewListBtn")?.classList.add("active");
+    document.getElementById("overviewGridBtn")?.classList.remove("active");
+    renderOverviewCards();
+  });
+  setInterval(()=>{ if(!ACTIVE_LINE) refreshOverviewFromServer(); },5000);
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("newFoBtn")?.addEventListener("click",prepareNewFo);
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("simulateExcelLockBtn")?.addEventListener("click",()=>{
+    EXCEL_FILE_LOCKED=true;
+    renderStorageStatus();
+  });
+
+  document.getElementById("simulateExcelUnlockBtn")?.addEventListener("click",()=>{
+    EXCEL_FILE_LOCKED=false;
+    flushLocalQueue();
+  });
+
+  document.getElementById("simulateOneDriveOffBtn")?.addEventListener("click",()=>{
+    ONEDRIVE_ONLINE=false;
+    renderStorageStatus();
+  });
+
+  document.getElementById("simulateOneDriveOnBtn")?.addEventListener("click",()=>{
+    ONEDRIVE_ONLINE=true;
+    flushLocalQueue();
+  });
+
+  renderStorageStatus();
+});
+
+// Retry queue automatically every 5 seconds in Demo
+setInterval(()=>{
+  if(LOCAL_EVENT_QUEUE.length){
+    flushLocalQueue();
+  }
+},5000);
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("importPlanExcelBtn")?.addEventListener("click",openPlannerImportPin);
+  document.getElementById("plannerImportPinCancel")?.addEventListener("click",closePlannerImportPin);
+  document.getElementById("plannerImportPinConfirm")?.addEventListener("click",confirmPlannerImportPin);
+  document.getElementById("plannerImportPinInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") confirmPlannerImportPin();
+    if(e.key==="Escape") closePlannerImportPin();
+  });
+
+  document.getElementById("planExcelFileInput")?.addEventListener("change",e=>{
+    importPlanFile(e.target.files?.[0]);
+  });
+
+  document.getElementById("downloadPlanTemplateBtn")?.addEventListener("click",downloadPlanTemplateExcel);
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("exportLogExcelBtn")?.addEventListener("click",exportLogExcel);
+  document.getElementById("exportLogCsvBtn")?.addEventListener("click",exportLogCsv);
+  document.getElementById("printLogBtn")?.addEventListener("click",printLogOnly);
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("exportExcelBtn")?.addEventListener("click",exportExcelReport);
+  document.getElementById("exportCsvBtn")?.addEventListener("click",exportCsvReport);
+  document.getElementById("printReportBtn")?.addEventListener("click",printProductionReport);
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  renderProductionLog();
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("refreshHistoryBtn")?.addEventListener("click",renderHistory);
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("closeFoPinCancel")?.addEventListener("click",closeCloseFoModal);
+  document.getElementById("closeFoPinConfirm")?.addEventListener("click",confirmSupervisorCloseFo);
+
+  document.getElementById("closeFoPinInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") document.getElementById("closeFoReasonInput")?.focus();
+    if(e.key==="Escape") closeCloseFoModal();
+  });
+
+  document.getElementById("closeFoReasonInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") confirmSupervisorCloseFo();
+    if(e.key==="Escape") closeCloseFoModal();
+  });
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("addQtyBtn")?.addEventListener("click",openAddQtyModal);
+  document.getElementById("addQtyCancel")?.addEventListener("click",closeAddQtyModal);
+  document.getElementById("addQtyConfirm")?.addEventListener("click",confirmAddQty);
+  document.getElementById("addQtyPinInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") document.getElementById("addQtyValueInput")?.focus();
+    if(e.key==="Escape") closeAddQtyModal();
+  });
+  document.getElementById("addQtyValueInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") confirmAddQty();
+    if(e.key==="Escape") closeAddQtyModal();
+  });
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("startProdBtn")?.addEventListener("click",()=>setProductionStatus("RUNNING"));
+  document.getElementById("pauseProdBtn")?.addEventListener("click",()=>setProductionStatus("PAUSED"));
+  document.getElementById("resumeProdBtn")?.addEventListener("click",()=>setProductionStatus("RUNNING"));
+  document.getElementById("closeProdBtn")?.addEventListener("click",openCloseFoModal);
+
+  document.getElementById("okBtn")?.addEventListener("click",()=>handleProductionInput("ok","BUTTON"));
+  document.getElementById("repairBtn")?.addEventListener("click",()=>handleProductionInput("repair","BUTTON"));
+  document.getElementById("ngBtn")?.addEventListener("click",()=>handleProductionInput("ng","BUTTON"));
+
+
+  document.getElementById("buttonModeBtn")?.addEventListener("click",()=>setInputMode("BUTTON"));
+  document.getElementById("keyboardModeBtn")?.addEventListener("click",()=>setInputMode("KEYBOARD"));
+
+  document.addEventListener("keydown",e=>{
+    if(INPUT_MODE!=="KEYBOARD") return;
+
+    // Do not capture while typing in an input/select/textarea.
+    const tag=String(e.target?.tagName||"").toUpperCase();
+    if(["INPUT","SELECT","TEXTAREA"].includes(tag)) return;
+
+    // รับเฉพาะ 1, 2, 3 เท่านั้น
+    if(e.repeat && ["1","2","3"].includes(e.key)){
+      e.preventDefault();
+      if(INPUT_LOCKED) speakDuplicateWarning();
+      return;
+    }
+
+    if(e.key==="1"){
+      e.preventDefault();
+      handleProductionInput("ok","KEYBOARD");
+    }else if(e.key==="2"){
+      e.preventDefault();
+      handleProductionInput("repair","KEYBOARD");
+    }else if(e.key==="3"){
+      e.preventDefault();
+      handleProductionInput("ng","KEYBOARD");
+    }
+  });
+
+  if("speechSynthesis" in window){
+    window.speechSynthesis.getVoices();
+  }
+  setInputMode("BUTTON");
+  updateProductionUi();
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("saveFoPlanBtn")?.addEventListener("click",saveFoPlan);
+  document.getElementById("editFoPlanBtn")?.addEventListener("click",openFoEditPin);
+  document.getElementById("foEditPinCancel")?.addEventListener("click",closeFoEditPin);
+  document.getElementById("foEditPinConfirm")?.addEventListener("click",confirmFoEditPin);
+  document.getElementById("foEditPinInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") confirmFoEditPin();
+    if(e.key==="Escape") closeFoEditPin();
+  });
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  renderPlanTable();
+  refreshFoOptions();
+
+  document.getElementById("goPlanningBtn")?.addEventListener("click",openPlanning);
+  document.getElementById("goProductionFromPlan")?.addEventListener("click",closePlanning);
+  document.getElementById("unlockPlannerBtn")?.addEventListener("click",openPlannerPin);
+  document.getElementById("lockPlannerBtn")?.addEventListener("click",lockPlanner);
+document.getElementById("addPlanRowBtn")?.addEventListener("click",addPlanRow);
+  document.getElementById("plannerPinCancel")?.addEventListener("click",closePlannerPin);
+  document.getElementById("plannerPinConfirm")?.addEventListener("click",unlockPlanner);
+  document.getElementById("plannerPinInput")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter") unlockPlanner();
+    if(e.key==="Escape") closePlannerPin();
+  });
+  document.getElementById("foSelect")?.addEventListener("change",e=>applyFoFromPlan(e.target.value));
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  ACTIVE_LINE="";
+  SELECTED_LINE="";
+
+  const loginScreen=document.getElementById("lineLoginScreen");
+  const appShell=document.getElementById("appShell");
+  loginScreen.classList.remove("app-hidden");
+  loginScreen.setAttribute("aria-hidden","false");
+  appShell.classList.add("app-hidden");
+  appShell.setAttribute("aria-hidden","true");
+
+  renderLineGrid();
+  updateOverviewClock();  setInterval(updateOverviewClock,1000);
+
+  document.getElementById("lineLoginBtn").addEventListener("click",enterLine);
+  document.getElementById("cancelLineLoginBtn").addEventListener("click",closeLineModal);
+  document.getElementById("lineCodeInput").addEventListener("keydown",e=>{
+    if(e.key==="Enter") enterLine();
+    if(e.key==="Escape") closeLineModal();
+  });
+  document.getElementById("logoutLineBtn").addEventListener("click",logoutLine);
+});
+
+const state={otByDay:{},otDraft:{}};
+
+const SHIFT=[
+  {time:"08:00-09:00",h:1,type:"WORK"},
+  {time:"09:00-10:00",h:1,type:"WORK"},
+  {time:"10:00-11:00",h:1,type:"WORK"},
+  {time:"11:00-12:00",h:1,type:"WORK"},
+  {time:"12:00-13:00",h:0,type:"BREAK",problem:"พัก"},
+  {time:"13:00-14:00",h:1,type:"WORK"},
+  {time:"14:00-15:00",h:1,type:"WORK"},
+  {time:"15:00-16:00",h:1,type:"WORK"},
+  {time:"16:00-17:00",h:1,type:"WORK"},
+  {time:"17:00-17:30",h:0,type:"BREAK",problem:"พัก"},
+  {time:"17:30-18:30",h:1,type:"OT",otNo:1,problem:"OT"},
+  {time:"18:30-19:30",h:1,type:"OT",otNo:2,problem:"OT"},
+  {time:"19:30-20:30",h:1,type:"OT",otNo:3,problem:"OT"}
+];
+
+function isoToday(){
+  const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+  return d.toISOString().slice(0,10);
+}
+document.getElementById("start").value=isoToday();
+
+function samMinutes(raw){
+  const s=String(raw||"").trim();
+  const [m0,sec0=""]=s.split(".");
+  const m=Number(m0||0), sec=Number((sec0+"00").slice(0,2)||0);
+  if(!Number.isFinite(m)||!Number.isFinite(sec)||m<0||sec<0||sec>59)return 0;
+  return m+sec/60;
+}
+
+function effDecimal(){
+  const raw=Number(document.getElementById("eff")?.value||0);
+  if(!Number.isFinite(raw) || raw<=0) return 0;
+  return raw>1 ? raw/100 : raw;
+}
+
+function rawTargetHrFromSam(rawSam){
+  const sm=samMinutes(rawSam);
+  const manpower=Number(document.getElementById("manpower")?.value||0);
+  const eff=effDecimal();
+  if(sm<=0 || !Number.isFinite(manpower) || manpower<=0 || eff<=0) return 0;
+
+  // Target/Hr = (Manpower × 60 ÷ SAM) × Eff
+  return (manpower * 60 / sm) * eff;
+}
+
+function roundTargetHr(value){
+  const n=Number(value||0);
+  if(!Number.isFinite(n) || n<=0) return 0;
+  // ปัดเฉพาะผลลัพธ์สุดท้าย:
+  // ต่ำกว่า .50 ปัดลง / ตั้งแต่ .50 ปัดขึ้น
+  return Math.floor(n + 0.5);
+}
+
+function targetHrFromSam(rawSam){
+  return roundTargetHr(rawTargetHrFromSam(rawSam));
+}
+
+function fmtDate(iso){
+  const [y,m,d]=iso.split("-");
+  return `${d}/${m}/${Number(y)+543}`;
+}
+function nextDate(iso){
+  const [y,m,d]=iso.split("-").map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d));
+  dt.setUTCDate(dt.getUTCDate()+1);
+  return dt.toISOString().slice(0,10);
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+
+function setOt(dayKey,hours){
+  if(FO_PLAN_LOCKED) return;
+  const dateIso=String(dayKey).split("_").slice(2).join("_");
+  if(isPastDayLocked(dateIso)){
+    alert("ไม่สามารถแก้ OT ของวันย้อนหลังได้");
+    return;
+  }
+  state.otDraft[String(dayKey)]=Number(hours);
+  render();
+}
+
+function applyOt(dayKey){
+  if(FO_PLAN_LOCKED) return;
+  const dateIso=String(dayKey).split("_").slice(2).join("_");
+  if(isPastDayLocked(dateIso)){
+    alert("ไม่สามารถแก้ OT ของวันย้อนหลังได้");
+    return;
+  }
+  const key=String(dayKey);
+  const selected = state.otDraft[key] ?? state.otByDay[key] ?? 0;
+  state.otByDay[key]=Number(selected);
+
+  const status=document.getElementById("recalcStatus");
+  if(status) status.textContent="กำลังคำนวณแผนใหม่ทั้ง FO...";
+
+  render();
+  captureCurrentLineWorkspace();
+
+  if(status){
+    status.textContent="ปรับ OT และคำนวณใหม่ทั้ง FO แล้ว";
+    clearTimeout(window.__recalcTimer);
+    window.__recalcTimer=setTimeout(()=>{status.textContent=""},1800);
+  }
+}
+
+function estimateFinishTime(targetHr, qtyThisSlot){
+  if(targetHr<=0)return "";
+  const mins=Math.ceil((qtyThisSlot/targetHr)*60);
+  return mins;
+}
+
+
+function timeToMinutes(t){
+  const [h,m]=String(t||"00:00").split(":").map(Number);
+  return (Number(h)||0)*60+(Number(m)||0);
+}
+
+function slotStartMinutes(slotTime){
+  return timeToMinutes(String(slotTime||"").split("-")[0]);
+}
+
+function isBeforeFirstDayStart(dayCount, slotTime, selectedStartTime){
+  if(Number(dayCount)!==1) return false;
+  return slotStartMinutes(slotTime) < timeToMinutes(selectedStartTime);
+}
+
+function render(){
+  if(!ACTIVE_LINE){
+    return;
+  }
+
+  ACTIVE_PROD_KEYS.clear();
+  PLAN_DATES=[];
+  LAST_RENDERED_PLAN_DATES=[];
+  const cuttingQty=Math.max(1,Number(document.getElementById("qty").value||0));
+  const previousCum=Math.max(0,Number(document.getElementById("previousCum").value||0));
+  const qty=Math.max(0,cuttingQty-previousCum);
+  const sm=samMinutes(document.getElementById("sam").value);
+  const start=document.getElementById("start").value;
+  const startTime=document.getElementById("startTime")?.value||"08:00";
+  const targetHr=targetHrFromSam(document.getElementById("sam")?.value);
+
+  if(!start||!targetHr){
+    document.getElementById("days").innerHTML="<div class='note'>กรอกวันเริ่มผลิตและ SAM ให้ถูกต้อง</div>";
+    return;
+  }
+
+  if(qty<=0){
+    document.getElementById("days").innerHTML="<div class='complete'>FO นี้ผลิตครบตามยอดตัดแล้ว</div>";
+    document.getElementById("kTargetHr").textContent=String(targetHr);
+    document.getElementById("kQty").textContent=`0 / ${cuttingQty}`;
+    document.getElementById("kDays").textContent="0";
+    document.getElementById("kRegular").textContent="0 ชม.";
+    document.getElementById("kOt").textContent="0 ชม.";
+    document.getElementById("kFinish").textContent="COMPLETE";
+    document.getElementById("complete").textContent="FO COMPLETE";
+    return;
+  }
+
+  let date=start;
+  let plannedCum=0;
+  let actualCum=0;
+  let dayCount=0;
+  let regularHours=0;
+  let otHoursTotal=0;
+  let finishDate=start;
+  let finishText="";
+  let html="";
+
+  while(plannedCum<qty && dayCount<120){
+    dayCount++;
+    PLAN_DATES.push(date);
+    LAST_RENDERED_PLAN_DATES.push(date);
+    const dayKey=`DAY_${dayCount}_${date}`;
+    const ot=Number(state.otByDay[dayKey]||0);
+    const draftOt=Number(state.otDraft[dayKey] ?? ot);
+    let dayTargetStart=plannedCum;
+    let rows="";
+    let dayRegular=0, dayOt=0;
+    let dayFinished=false;
+
+    for(const slot of SHIFT){
+      // เมื่อยอดสั่งผลิตครบแล้ว ให้หยุดสร้างแถวต่อทันที
+      if(plannedCum>=qty) break;
+
+      const beforeStart=isBeforeFirstDayStart(dayCount,slot.time,startTime);
+      const shiftActive = slot.type==="WORK" || (slot.type==="OT" && slot.otNo<=ot);
+      const active = !beforeStart && shiftActive;
+
+      // วันแรก: ก่อนเวลาเริ่มผลิตให้ Target = 0
+      // วันถัดไปกลับมาใช้ตารางบริษัทตั้งแต่ 08:00 ตามเดิม
+      let rowTarget=0;
+      if(active && plannedCum<qty){
+        const capacity=targetHr*slot.h;
+        rowTarget=Math.min(capacity, qty-plannedCum);
+        plannedCum += rowTarget;
+
+        if(slot.type==="WORK") dayRegular+=slot.h;
+        if(slot.type==="OT") dayOt+=slot.h;
+      }
+
+      const targetCum=Math.min(qty,plannedCum);
+      const cls=beforeStart
+        ? "off"
+        : slot.type==="BREAK"
+          ? "break"
+          : slot.type==="OT"&&!active
+            ? "ot off"
+            : slot.type==="OT"
+              ? "ot"
+              : "";
+      const problem=beforeStart ? "ก่อนเริ่มผลิต" : (slot.problem||"");
+
+      const rowKey=`${date}|${slot.time}`;
+      if(active && slot.type!=="BREAK") ACTIVE_PROD_KEYS.add(rowKey);
+      const actual=PROD_ROWS[rowKey]||{ok:0,repair:0,ng:0};
+      const rowProduction=Number(actual.ok||0)+Number(actual.ng||0);
+      actualCum+=rowProduction;
+      const liveDiff=actualCum-targetCum;
+      const livePct=targetCum>0?(actualCum/targetCum*100):0;
+
+      rows+=`<tr class="${cls}">
+        <td class="date">${fmtDate(date)}</td>
+        <td>${slot.time}</td>
+        <td>${active?targetHr.toFixed(0):"0"}</td>
+        <td>${Math.round(targetCum)}</td>
+        <td>${actual.ok||0}</td>
+        <td>${actual.repair||0}</td>
+        <td>${actual.ng||0}</td>
+        <td>${Math.round(actualCum)}</td>
+        <td class="diff ${liveDiff<0?"neg":""}">${Math.round(liveDiff)}</td>
+        <td>${livePct.toFixed(1)}%</td>
+        <td class="problem">${problem}</td>
+      </tr>`;
+
+      // ถ้าจบ FO ใน slot นี้ ให้คำนวณเวลาจบแล้วหยุดทันที
+      if(plannedCum>=qty && active && !dayFinished){
+        dayFinished=true;
+        finishDate=date;
+
+        const [sh,sm0]=slot.time.split("-")[0].split(":").map(Number);
+        const qtyBeforeSlot=Math.max(0,qty-(plannedCum-rowTarget));
+        const mins=estimateFinishTime(targetHr,qtyBeforeSlot);
+        let total=sh*60+sm0+mins;
+        const hh=String(Math.floor(total/60)).padStart(2,"0");
+        const mm=String(total%60).padStart(2,"0");
+        finishText=`${fmtDate(date)} ${hh}:${mm}`;
+
+        break;
+      }
+    }
+
+    regularHours+=dayRegular;
+    otHoursTotal+=dayOt;
+    const dayQty=Math.round(plannedCum-dayTargetStart);
+
+    const daySummary=daySummaryHtml(
+      date,
+      dayQty,
+      cuttingQty,
+      previousCum
+    );
+
+    html+=`
+      <div class="daybar">
+        <strong>วันที่ ${fmtDate(date)} <span style="color:#64748b;font-size:11px">(Day ${dayCount})</span></strong>
+        <span>OT:</span>
+        <div class="ot-group">
+          ${plannedCum>=qty
+            ? `<span style="color:#15803d;font-weight:800;padding:7px 10px">จบ FO แล้ว</span>`
+            : [0,1,2,3].map(h=>`<button type="button" ${FO_PLAN_LOCKED?"disabled":""} class="ot-btn ${draftOt===h?"active":""}" onclick="setOt('${dayKey}',${h})">${h===0?"ไม่เปิด OT":h+" ชม."}</button>`).join("") +
+              `<button type="button" ${FO_PLAN_LOCKED?"disabled":""} class="primary" style="padding:7px 12px" onclick="applyOt('${dayKey}')">เปลี่ยนแปลง</button>`
+          }
+        </div>
+        <div class="day-summary">
+          OT ที่ใช้งาน <b>${ot}</b> ชม. · แผนวันนี้ <b>${dayQty}</b> ชิ้น · สะสม <b>${Math.round(plannedCum)}</b> / ${qty}
+          ${plannedCum>=qty ? ' · <span style="color:#15803d;font-weight:800">FO COMPLETE</span>' : ''}
+        </div>
+      </div>
+      ${daySummary}
+      <div class="day-export-toolbar">
+        <button class="day-export-excel" onclick="exportDayExcel('${date}')">Excel วันนี้</button>
+        <button class="day-export-csv" onclick="exportDayCsv('${date}')">CSV วันนี้</button>
+        <button class="day-export-print" onclick="printDayReport('${date}')">พิมพ์ / PDF วันนี้</button>
+      </div>
+      <div class="tablewrap" data-day="${date}">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th><th>เวลา</th><th>Target/Hr</th><th>Target Cum</th>
+              <th>OK</th><th>Repair</th><th>NG</th><th>Actual Cum</th><th>Diff</th><th>%</th><th>ปัญหา</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+
+    if(plannedCum>=qty)break;
+    date=nextDate(date);
+  }
+
+  document.getElementById("days").innerHTML=html;
+  document.getElementById("kTargetHr").textContent=String(targetHr);
+  document.getElementById("kQty").textContent=`${qty} / ${cuttingQty}`;
+  document.getElementById("kDays").textContent=dayCount;
+  document.getElementById("kRegular").textContent=regularHours.toFixed(0)+" ชม.";
+  document.getElementById("kOt").textContent=otHoursTotal.toFixed(0)+" ชม.";
+  document.getElementById("kFinish").textContent=finishText||fmtDate(finishDate);
+  document.getElementById("complete").innerHTML=
+    `FO COMPLETE ตามแผน: <b>${esc(ACTIVE_LINE)}</b> · FO <b>${esc(document.getElementById("fo").value)}</b> · ยอดตัด <b>${cuttingQty}</b> · ผลิตสะสมก่อนหน้า <b>${previousCum}</b> · ต้องผลิตเพิ่ม <b>${qty}</b> ชิ้น · คาดว่าจบ <b>${finishText}</b>`;
+  updateProductionUi();
+  updateSamCalculationNote();
+  lockPastDays();
+  renderHistory();
+}
+
+document.getElementById("calcBtn").onclick=render;
+document.getElementById("resetBtn").onclick=()=>{state.otByDay={};state.otDraft={};render()};
+["qty","previousCum","start","manpower","startTime","eff","sam"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){
+    el.addEventListener("change",render);
+    el.addEventListener("input",()=>{updateSamCalculationNote();});
+  }
+});
+render();
+
+let LAST_SEEN_DATE=todayIsoLocal();
+setInterval(()=>{
+  const nowDate=todayIsoLocal();
+  if(nowDate!==LAST_SEEN_DATE){
+    LAST_SEEN_DATE=nowDate;
+    lockPastDays();
+    if(PROD_STATUS!=="CLOSED" && ACTIVE_LINE){
+      // ไม่สร้าง FO ใหม่ และไม่รีเซ็ต cumulative
+      // เพียงย้าย summary/board ไปวันใหม่ตามแผน
+      render();
+      recordAudit("DAY_ROLLOVER",`ยกยอด FO ต่ออัตโนมัติไปวันที่ ${nowDate}`);
+    }
+  }
+},30000);
+
+
+setInterval(()=>{
+  if(ACTIVE_LINE && !document.getElementById("appShell")?.classList.contains("app-hidden")){
+    updateLiveTodayHeader();
+  }
+},1000);
+
+
+function currentLineLocalMasterPath(){
+  return `E:\\ProductionControlData\\${ACTIVE_LINE}\\Production_Control_${ACTIVE_LINE}.xlsx`;
+}
+
+function currentLineOneDriveMirrorPath(){
+  return `E:\\OneDrive - บริษัท เทพฤกษ์ จำกัด\\ProductionControl\\${ACTIVE_LINE}\\Production_Control_${ACTIVE_LINE}.xlsx`;
+}
+
+</script>
+</div>
+
+<script>
+/* SERVER BRIDGE V1.34: connects consolidated V1.31 UI logic to the real Node server. */
+(function(){
+  const SERVER_ENABLED = (location.protocol === "http:" || location.protocol === "https:")\n    && !/github\\.io$/i.test(location.hostname);
+  if(!SERVER_ENABLED) return;
+
+  async function api(path, options={}){
+    const res = await fetch(path, {
+      headers:{"Content-Type":"application/json", ...(options.headers||{})},
+      ...options
+    });
+    let data={};
+    try{ data=await res.json(); }catch{}
+    if(!res.ok || data.ok===false){
+      const err=new Error(data.message||`HTTP ${res.status}`);
+      err.status=res.status; err.data=data; throw err;
+    }
+    return data;
+  }
+
+  async function loadServerPlan(){
+    try{
+      const data=await api('/api/plan');
+      if(Array.isArray(data.rows)){
+        PLAN_MASTER.length=0;
+        data.rows.forEach((r,i)=>PLAN_MASTER.push(ensurePlanJobId({seq:i+1,jobId:r.jobId||"",masterFo:r.masterFo||r.fo||"",productionFo:r.productionFo||r.fo||"",fo:r.productionFo||r.fo||"",style:r.style||"",color:r.color||"",process:r.process||"Sewing",size:r.size||"",line:r.line||"",jobQty:r.jobQty??r.qty??r.orderQty??"",sam:String(r.sam||""),eff:(r.eff!==undefined&&String(r.eff).trim()!=="")?r.eff:"40",orderQty:r.orderQty??""},i+1)));
+        while(PLAN_MASTER.length<33) PLAN_MASTER.push(blankPlanRow());
+        renderPlanTable(); refreshFoOptions();
+      }
+    }catch(e){ console.warn('plan load',e.message); }
+  }
+
+  async function loadServerAssignments(){
+    try{
+      const data=await api('/api/assignments');
+      Object.keys(FO_ASSIGNMENT_MASTER).forEach(k=>delete FO_ASSIGNMENT_MASTER[k]);
+      Object.assign(FO_ASSIGNMENT_MASTER,data.assignments||{});
+      const fo=document.getElementById('fo')?.value||''; if(fo) showFoAssignmentMessage(fo);
+    }catch(e){ console.warn('assignments load',e.message); }
+  }
+
+  let stateTimer=null;
+  async function pushWorkspace(){
+    if(!ACTIVE_LINE) return;
+    const w=LINE_WORKSPACES[ACTIVE_LINE]; if(!w) return;
+    const copy=JSON.parse(JSON.stringify(w));
+    copy.productionLog=[]; // DATA_LOG is persisted separately by /api/event
+    try{ await api('/api/line/state',{method:'POST',body:JSON.stringify({line:ACTIVE_LINE,workspace:copy})}); }
+    catch(e){ console.warn('state save queued/server unavailable',e.message); }
+  }
+  function scheduleWorkspacePush(){ clearTimeout(stateTimer); stateTimer=setTimeout(pushWorkspace,250); }
+
+  const originalCapture = captureCurrentLineWorkspace;
+  captureCurrentLineWorkspace = function(){
+    const r=originalCapture.apply(this,arguments);
+    scheduleWorkspacePush();
+    return r;
+  };
+
+  const originalAppend = appendProductionLog;
+  appendProductionLog = function(type,source,rowKey){
+    const item=originalAppend.apply(this,arguments);
+    if(item && ACTIVE_LINE){
+      api('/api/event',{method:'POST',body:JSON.stringify({line:ACTIVE_LINE,event:item})})
+        .then(()=>refreshServerStorage())
+        .catch(e=>{ console.warn('event queued locally in browser; server error',e.message); refreshServerStorage(); });
+    }
+    return item;
+  };
+
+  async function refreshServerStorage(){
+    if(!ACTIVE_LINE) return;
+    try{
+      const s=await api(`/api/storage/status?line=${encodeURIComponent(ACTIVE_LINE)}`);
+      const l=document.getElementById('localQueueStatus'), e=document.getElementById('excelMasterStatus'), o=document.getElementById('oneDriveStatus');
+      const lb=document.getElementById('localQueueBox'), eb=document.getElementById('excelMasterBox'), ob=document.getElementById('oneDriveBox');
+      const lp=(s.localQueue?.pendingEvents||0)+(s.localQueue?.statePending?1:0);
+      if(l) l.textContent=`SAVED • ${lp} pending`;
+      if(e) e.textContent=s.excelMaster?.status==='WAITING'?'WAITING • FILE LOCKED / SAVE PENDING':'SAVED';
+      if(o) o.textContent=s.oneDrive?.status||'DISABLED';
+      if(lb) lb.className='storage-box storage-ok';
+      if(eb) eb.className=`storage-box ${s.excelMaster?.status==='WAITING'?'storage-wait':'storage-ok'}`;
+      if(ob) ob.className=`storage-box ${['WAITING','SYNCING'].includes(s.oneDrive?.status)?'storage-wait':'storage-ok'}`;
+      const badge=document.getElementById('serverModeBadge');
+      if(badge) badge.textContent=`SERVER MODE • ${ACTIVE_LINE} • Local First`;
+      try{
+        const p=await api(`/api/storage/pending?line=${encodeURIComponent(ACTIVE_LINE)}`);
+        const body=document.getElementById('pendingQueueBody');
+        if(body){
+          body.innerHTML=(p.rows||[]).length ? (p.rows||[]).slice(0,8).map(x=>`<tr><td>${x.eventId}</td><td>${x.line}</td><td>${x.fo}</td><td>${x.type}</td><td>${x.qty}</td><td>${x.queueStatus}</td><td>${x.excelStatus}</td><td>${x.oneDriveStatus}</td></tr>`).join('') : '<tr><td colspan="8">ไม่มีรายการค้าง</td></tr>';
+        }
+      }catch{}
+    }catch(e){
+      const l=document.getElementById('localQueueStatus'), ex=document.getElementById('excelMasterStatus'), od=document.getElementById('oneDriveStatus');
+      if(l) l.textContent='BROWSER QUEUE • SERVER OFFLINE';
+      if(ex) ex.textContent='WAITING • SERVER OFFLINE';
+      if(od) od.textContent='WAITING';
+    }
+  }
+
+  const originalEnter = enterLine;
+  enterLine = async function(){
+    originalEnter.apply(this,arguments);
+    if(!ACTIVE_LINE) return;
+    try{
+      await loadServerPlan();
+      await loadServerAssignments();
+      const data=await api(`/api/line/state?line=${encodeURIComponent(ACTIVE_LINE)}`);
+      if(data.workspace){
+        const w=data.workspace;
+        w.productionLog=Array.isArray(data.logs)?data.logs:[];
+        LINE_WORKSPACES[ACTIVE_LINE]=w;
+        restoreLineWorkspace(ACTIVE_LINE);
+        render(); renderProductionLog(); updateProductionUi();
+      } else {
+        captureCurrentLineWorkspace();
+      }
+    }catch(e){ console.warn('line restore',e.message); }
+    await refreshServerStorage();
+  };
+
+  // Real central FO lock: reserve on Save Plan before local UI locks.
+  saveFoPlan = async function(){
+    const fo=document.getElementById('fo')?.value?.trim();
+    const qty=Number(document.getElementById('qty')?.value||0);
+    const sam=document.getElementById('sam')?.value?.trim();
+    if(!ACTIVE_LINE){alert('กรุณาเข้าสู่ Line ก่อน');return;}
+    if(!fo){alert('กรุณาเลือก FO จากแผนการผลิต');return;}
+    if(qty<=0){alert('กรุณาระบุ Cutting Qty');return;}
+    if(!sam){alert('ไม่พบค่า SAM จากแผนการผลิต');return;}
+    const ok=confirm(`ยืนยันบันทึกแผน ${ACTIVE_LINE} / ${fo} ?\n\nหลังบันทึกแล้วจะไม่สามารถแก้ไขข้อมูลหรือ OT ได้\nหากต้องการแก้ไข ต้องกด “แก้ไข FO” และใส่รหัส 12345`);
+    if(!ok) return;
+    try{
+      const d=await api('/api/fo/reserve',{method:'POST',body:JSON.stringify({line:ACTIVE_LINE,jobId:currentJobId(),masterFo:document.getElementById('masterFoField')?.value||'',productionFo:fo,size:document.getElementById('sizeField')?.value||'',jobQty:document.getElementById('jobQtyField')?.value||'',fo,style:document.getElementById('style')?.value||'',color:document.getElementById('color')?.value||'',status:'READY'})});
+      FO_ASSIGNMENT_MASTER[normalizeJobKey(currentJobId()||fo)]=d.assignment;
+    }catch(e){ alert(e.message); await loadServerAssignments(); return; }
+    reserveFoForLine(fo,'READY');
+    recordAudit('SAVE_PLAN',`บันทึกและล็อกแผน FO / Assigned ${ACTIVE_LINE}`);
+    setFoPlanLocked(true); captureCurrentLineWorkspace();
+  };
+
+  setProductionStatus = async function(status){
+    if(PROD_STATUS==='CLOSED'){
+      if(status==='RUNNING') alert('FO เดิมปิดแล้ว กรุณากด “เริ่ม FO ใหม่” แล้วเลือก FO ใหม่ก่อน');
+      return;
+    }
+    const fo=document.getElementById('fo')?.value||'';
+    if(status==='RUNNING' && !FO_PLAN_LOCKED){alert('กรุณาคำนวณ ตรวจสอบ และกด “บันทึกแผน” ก่อนเริ่มผลิต');return;}
+    if(status==='RUNNING'){
+      try{
+        const d=await api('/api/fo/reserve',{method:'POST',body:JSON.stringify({line:ACTIVE_LINE,jobId:currentJobId(),masterFo:document.getElementById('masterFoField')?.value||'',productionFo:fo,size:document.getElementById('sizeField')?.value||'',jobQty:document.getElementById('jobQtyField')?.value||'',fo,style:document.getElementById('style')?.value||'',color:document.getElementById('color')?.value||'',status:'RUNNING'})});
+        FO_ASSIGNMENT_MASTER[normalizeJobKey(currentJobId()||fo)]=d.assignment;
+      }catch(e){alert(e.message);await loadServerAssignments();return;}
+      reserveFoForLine(fo,'RUNNING');
+    }
+    if(status==='PAUSED') updateFoAssignmentStatus(fo,'PAUSED');
+    PROD_STATUS=status; updateProductionUi(); captureCurrentLineWorkspace();
+  };
+
+  const originalUpdateAssignment = updateFoAssignmentStatus;
+  updateFoAssignmentStatus = function(fo,status){
+    const r=originalUpdateAssignment.apply(this,arguments);
+    if(ACTIVE_LINE && fo){
+      const auth=status==='CLOSED' ? (SERVER_CLOSE_AUTH_CONTEXT||{}) : {};
+      api('/api/fo/status',{method:'POST',body:JSON.stringify({line:ACTIVE_LINE,jobId:currentJobId(),fo,status,...auth})})
+        .then(d=>{FO_ASSIGNMENT_MASTER[normalizeJobKey(currentJobId()||fo)]=d.assignment;})
+        .catch(e=>{
+          console.warn('fo status',e.message);
+          if(status==='CLOSED') alert(`Server ไม่อนุญาตให้ปิด FO: ${e.message}`);
+        })
+        .finally(()=>{ if(status==='CLOSED') SERVER_CLOSE_AUTH_CONTEXT=null; });
+    }
+    return r;
+  };
+
+  const originalValidateImport = validateAndImportPlanRows;
+  validateAndImportPlanRows = function(rows){
+    const ok=originalValidateImport.apply(this,arguments);
+    if(ok){
+      const payload=PLAN_MASTER.filter(rowHasPlanContent).map((r,i)=>{ensurePlanJobId(r,i+1);return {jobId:r.jobId||'',masterFo:r.masterFo||'',productionFo:r.productionFo||r.fo||'',fo:r.productionFo||r.fo||'',style:r.style||'',color:r.color||'',process:r.process||'',size:r.size||'',line:r.line||'',jobQty:r.jobQty??'',sam:r.sam||'',eff:r.eff??'',orderQty:r.orderQty??''};});
+      api('/api/plan',{method:'POST',body:JSON.stringify({pin:'12345',rows:payload})}).catch(e=>alert(`Server บันทึก Plan ไม่สำเร็จ: ${e.message}`));
+    }
+    return ok;
+  };
+
+  const originalLockPlanner = lockPlanner;
+  lockPlanner = function(){
+    originalLockPlanner.apply(this,arguments);
+    const rows=PLAN_MASTER.filter(rowHasPlanContent).map((r,i)=>{ensurePlanJobId(r,i+1);return {jobId:r.jobId||'',masterFo:r.masterFo||'',productionFo:r.productionFo||r.fo||'',fo:r.productionFo||r.fo||'',style:r.style||'',color:r.color||'',process:r.process||'',size:r.size||'',line:r.line||'',jobQty:r.jobQty??'',sam:r.sam||'',eff:r.eff??'',orderQty:r.orderQty??''};});
+    api('/api/plan',{method:'POST',body:JSON.stringify({pin:'12345',rows})})
+      .then(()=>setPlanImportStatus?.(`บันทึกแผนขึ้น Server แล้ว ${rows.length} FO`,'success'))
+      .catch(e=>alert(`Server บันทึก Plan ไม่สำเร็จ: ${e.message}`));
+  };
+
+  // Periodic real status refresh and initial central plan load.
+  document.addEventListener('DOMContentLoaded',()=>{ loadServerPlan(); loadServerAssignments(); });
+  setInterval(refreshServerStorage,3000);
+})();
+
+</script>
+
+<script>
+/* ===== MASTER SOURCE DASHBOARD LOG BRIDGE ===== */
+(function(){
+  const LOG_KEY='production_control_dashboard_log_v1';
+  const META_KEY='production_control_dashboard_meta_v1';
+
+  function keyOf(x,i){
+    return String(x?.eventId||'').trim() ||
+      [x?.line,x?.seq,x?.dateTime,x?.jobId,x?.type,x?.qty,i].join('|');
+  }
+
+  function publishMasterLog(){
+    try{
+      let old=[];
+      try{ old=JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){}
+      if(!Array.isArray(old)) old=[];
+
+      const current=[];
+      if(typeof LINE_WORKSPACES!=='undefined'){
+        Object.keys(LINE_WORKSPACES).forEach(line=>{
+          const w=LINE_WORKSPACES[line]||{};
+          (w.productionLog||[]).forEach(x=>current.push({...x,line:x.line||line}));
+        });
+      }
+      if(typeof PRODUCTION_LOG!=='undefined' && Array.isArray(PRODUCTION_LOG)){
+        PRODUCTION_LOG.forEach(x=>current.push({...x,line:x.line||(typeof ACTIVE_LINE!=='undefined'?ACTIVE_LINE:'')}));
+      }
+
+      const map=new Map();
+      old.forEach((x,i)=>map.set(keyOf(x,'o'+i),x));
+      current.forEach((x,i)=>map.set(keyOf(x,'n'+i),x));
+      const merged=[...map.values()];
+
+      localStorage.setItem(LOG_KEY,JSON.stringify(merged));
+      localStorage.setItem(META_KEY,JSON.stringify({
+        updatedAt:new Date().toISOString(),
+        records:merged.length,
+        source:'Production Control V1.35 JOB ID / PLAN_MASTER'
+      }));
+      return merged.length;
+    }catch(e){
+      console.warn('Dashboard log bridge',e);
+      return 0;
+    }
+  }
+
+  function addDashboardButton(){
+    document.querySelectorAll('.main-nav').forEach(nav=>{
+      if(nav.querySelector('.dashboard-master-btn')) return;
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='dashboard-master-btn';
+      b.textContent='▦ Dashboard';
+      b.onclick=()=>{
+        publishMasterLog();
+        location.href='dashboard.html';
+      };
+      nav.appendChild(b);
+    });
+  }
+
+  const boot=()=>{
+    addDashboardButton();
+    publishMasterLog();
+    window.MASTER_SOURCE_DASHBOARD_LOG={
+      publish:publishMasterLog,
+      logKey:LOG_KEY,
+      metaKey:META_KEY
+    };
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',boot);
+  }else{
+    boot();
+  }
+  window.addEventListener('beforeunload',publishMasterLog);
+})();
+</script>
+
+</body>
+</html>
