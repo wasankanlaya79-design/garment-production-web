@@ -2611,18 +2611,38 @@ function localDateTimeText(){
 
 function appendProductionLog(type,source,rowKey){
   const [productionDate,timeSlot]=String(rowKey||"|").split("|");
+
+  // MASTER SOURCE: ดึงข้อมูลจากแถว JOB ID ใน PLAN_MASTER โดยตรง
+  const activeJobId=currentJobId();
+  const planItem=PLAN_MASTER.find(r=>
+    normalizeJobKey(r.jobId)===normalizeJobKey(activeJobId)
+  )||{};
+
+  const formValue=(id)=>document.getElementById(id)?.value||"";
+  const productionFo=
+    planItem.productionFo||planItem.fo||
+    formValue("productionFoField")||formValue("fo");
+
   const item={
     seq:PRODUCTION_LOG.length+1,
     dateTime:localDateTimeText(),
     productionDate:productionDate||"",
-    line:ACTIVE_LINE||"",
-    jobId:currentJobId(),
-    masterFo:document.getElementById("masterFoField")?.value||"",
-    productionFo:document.getElementById("productionFoField")?.value||document.getElementById("fo")?.value||"",
-    size:document.getElementById("sizeField")?.value||"",
-    fo:document.getElementById("fo")?.value||"",
-    style:document.getElementById("style")?.value||"",
-    color:document.getElementById("color")?.value||"",
+    jobId:planItem.jobId||activeJobId||"",
+    masterFo:planItem.masterFo||formValue("masterFoField")||"",
+    productionFo:productionFo||"",
+    fo:productionFo||"",
+    style:planItem.style||formValue("style")||"",
+    color:planItem.color||formValue("color")||"",
+    process:planItem.process||formValue("processField")||"",
+    size:planItem.size||formValue("sizeField")||"",
+    line:ACTIVE_LINE||planItem.line||"",
+    planLine:planItem.line||"",
+    jobQty:planItem.jobQty||formValue("jobQtyField")||"",
+    sam:planItem.sam||formValue("sam")||"",
+    eff:(planItem.eff!==undefined && String(planItem.eff).trim()!=="")
+      ? planItem.eff : formValue("eff"),
+    masterOrderQty:planItem.orderQty||formValue("orderQty")||"",
+    orderQty:planItem.orderQty||formValue("orderQty")||"",
     timeSlot:timeSlot||"",
     type:String(type||"").toUpperCase(),
     qty:1,
@@ -5569,133 +5589,79 @@ function currentLineOneDriveMirrorPath(){
 </script>
 
 <script>
-/* =========================================================
-   DASHBOARD LOG BRIDGE — additive only
-   Source UI/logic remains Production Control V1.35 JOB ID.
-   ========================================================= */
+/* ===== MASTER SOURCE DASHBOARD LOG BRIDGE ===== */
 (function(){
-  const DASHBOARD_LOG_KEY = 'production_control_dashboard_log_v1';
-  const DASHBOARD_META_KEY = 'production_control_dashboard_meta_v1';
+  const LOG_KEY='production_control_dashboard_log_v1';
+  const META_KEY='production_control_dashboard_meta_v1';
 
-  function readSaved(){
+  function keyOf(x,i){
+    return String(x?.eventId||'').trim() ||
+      [x?.line,x?.seq,x?.dateTime,x?.jobId,x?.type,x?.qty,i].join('|');
+  }
+
+  function publishMasterLog(){
     try{
-      const x = JSON.parse(localStorage.getItem(DASHBOARD_LOG_KEY) || '[]');
-      return Array.isArray(x) ? x : [];
-    }catch(e){ return []; }
-  }
+      let old=[];
+      try{ old=JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){}
+      if(!Array.isArray(old)) old=[];
 
-  function eventKey(x, fallback=''){
-    const id = String(x && x.eventId || '').trim();
-    if(id) return id;
-    return [
-      x && x.line || '', x && x.seq || '', x && x.dateTime || '',
-      x && x.productionDate || '', x && (x.productionFo || x.fo || '') || '',
-      x && x.type || '', x && x.qty || '', fallback
-    ].join('|');
-  }
-
-  function mergeLogs(existing, current){
-    const map = new Map();
-    (existing || []).forEach((x,i)=>map.set(eventKey(x,'old'+i), x));
-    (current || []).forEach((x,i)=>map.set(eventKey(x,'new'+i), x));
-    return Array.from(map.values()).sort((a,b)=>{
-      const ma = String(a && a.eventId || '').match(/^EVT-(\d+)-/);
-      const mb = String(b && b.eventId || '').match(/^EVT-(\d+)-/);
-      if(ma && mb) return Number(ma[1]) - Number(mb[1]);
-      return Number(a && a.seq || 0) - Number(b && b.seq || 0);
-    });
-  }
-
-  function collectCurrentLogs(){
-    const rows = [];
-    try{
-      if(typeof LINE_WORKSPACES !== 'undefined'){
+      const current=[];
+      if(typeof LINE_WORKSPACES!=='undefined'){
         Object.keys(LINE_WORKSPACES).forEach(line=>{
-          const w = LINE_WORKSPACES[line] || {};
-          (w.productionLog || []).forEach(x=>rows.push({...x, line:x.line || line}));
+          const w=LINE_WORKSPACES[line]||{};
+          (w.productionLog||[]).forEach(x=>current.push({...x,line:x.line||line}));
         });
       }
-      if(typeof PRODUCTION_LOG !== 'undefined' && Array.isArray(PRODUCTION_LOG)){
-        PRODUCTION_LOG.forEach(x=>rows.push({...x, line:x.line || (typeof ACTIVE_LINE !== 'undefined' ? ACTIVE_LINE : '')}));
+      if(typeof PRODUCTION_LOG!=='undefined' && Array.isArray(PRODUCTION_LOG)){
+        PRODUCTION_LOG.forEach(x=>current.push({...x,line:x.line||(typeof ACTIVE_LINE!=='undefined'?ACTIVE_LINE:'')}));
       }
-    }catch(e){ console.warn('[DashboardLogBridge] collect', e); }
-    return rows;
-  }
 
-  function publishDashboardLog(){
-    try{
-      const merged = mergeLogs(readSaved(), collectCurrentLogs());
-      localStorage.setItem(DASHBOARD_LOG_KEY, JSON.stringify(merged));
-      localStorage.setItem(DASHBOARD_META_KEY, JSON.stringify({
-        updatedAt: new Date().toISOString(),
-        records: merged.length,
-        source: 'Production Control V1.35 JOB ID'
+      const map=new Map();
+      old.forEach((x,i)=>map.set(keyOf(x,'o'+i),x));
+      current.forEach((x,i)=>map.set(keyOf(x,'n'+i),x));
+      const merged=[...map.values()];
+
+      localStorage.setItem(LOG_KEY,JSON.stringify(merged));
+      localStorage.setItem(META_KEY,JSON.stringify({
+        updatedAt:new Date().toISOString(),
+        records:merged.length,
+        source:'Production Control V1.35 JOB ID / PLAN_MASTER'
       }));
       return merged.length;
     }catch(e){
-      console.warn('[DashboardLogBridge] publish', e);
+      console.warn('Dashboard log bridge',e);
       return 0;
     }
   }
 
-  function addDashboardNav(){
+  function addDashboardButton(){
     document.querySelectorAll('.main-nav').forEach(nav=>{
-      if(nav.querySelector('.dashboard-link-btn')) return;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dashboard-link-btn';
-      btn.textContent = '▦ Dashboard';
-      btn.title = 'เปิด Executive Production Dashboard';
-      btn.addEventListener('click', ()=>{
-        publishDashboardLog();
-        location.href = 'dashboard.html';
-      });
-      nav.appendChild(btn);
+      if(nav.querySelector('.dashboard-master-btn')) return;
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='dashboard-master-btn';
+      b.textContent='▦ Dashboard';
+      b.onclick=()=>{
+        publishMasterLog();
+        location.href='dashboard.html';
+      };
+      nav.appendChild(b);
     });
   }
 
-  function wirePublishers(){
-    if(typeof appendProductionLog === 'function' && !appendProductionLog.__dashboardWrapped){
-      const originalAppendProductionLog = appendProductionLog;
-      const wrappedAppendProductionLog = function(){
-        const result = originalAppendProductionLog.apply(this, arguments);
-        publishDashboardLog();
-        return result;
-      };
-      wrappedAppendProductionLog.__dashboardWrapped = true;
-      appendProductionLog = wrappedAppendProductionLog;
-    }
+  const boot=()=>{
+    addDashboardButton();
+    publishMasterLog();
+    window.MASTER_SOURCE_DASHBOARD_LOG={publish:publishMasterLog,logKey:LOG_KEY,metaKey:META_KEY};
+  };
 
-    if(typeof captureCurrentLineWorkspace === 'function' && !captureCurrentLineWorkspace.__dashboardWrapped){
-      const originalCaptureCurrentLineWorkspace = captureCurrentLineWorkspace;
-      const wrappedCaptureCurrentLineWorkspace = function(){
-        const result = originalCaptureCurrentLineWorkspace.apply(this, arguments);
-        publishDashboardLog();
-        return result;
-      };
-      wrappedCaptureCurrentLineWorkspace.__dashboardWrapped = true;
-      captureCurrentLineWorkspace = wrappedCaptureCurrentLineWorkspace;
-    }
-  }
-
-  function bootDashboardBridge(){
-    addDashboardNav();
-    wirePublishers();
-    publishDashboardLog();
-    window.PRODUCTION_DASHBOARD_LOG_BRIDGE = {
-      publish: publishDashboardLog,
-      logKey: DASHBOARD_LOG_KEY,
-      metaKey: DASHBOARD_META_KEY
-    };
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', bootDashboardBridge);
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',boot);
   }else{
-    bootDashboardBridge();
+    boot();
   }
-  window.addEventListener('beforeunload', publishDashboardLog);
+  window.addEventListener('beforeunload',publishMasterLog);
 })();
 </script>
-\n</body>
+</body>
 </html>
