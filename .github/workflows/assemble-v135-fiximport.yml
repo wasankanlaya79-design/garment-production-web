@@ -23,17 +23,29 @@ jobs:
         run: |
           cat .deploy_v135_fiximport/part01.b64 \
               .deploy_v135_fiximport/part02.b64 \
-              .deploy_v135_fiximport/part03.b64 > /tmp/index.b64
+              .deploy_v135_fiximport/part03.b64 \
+            | tr -d '\r\n\t ' > /tmp/index.b64
+          rem=$(( $(wc -c < /tmp/index.b64) % 4 ))
+          if [ "$rem" -eq 2 ]; then printf '==' >> /tmp/index.b64; fi
+          if [ "$rem" -eq 3 ]; then printf '='  >> /tmp/index.b64; fi
           base64 -d /tmp/index.b64 > /tmp/index.html.xz
+          xz -t /tmp/index.html.xz
           xz -dc /tmp/index.html.xz > index.html
 
       - name: Verify required fixes
         shell: bash
         run: |
+          test $(wc -c < index.html) -gt 200000
           grep -q 'Production Control V1.35' index.html
+          grep -q 'เลือกจากทั้งหมด 18 Line' index.html
+          grep -q 'Production Plan Master' index.html
           grep -q 'clearPlanFoBtn' index.html
           grep -qi 'production code' index.html
           grep -q 'เคลียร์ FO ทั้งหมด' index.html
+          grep -q 'prod-ok' index.html
+          grep -q 'prod-repair' index.html
+          grep -q 'prod-ng' index.html
+          grep -q '</html>' index.html
 
       - name: Commit rebuilt production page
         shell: bash
@@ -44,6 +56,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'index.html is already up to date'
           else
-            git commit -m 'Deploy V1.35 fixed Excel import and Clear FO'
+            git commit -m 'Restore full V1.35 page with fixed Excel import and Clear FO'
             git push
           fi
