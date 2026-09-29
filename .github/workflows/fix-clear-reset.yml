@@ -28,6 +28,7 @@ jobs:
           grep -q 'prod-ok' index.html
           grep -q 'prod-repair' index.html
           grep -q 'prod-ng' index.html
+          grep -Fq 'const hasRealPlanData=[' index.html
 
       - name: Commit fixed index
         run: |
@@ -36,3 +37,5 @@ jobs:
           git add index.html
           git commit -m "Fix Clear FO reset without regenerating blank JOB IDs"
           git push
+
+# rerun-v2
