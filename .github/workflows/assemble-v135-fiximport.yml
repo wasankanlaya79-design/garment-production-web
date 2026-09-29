@@ -21,15 +21,22 @@ jobs:
       - name: Rebuild index.html from staged payload
         shell: bash
         run: |
-          cat .deploy_v135_fiximport/part01.b64 \
-              .deploy_v135_fiximport/part02.b64 \
-              .deploy_v135_fiximport/part03.b64 \
-            | tr -cd 'A-Za-z0-9+/=' > /tmp/index.b64
-          rem=$(( $(wc -c < /tmp/index.b64) % 4 ))
-          if [ "$rem" -eq 2 ]; then printf '==' >> /tmp/index.b64; fi
-          if [ "$rem" -eq 3 ]; then printf '='  >> /tmp/index.b64; fi
-          echo "sanitized base64 chars: $(wc -c < /tmp/index.b64)"
-          base64 -d /tmp/index.b64 > /tmp/index.html.xz
+          decode_part() {
+            src="$1"
+            out="$2"
+            tr -cd 'A-Za-z0-9+/=' < "$src" > /tmp/one.b64
+            rem=$(( $(wc -c < /tmp/one.b64) % 4 ))
+            if [ "$rem" -eq 2 ]; then printf '==' >> /tmp/one.b64; fi
+            if [ "$rem" -eq 3 ]; then printf '='  >> /tmp/one.b64; fi
+            base64 -d /tmp/one.b64 > "$out"
+          }
+
+          decode_part .deploy_v135_fiximport/part01.b64 /tmp/part01.bin
+          decode_part .deploy_v135_fiximport/part02.b64 /tmp/part02.bin
+          decode_part .deploy_v135_fiximport/part03.b64 /tmp/part03.bin
+
+          cat /tmp/part01.bin /tmp/part02.bin /tmp/part03.bin > /tmp/index.html.xz
+          echo "assembled xz bytes: $(wc -c < /tmp/index.html.xz)"
           xz -t /tmp/index.html.xz
           xz -dc /tmp/index.html.xz > index.html
           echo "restored index bytes: $(wc -c < index.html)"
