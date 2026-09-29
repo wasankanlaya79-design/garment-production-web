@@ -1612,7 +1612,7 @@ button:disabled{
           <button id="unlockPlannerBtn" class="primary">เพิ่ม / แก้ไขแผน 🔒</button>
           <button id="addPlanRowBtn" class="secondary app-hidden">+ เพิ่มแถว</button>
           <button id="lockPlannerBtn" class="secondary app-hidden">ล็อกการแก้ไข</button>
-          <input id="planExcelFileInput" type="file" accept=".xlsx,.xls,.csv" class="app-hidden">
+          <input id="planExcelFileInput" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.xlt,.xltx,.xltm,.xml,.csv,.ods,.fods,.txt,.prn,.dif,.slk,.sylk,.dbf,.wk1,.wk3,.wk4,.wks,.123" class="app-hidden">
         </div>
       </div>
       
@@ -3950,7 +3950,7 @@ function headerIndexMap(headers){
 
   return {
     seq: find(["ลำดับ","no","no.","seq","sequence"]),
-    jobId: find(["job id","job_id","jobid","รหัสงานย่อย","รหัสงาน"]),
+    jobId: find(["job id","job_id","jobid","production code","production_code","productioncode","รหัสงานย่อย","รหัสงาน","รหัสผลิต"]),
     masterFo: find(["master fo","master_fo","parent fo","fo ตัวแม่"]),
     productionFo: find(["production fo","production_fo","child fo","fo ผลิต"]),
     fo: find(["fo","fo no","fo number"]),
@@ -3977,21 +3977,31 @@ function validateAndImportPlanRows(rows){
     const r=rows[i]||[];
     if(!rowHasAnyCell(r)) continue;
     const item=rowFromMappedOrPlain(r,map,imported.length+1,useHeader);
-    if(!cellText(item.productionFo) && !cellText(item.masterFo)) continue;
     imported.push(ensurePlanJobId(item,imported.length+1));
   }
   if(!imported.length) throw new Error("ไม่พบแถวข้อมูลที่นำเข้าได้");
-  const duplicateIds=[]; const seen=new Set();
-  imported.forEach(r=>{ const k=normalizeJobKey(r.jobId); if(seen.has(k)) duplicateIds.push(r.jobId); seen.add(k); });
-  if(duplicateIds.length) throw new Error(`JOB ID ซ้ำในไฟล์: ${[...new Set(duplicateIds)].slice(0,5).join(", ")}`);
-  const ok=confirm(`พบ Production Job ${imported.length} งาน\nระบบจะใช้ JOB ID แยกงานตาม Size / Line\n\nต้องการนำเข้าใช่หรือไม่?`);
+  const usedJobIds=new Set();
+  let duplicateRenamed=0;
+  imported.forEach((r,i)=>{
+    const base=cellText(r.jobId)||generateJobId(r,i+1);
+    let candidate=base;
+    let n=1;
+    while(usedJobIds.has(normalizeJobKey(candidate))){
+      n++;
+      candidate=`${base}-${String(n).padStart(2,"0")}`;
+    }
+    if(candidate!==base) duplicateRenamed++;
+    r.jobId=candidate;
+    usedJobIds.add(normalizeJobKey(candidate));
+  });
+  const ok=confirm(`พบข้อมูล ${imported.length} แถว\nโหลดทุกแถวแบบ IMPORT ALL AS TEXT\nJOB ID ซ้ำจะเติมเลขท้ายให้อัตโนมัติ${duplicateRenamed?` (${duplicateRenamed} แถว)`:""}\n\nต้องการนำเข้าใช่หรือไม่?`);
   if(!ok) return false;
   PLAN_MASTER.length=0;
   imported.forEach((r,i)=>PLAN_MASTER.push({...ensurePlanJobId(r,i+1),seq:i+1}));
   ensurePlanMinRows();
   renderPlanTable(); refreshFoOptions();
   const mode=useHeader?"อ่านตามหัวตาราง":"อ่านตามคอลัมน์มาตรฐาน Planning Export";
-  const detail=`โหลดสำเร็จ ${imported.length} Production Job | ${mode} | JOB ID พร้อมใช้งาน`;
+  const detail=`โหลดสำเร็จทุกแถว ${imported.length} รายการ | IMPORT ALL AS TEXT | ${mode} | JOB ID พร้อมใช้งาน`;
   recordAudit("IMPORT_PLAN_JOB_ID",detail); setPlanImportStatus(detail,"success");
   return true;
 }
@@ -4047,19 +4057,21 @@ async function importPlanFile(file){
   try{
     const ext=(file.name.split(".").pop()||"").toLowerCase();
 
-    if(ext==="csv"){
+    if(["csv","txt","prn"].includes(ext)){
       const text=await file.text();
       validateAndImportPlanRows(parseCsvText(text));
       return;
     }
 
-    if(!["xlsx","xls"].includes(ext)){
-      throw new Error("รองรับเฉพาะ .xlsx, .xls และ .csv");
-    }
-
+    // IMPORT ALL: do not block by file extension. Let SheetJS detect supported spreadsheet formats.
     const XLSX=await loadSheetJs();
     const buffer=await file.arrayBuffer();
-    const wb=XLSX.read(buffer,{type:"array"});
+    let wb;
+    try{
+      wb=XLSX.read(buffer,{type:"array",cellDates:true});
+    }catch(readErr){
+      throw new Error(`อ่านไฟล์ ${file.name} ไม่สำเร็จ: ไฟล์อาจเสียหาย มีรหัสผ่าน หรือไม่ใช่ Spreadsheet ที่รองรับ`);
+    }
     const firstSheet=wb.SheetNames[0];
     if(!firstSheet) throw new Error("ไม่พบ Sheet ในไฟล์");
 
