@@ -1608,7 +1608,7 @@ button:disabled{
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button id="importPlanExcelBtn" class="export-excel">โหลดแผนจาก Excel 🔒</button>
           <button id="downloadPlanTemplateBtn" class="secondary">ดาวน์โหลด Template Excel</button>
-          <button id="clearPlanFoBtn" type="button" style="background:#dc2626;color:#fff">เคลียร์ FO ทั้งหมด 🔒</button>
+          <button id="clearPlanFoBtn" type="button" style="background:#dc2626;color:#fff">Reset / เคลียร์ FO 🔒</button>
           <button id="unlockPlannerBtn" class="primary">เพิ่ม / แก้ไขแผน 🔒</button>
           <button id="addPlanRowBtn" class="secondary app-hidden">+ เพิ่มแถว</button>
           <button id="lockPlannerBtn" class="secondary app-hidden">ล็อกการแก้ไข</button>
@@ -4137,7 +4137,15 @@ function ensurePlanJobId(row,seq=1){
   row.process=cellText(row.process)||"Sewing";
   row.size=cellText(row.size)||"ไม่มี Size";
   row.jobQty=cellText(row.jobQty||row.qty||row.orderQty);
-  row.jobId=cellText(row.jobId)||generateJobId(row,seq);
+
+  const hasRealPlanData=[
+    row.masterFo,row.productionFo,row.fo,row.style,row.color,row.line,
+    row.jobQty,row.sam,row.orderQty,cellText(row.jobId)
+  ].some(v=>cellText(v)!=="");
+
+  row.jobId=hasRealPlanData
+    ? (cellText(row.jobId)||generateJobId(row,seq))
+    : "";
   return row;
 }
 function currentJobId(){
