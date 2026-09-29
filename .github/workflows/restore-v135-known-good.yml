@@ -1,6 +1,8 @@
 name: Restore V135 Known Good
 
-on: push
+on:
+  push:
+  workflow_dispatch:
 
 permissions:
   contents: write
