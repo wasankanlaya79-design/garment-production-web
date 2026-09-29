@@ -6,10 +6,6 @@ s = p.read_text(encoding='utf-8')
 BUTTON = 'id="clearPlanFoBtn"'
 MARKER = '/* CLEAR PLAN FO PATCH V1 */'
 
-if BUTTON in s and MARKER in s:
-    print('Clear FO patch already present; nothing to do.')
-    raise SystemExit(0)
-
 old_toolbar = '''          <button id="importPlanExcelBtn" class="export-excel">โหลดแผนจาก Excel 🔒</button>
           <button id="downloadPlanTemplateBtn" class="secondary">ดาวน์โหลด Template Excel</button>
           <button id="unlockPlannerBtn" class="primary">เพิ่ม / แก้ไขแผน 🔒</button>'''
@@ -18,11 +14,6 @@ new_toolbar = '''          <button id="importPlanExcelBtn" class="export-excel">
           <button id="downloadPlanTemplateBtn" class="secondary">ดาวน์โหลด Template Excel</button>
           <button id="clearPlanFoBtn" type="button" style="background:#dc2626;color:#fff">เคลียร์ FO ทั้งหมด 🔒</button>
           <button id="unlockPlannerBtn" class="primary">เพิ่ม / แก้ไขแผน 🔒</button>'''
-
-if old_toolbar not in s:
-    raise SystemExit('ERROR: planner toolbar marker not found; index.html left unchanged')
-
-s = s.replace(old_toolbar, new_toolbar, 1)
 
 patch = r'''
 <script>
@@ -79,10 +70,29 @@ patch = r'''
 </script>
 '''
 
-if '</body>' not in s:
-    raise SystemExit('ERROR: closing body not found; index.html left unchanged')
+# Ensure the button exists exactly once in the planner toolbar.
+if BUTTON not in s:
+    if old_toolbar not in s:
+        raise SystemExit('ERROR: planner toolbar marker not found; index.html left unchanged')
+    s = s.replace(old_toolbar, new_toolbar, 1)
 
-s = s.replace('</body>', patch + '\n</body>', 1)
+# Remove any previous misplaced copy of the patch block.
+while patch in s:
+    s = s.replace(patch, '', 1)
+
+# Also remove a legacy misplaced block by marker boundaries if needed.
+if MARKER in s:
+    marker_pos = s.find(MARKER)
+    script_start = s.rfind('<script>', 0, marker_pos)
+    script_end = s.find('</script>', marker_pos)
+    if script_start >= 0 and script_end >= 0:
+        s = s[:script_start] + s[script_end + len('</script>'):]
+
+# Insert only before the FINAL closing body tag, never the report templates above.
+body_pos = s.rfind('</body>')
+if body_pos < 0:
+    raise SystemExit('ERROR: final closing body not found; index.html left unchanged')
+s = s[:body_pos] + patch + '\n' + s[body_pos:]
 
 # Safety checks: abort rather than damage the known-good page.
 required = [
@@ -97,6 +107,13 @@ required = [
 for token in required:
     if token not in s:
         raise SystemExit(f'ERROR: required token missing after patch: {token}')
+
+if s.count(MARKER) != 1:
+    raise SystemExit(f'ERROR: expected exactly one clear-FO patch, found {s.count(MARKER)}')
+
+# The real patch must be near the actual end of the document.
+if s.rfind(MARKER) < len(s) - 12000:
+    raise SystemExit('ERROR: clear-FO patch is not near final document end; refusing to write')
 
 if len(s.encode('utf-8')) < 200000:
     raise SystemExit('ERROR: patched index unexpectedly small; refusing to write')
