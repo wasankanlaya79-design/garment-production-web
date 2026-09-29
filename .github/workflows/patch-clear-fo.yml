@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Patch index safely
+      - name: Patch index safely at final body
         run: python .github/scripts/patch_clear_fo.py
 
       - name: Verify only index changed
@@ -29,5 +29,5 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add index.html
-          git commit -m "Add Clear FO button without removing production logs"
+          git commit -m "Fix Clear FO button binding without removing production logs"
           git push
