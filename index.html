@@ -1611,7 +1611,7 @@ button:disabled{
           <button id="unlockPlannerBtn" class="primary">เพิ่ม / แก้ไขแผน 🔒</button>
           <button id="addPlanRowBtn" class="secondary app-hidden">+ เพิ่มแถว</button>
           <button id="lockPlannerBtn" class="secondary app-hidden">ล็อกการแก้ไข</button>
-          <input id="planExcelFileInput" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.xlt,.xltx,.xltm,.xml,.csv,.ods,.fods,.txt,.prn,.dif,.slk,.sylk,.dbf,.wk1,.wk3,.wk4,.wks,.123,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,text/csv,application/xml,text/xml" class="app-hidden">
+          <input id="planExcelFileInput" type="file" accept=".xlsx,.xls,.csv" class="app-hidden">
         </div>
       </div>
       
@@ -2611,35 +2611,18 @@ function localDateTimeText(){
 
 function appendProductionLog(type,source,rowKey){
   const [productionDate,timeSlot]=String(rowKey||"|").split("|");
-  const activeJobId=currentJobId();
-  const planItem=PLAN_MASTER.find(r=>
-    normalizeJobKey(r.jobId)===normalizeJobKey(activeJobId)
-  )||{};
-  const formValue=(id)=>document.getElementById(id)?.value||"";
-  const productionFo=
-    planItem.productionFo||planItem.fo||
-    formValue("productionFoField")||formValue("fo");
-
   const item={
     seq:PRODUCTION_LOG.length+1,
     dateTime:localDateTimeText(),
     productionDate:productionDate||"",
-    jobId:planItem.jobId||activeJobId||"",
-    masterFo:planItem.masterFo||formValue("masterFoField")||"",
-    productionFo:productionFo||"",
-    fo:productionFo||"",
-    style:planItem.style||formValue("style")||"",
-    color:planItem.color||formValue("color")||"",
-    process:planItem.process||formValue("processField")||"",
-    size:planItem.size||formValue("sizeField")||"",
-    line:ACTIVE_LINE||planItem.line||"",
-    planLine:planItem.line||"",
-    jobQty:planItem.jobQty||formValue("jobQtyField")||"",
-    sam:planItem.sam||formValue("sam")||"",
-    eff:(planItem.eff!==undefined && String(planItem.eff).trim()!=="")
-      ? planItem.eff : formValue("eff"),
-    masterOrderQty:planItem.orderQty||formValue("orderQty")||"",
-    orderQty:planItem.orderQty||formValue("orderQty")||"",
+    line:ACTIVE_LINE||"",
+    jobId:currentJobId(),
+    masterFo:document.getElementById("masterFoField")?.value||"",
+    productionFo:document.getElementById("productionFoField")?.value||document.getElementById("fo")?.value||"",
+    size:document.getElementById("sizeField")?.value||"",
+    fo:document.getElementById("fo")?.value||"",
+    style:document.getElementById("style")?.value||"",
+    color:document.getElementById("color")?.value||"",
     timeSlot:timeSlot||"",
     type:String(type||"").toUpperCase(),
     qty:1,
@@ -4062,20 +4045,19 @@ async function importPlanFile(file){
   try{
     const ext=(file.name.split(".").pop()||"").toLowerCase();
 
-    if(["csv","txt","prn"].includes(ext)){
+    if(ext==="csv"){
       const text=await file.text();
       validateAndImportPlanRows(parseCsvText(text));
       return;
     }
 
+    if(!["xlsx","xls"].includes(ext)){
+      throw new Error("รองรับเฉพาะ .xlsx, .xls และ .csv");
+    }
+
     const XLSX=await loadSheetJs();
     const buffer=await file.arrayBuffer();
-    let wb;
-    try{
-      wb=XLSX.read(buffer,{type:"array",cellDates:true,cellText:false});
-    }catch(readErr){
-      throw new Error(`อ่านไฟล์ ${file.name} ไม่สำเร็จ: ไฟล์อาจเสียหาย เข้ารหัสด้วยรหัสผ่าน หรือไม่ใช่ Spreadsheet ที่รองรับ`);
-    }
+    const wb=XLSX.read(buffer,{type:"array"});
     const firstSheet=wb.SheetNames[0];
     if(!firstSheet) throw new Error("ไม่พบ Sheet ในไฟล์");
 
@@ -5587,84 +5569,133 @@ function currentLineOneDriveMirrorPath(){
 </script>
 
 <script>
-/* ===== MASTER SOURCE DASHBOARD LOG BRIDGE ===== */
+/* =========================================================
+   DASHBOARD LOG BRIDGE — additive only
+   Source UI/logic remains Production Control V1.35 JOB ID.
+   ========================================================= */
 (function(){
-  const LOG_KEY='production_control_dashboard_log_v1';
-  const META_KEY='production_control_dashboard_meta_v1';
+  const DASHBOARD_LOG_KEY = 'production_control_dashboard_log_v1';
+  const DASHBOARD_META_KEY = 'production_control_dashboard_meta_v1';
 
-  function keyOf(x,i){
-    return String(x?.eventId||'').trim() ||
-      [x?.line,x?.seq,x?.dateTime,x?.jobId,x?.type,x?.qty,i].join('|');
+  function readSaved(){
+    try{
+      const x = JSON.parse(localStorage.getItem(DASHBOARD_LOG_KEY) || '[]');
+      return Array.isArray(x) ? x : [];
+    }catch(e){ return []; }
   }
 
-  function publishMasterLog(){
-    try{
-      let old=[];
-      try{ old=JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){}
-      if(!Array.isArray(old)) old=[];
+  function eventKey(x, fallback=''){
+    const id = String(x && x.eventId || '').trim();
+    if(id) return id;
+    return [
+      x && x.line || '', x && x.seq || '', x && x.dateTime || '',
+      x && x.productionDate || '', x && (x.productionFo || x.fo || '') || '',
+      x && x.type || '', x && x.qty || '', fallback
+    ].join('|');
+  }
 
-      const current=[];
-      if(typeof LINE_WORKSPACES!=='undefined'){
+  function mergeLogs(existing, current){
+    const map = new Map();
+    (existing || []).forEach((x,i)=>map.set(eventKey(x,'old'+i), x));
+    (current || []).forEach((x,i)=>map.set(eventKey(x,'new'+i), x));
+    return Array.from(map.values()).sort((a,b)=>{
+      const ma = String(a && a.eventId || '').match(/^EVT-(\d+)-/);
+      const mb = String(b && b.eventId || '').match(/^EVT-(\d+)-/);
+      if(ma && mb) return Number(ma[1]) - Number(mb[1]);
+      return Number(a && a.seq || 0) - Number(b && b.seq || 0);
+    });
+  }
+
+  function collectCurrentLogs(){
+    const rows = [];
+    try{
+      if(typeof LINE_WORKSPACES !== 'undefined'){
         Object.keys(LINE_WORKSPACES).forEach(line=>{
-          const w=LINE_WORKSPACES[line]||{};
-          (w.productionLog||[]).forEach(x=>current.push({...x,line:x.line||line}));
+          const w = LINE_WORKSPACES[line] || {};
+          (w.productionLog || []).forEach(x=>rows.push({...x, line:x.line || line}));
         });
       }
-      if(typeof PRODUCTION_LOG!=='undefined' && Array.isArray(PRODUCTION_LOG)){
-        PRODUCTION_LOG.forEach(x=>current.push({...x,line:x.line||(typeof ACTIVE_LINE!=='undefined'?ACTIVE_LINE:'')}));
+      if(typeof PRODUCTION_LOG !== 'undefined' && Array.isArray(PRODUCTION_LOG)){
+        PRODUCTION_LOG.forEach(x=>rows.push({...x, line:x.line || (typeof ACTIVE_LINE !== 'undefined' ? ACTIVE_LINE : '')}));
       }
+    }catch(e){ console.warn('[DashboardLogBridge] collect', e); }
+    return rows;
+  }
 
-      const map=new Map();
-      old.forEach((x,i)=>map.set(keyOf(x,'o'+i),x));
-      current.forEach((x,i)=>map.set(keyOf(x,'n'+i),x));
-      const merged=[...map.values()];
-
-      localStorage.setItem(LOG_KEY,JSON.stringify(merged));
-      localStorage.setItem(META_KEY,JSON.stringify({
-        updatedAt:new Date().toISOString(),
-        records:merged.length,
-        source:'Production Control V1.35 JOB ID / PLAN_MASTER'
+  function publishDashboardLog(){
+    try{
+      const merged = mergeLogs(readSaved(), collectCurrentLogs());
+      localStorage.setItem(DASHBOARD_LOG_KEY, JSON.stringify(merged));
+      localStorage.setItem(DASHBOARD_META_KEY, JSON.stringify({
+        updatedAt: new Date().toISOString(),
+        records: merged.length,
+        source: 'Production Control V1.35 JOB ID'
       }));
       return merged.length;
     }catch(e){
-      console.warn('Dashboard log bridge',e);
+      console.warn('[DashboardLogBridge] publish', e);
       return 0;
     }
   }
 
-  function addDashboardButton(){
+  function addDashboardNav(){
     document.querySelectorAll('.main-nav').forEach(nav=>{
-      if(nav.querySelector('.dashboard-master-btn')) return;
-      const b=document.createElement('button');
-      b.type='button';
-      b.className='dashboard-master-btn';
-      b.textContent='▦ Dashboard';
-      b.onclick=()=>{
-        publishMasterLog();
-        location.href='dashboard.html';
-      };
-      nav.appendChild(b);
+      if(nav.querySelector('.dashboard-link-btn')) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dashboard-link-btn';
+      btn.textContent = '▦ Dashboard';
+      btn.title = 'เปิด Executive Production Dashboard';
+      btn.addEventListener('click', ()=>{
+        publishDashboardLog();
+        location.href = 'dashboard.html';
+      });
+      nav.appendChild(btn);
     });
   }
 
-  const boot=()=>{
-    addDashboardButton();
-    publishMasterLog();
-    window.MASTER_SOURCE_DASHBOARD_LOG={
-      publish:publishMasterLog,
-      logKey:LOG_KEY,
-      metaKey:META_KEY
-    };
-  };
+  function wirePublishers(){
+    if(typeof appendProductionLog === 'function' && !appendProductionLog.__dashboardWrapped){
+      const originalAppendProductionLog = appendProductionLog;
+      const wrappedAppendProductionLog = function(){
+        const result = originalAppendProductionLog.apply(this, arguments);
+        publishDashboardLog();
+        return result;
+      };
+      wrappedAppendProductionLog.__dashboardWrapped = true;
+      appendProductionLog = wrappedAppendProductionLog;
+    }
 
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',boot);
-  }else{
-    boot();
+    if(typeof captureCurrentLineWorkspace === 'function' && !captureCurrentLineWorkspace.__dashboardWrapped){
+      const originalCaptureCurrentLineWorkspace = captureCurrentLineWorkspace;
+      const wrappedCaptureCurrentLineWorkspace = function(){
+        const result = originalCaptureCurrentLineWorkspace.apply(this, arguments);
+        publishDashboardLog();
+        return result;
+      };
+      wrappedCaptureCurrentLineWorkspace.__dashboardWrapped = true;
+      captureCurrentLineWorkspace = wrappedCaptureCurrentLineWorkspace;
+    }
   }
-  window.addEventListener('beforeunload',publishMasterLog);
+
+  function bootDashboardBridge(){
+    addDashboardNav();
+    wirePublishers();
+    publishDashboardLog();
+    window.PRODUCTION_DASHBOARD_LOG_BRIDGE = {
+      publish: publishDashboardLog,
+      logKey: DASHBOARD_LOG_KEY,
+      metaKey: DASHBOARD_META_KEY
+    };
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bootDashboardBridge);
+  }else{
+    bootDashboardBridge();
+  }
+  window.addEventListener('beforeunload', publishDashboardLog);
 })();
 </script>
-
-</body>
+\n</body>
 </html>
