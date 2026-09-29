@@ -3,21 +3,21 @@ from pathlib import Path
 p = Path('index.html')
 s = p.read_text(encoding='utf-8')
 
-# 1) Make the button meaning explicit.
+# 1) Rename button so the action is clear.
 s = s.replace(
     '<button id="clearPlanFoBtn" type="button" style="background:#dc2626;color:#fff">เคลียร์ FO ทั้งหมด 🔒</button>',
     '<button id="clearPlanFoBtn" type="button" style="background:#dc2626;color:#fff">Reset / เคลียร์ FO 🔒</button>',
     1
 )
 
-# 2) Clear means zero plan rows. Do NOT recreate 33 placeholder rows.
-old_clear = """    PLAN_MASTER.length=0;\n    if(typeof ensurePlanMinRows==='function') ensurePlanMinRows();\n    if(typeof renderPlanTable==='function') renderPlanTable();"""
-new_clear = """    PLAN_MASTER.length=0;\n    if(typeof renderPlanTable==='function') renderPlanTable();"""
-if old_clear not in s:
-    raise SystemExit('ERROR: clear FO block not found; index left unchanged')
-s = s.replace(old_clear, new_clear, 1)
+# 2) Reset must leave PLAN_MASTER at zero rows; never recreate placeholders here.
+s = s.replace(
+    "    PLAN_MASTER.length=0;\n    if(typeof ensurePlanMinRows==='function') ensurePlanMinRows();\n    if(typeof renderPlanTable==='function') renderPlanTable();",
+    "    PLAN_MASTER.length=0;\n    if(typeof renderPlanTable==='function') renderPlanTable();",
+    1
+)
 
-# 3) Never auto-generate JOBxxx-NS-LNA for an empty placeholder row.
+# 3) Never generate JOBxxx-NS-LNA for a truly empty placeholder row.
 old_ensure = '''function ensurePlanJobId(row,seq=1){
   row.masterFo=cellText(row.masterFo||row.fo||row.productionFo);
   row.productionFo=cellText(row.productionFo||row.fo||row.masterFo);
@@ -46,9 +46,11 @@ new_ensure = '''function ensurePlanJobId(row,seq=1){
     : "";
   return row;
 }'''
-if old_ensure not in s:
+
+if old_ensure in s:
+    s = s.replace(old_ensure, new_ensure, 1)
+elif 'const hasRealPlanData=[' not in s:
     raise SystemExit('ERROR: ensurePlanJobId block not found; index left unchanged')
-s = s.replace(old_ensure, new_ensure, 1)
 
 # Safety checks before write.
 required = [
@@ -58,14 +60,16 @@ required = [
     'prod-ok', 'prod-repair', 'prod-ng',
     'Reset / เคลียร์ FO 🔒',
     'CLEAR PLAN FO PATCH V1',
+    'const hasRealPlanData=[',
     '</html>'
 ]
 for token in required:
     if token not in s:
         raise SystemExit(f'ERROR: required token missing: {token}')
 
-if "if(typeof ensurePlanMinRows==='function') ensurePlanMinRows();" in s[s.rfind('/* CLEAR PLAN FO PATCH V1 */'):]:
-    raise SystemExit('ERROR: clear patch still recreates placeholder rows')
+clear_tail=s[s.rfind('/* CLEAR PLAN FO PATCH V1 */'):]
+if "ensurePlanMinRows" in clear_tail:
+    raise SystemExit('ERROR: Clear FO still recreates placeholder rows')
 
 if len(s.encode('utf-8')) < 200000:
     raise SystemExit('ERROR: index unexpectedly small; refusing to write')
