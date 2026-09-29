@@ -3897,7 +3897,7 @@ const PLAN_MASTER=[
 ];
 
 while(PLAN_MASTER.length<33){
-  PLAN_MASTER.push({seq:PLAN_MASTER.length+1,jobId:"",masterFo:"",productionFo:"",fo:"",style:"",color:"",process:"Sewing",size:"",line:"",jobQty:"",sam:"",eff:"40",orderQty:""});
+  PLAN_MASTER.push({seq:PLAN_MASTER.length+1,jobId:"",masterFo:"",productionFo:"",fo:"",style:"",color:"",process:"",size:"",line:"",jobQty:"",sam:"",eff:"",orderQty:""});
 }
 
 
@@ -4187,7 +4187,7 @@ function plainNumberText(v){
 }
 
 function blankPlanRow(){
-  return {seq:0,jobId:"",masterFo:"",productionFo:"",fo:"",style:"",color:"",process:"Sewing",size:"",line:"",jobQty:"",sam:"",eff:"40",orderQty:""};
+  return {seq:0,jobId:"",masterFo:"",productionFo:"",fo:"",style:"",color:"",process:"",size:"",line:"",jobQty:"",sam:"",eff:"",orderQty:""};
 }
 
 function renumberPlanMaster(){
@@ -4256,7 +4256,11 @@ function addPlanRow(){
 
 function renderPlanTable(){
   const body=document.getElementById("planTableBody"); if(!body)return;
-  PLAN_MASTER.forEach((r,i)=>ensurePlanJobId(r,i+1));
+  PLAN_MASTER.forEach((r,i)=>{
+    const hasRealPlanData=[r.jobId,r.masterFo,r.productionFo,r.fo,r.style,r.color,r.line,r.jobQty,r.sam,r.orderQty]
+      .some(v=>cellText(v)!=="");
+    if(hasRealPlanData) ensurePlanJobId(r,i+1);
+  });
   body.innerHTML=PLAN_MASTER.map((r,i)=>`
     <tr>
       <td><input data-i="${i}" data-k="jobId" value="${esc(r.jobId||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
@@ -4264,7 +4268,7 @@ function renderPlanTable(){
       <td><input data-i="${i}" data-k="productionFo" value="${esc(r.productionFo||r.fo||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
       <td><input data-i="${i}" data-k="style" value="${esc(r.style||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
       <td><input data-i="${i}" data-k="color" value="${esc(r.color||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
-      <td><input data-i="${i}" data-k="process" value="${esc(r.process||"Sewing")}" ${PLANNER_EDIT?"":"readonly"}></td>
+      <td><input data-i="${i}" data-k="process" value="${esc(r.process||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
       <td><input data-i="${i}" data-k="size" value="${esc(r.size||"")}" ${PLANNER_EDIT?"":"readonly"}></td>
       <td><input data-i="${i}" data-k="line" inputmode="numeric" maxlength="2" value="${esc(displayLineNumber(r.line||""))}" ${PLANNER_EDIT?"":"readonly"}></td>
       <td><input data-i="${i}" data-k="jobQty" type="text" value="${esc(r.jobQty??"")}" ${PLANNER_EDIT?"":"readonly"}></td>
