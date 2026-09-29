@@ -1,70 +1,114 @@
-name: Assemble V1.35 Fix Import
+name: Restore Full V1.35 And Patch Import
 
 on:
-  workflow_dispatch:
   push:
     paths:
-      - '.deploy_v135_fiximport/**'
       - '.github/workflows/assemble-v135-fiximport.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  assemble:
+  restore-and-patch:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Rebuild index.html from staged payload
+      - name: Restore known-good full index
         shell: bash
         run: |
-          decode_part() {
-            src="$1"
-            out="$2"
-            tr -cd 'A-Za-z0-9+/=' < "$src" > /tmp/one.b64
-            rem=$(( $(wc -c < /tmp/one.b64) % 4 ))
-            if [ "$rem" -eq 2 ]; then printf '==' >> /tmp/one.b64; fi
-            if [ "$rem" -eq 3 ]; then printf '='  >> /tmp/one.b64; fi
-            base64 -d /tmp/one.b64 > "$out"
-          }
+          git show d3311f85febea79747929018818d4f14660f372b:index.html > index.html
+          echo "restored bytes: $(wc -c < index.html)"
 
-          decode_part .deploy_v135_fiximport/part01.b64 /tmp/part01.bin
-          decode_part .deploy_v135_fiximport/part02.b64 /tmp/part02.bin
-          decode_part .deploy_v135_fiximport/part03.b64 /tmp/part03.bin
-
-          cat /tmp/part01.bin /tmp/part02.bin /tmp/part03.bin > /tmp/index.html.xz
-          echo "assembled xz bytes: $(wc -c < /tmp/index.html.xz)"
-          xz -t /tmp/index.html.xz
-          xz -dc /tmp/index.html.xz > index.html
-          echo "restored index bytes: $(wc -c < index.html)"
-
-      - name: Verify required fixes
+      - name: Patch Production Code import and Clear FO
         shell: bash
         run: |
-          test $(wc -c < index.html) -gt 200000
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          t=p.read_text(encoding='utf-8')
+
+          old='jobId: find(["job id","job_id","jobid","รหัสงานย่อย","รหัสงาน"]),'
+          new='jobId: find(["job id","job_id","jobid","production code","production_code","productioncode","รหัสงานย่อย","รหัสงาน","รหัสผลิต"]),'
+          if old not in t:
+              raise SystemExit('JOB ID alias anchor not found')
+          t=t.replace(old,new,1)
+
+          qty_old='jobQty: find(["job qty","job_qty","plan qty","plan_qty","qty ผลิต","qty"]),'
+          qty_new='jobQty: find(["job qty","job_qty","plan qty","plan_qty","production qty","production quantity","qty ผลิต","qty"]),'
+          if qty_old in t:
+              t=t.replace(qty_old,qty_new,1)
+
+          btn_anchor='<button id="downloadPlanTemplateBtn" class="secondary">ดาวน์โหลด Template Excel</button>'
+          if 'id="clearPlanFoBtn"' not in t:
+              if btn_anchor not in t:
+                  raise SystemExit('toolbar anchor not found')
+              t=t.replace(btn_anchor, btn_anchor+'\n          <button id="clearPlanFoBtn" type="button" style="background:#dc2626;color:#fff">เคลียร์ FO ทั้งหมด 🔒</button>',1)
+
+          clear_func=r'''
+function clearAllPlanFo(){
+  const pin=prompt("กรอกรหัสเพื่อเคลียร์ FO / Production Plan Master");
+  if(pin===null) return;
+  if(pin!==PLANNER_PIN){ alert("รหัสไม่ถูกต้อง"); return; }
+  const realRows=PLAN_MASTER.filter(rowHasPlanContent).length;
+  if(!confirm(`ยืนยันเคลียร์ FO ทั้งหมด ${realRows} รายการ?\n\n• ล้างเฉพาะ Production Plan Master\n• ไม่ลบ Production Log / ประวัติการผลิต\n• หลังเคลียร์สามารถโหลด Excel ชุดใหม่ได้ทันที`)) return;
+  PLAN_MASTER.length=0;
+  ensurePlanMinRows();
+  renderPlanTable();
+  refreshFoOptions();
+  const foSelect=document.getElementById("foSelect");
+  if(foSelect) foSelect.value="";
+  if(typeof recordAudit==="function") recordAudit("CLEAR_PLAN_FO",`เคลียร์ Production Plan Master ${realRows} รายการ`);
+  if(typeof setPlanImportStatus==="function") setPlanImportStatus(`เคลียร์ FO สำเร็จ ${realRows} รายการ • Production Log ยังอยู่`,"success");
+}
+
+'''
+          if 'function clearAllPlanFo(){' not in t:
+              anchor='function refreshFoOptions(){'
+              if anchor not in t:
+                  raise SystemExit('clear function insertion anchor not found')
+              t=t.replace(anchor,clear_func+anchor,1)
+
+          evt='document.getElementById("importPlanExcelBtn")?.addEventListener("click",openPlannerImportPin);'
+          if 'clearPlanFoBtn")?.addEventListener' not in t:
+              if evt not in t:
+                  raise SystemExit('event anchor not found')
+              t=t.replace(evt,evt+'\n  document.getElementById("clearPlanFoBtn")?.addEventListener("click",clearAllPlanFo);',1)
+
+          p.write_text(t,encoding='utf-8')
+          PY
+
+      - name: Verify full page before commit
+        shell: bash
+        run: |
+          bytes=$(wc -c < index.html)
+          echo "patched bytes: $bytes"
+          test "$bytes" -gt 200000
           grep -q 'Production Control V1.35' index.html
           grep -q 'เลือกจากทั้งหมด 18 Line' index.html
           grep -q 'Production Plan Master' index.html
-          grep -q 'clearPlanFoBtn' index.html
           grep -qi 'production code' index.html
+          grep -q 'clearPlanFoBtn' index.html
           grep -q 'เคลียร์ FO ทั้งหมด' index.html
           grep -q 'prod-ok' index.html
           grep -q 'prod-repair' index.html
           grep -q 'prod-ng' index.html
           grep -q '</html>' index.html
 
-      - name: Commit rebuilt production page
+      - name: Commit restored full page
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           if git diff --cached --quiet; then
-            echo 'index.html is already up to date'
+            echo 'index.html already matches target'
           else
-            git commit -m 'Restore full V1.35 page with fixed Excel import and Clear FO'
+            git commit -m 'Restore full V1.35 and add Production Code import plus Clear FO'
             git push
           fi
